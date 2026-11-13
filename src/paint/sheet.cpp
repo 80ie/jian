@@ -82,7 +82,7 @@ QImage paint::sheet(const Palette& palette)
     QImage image(sheetWidth, height, QImage::Format_RGB32);
     QPainter p(&image);
     p.fillRect(image.rect(), palette.tone(0));
-    frame(p, QRect(0, 0, frameWidth, height), palette);
+    frame(p, QRect(0, 0, frameWidth, height), palette, Qt::RightEdge);
 
     // Spelled out in full, or the golden image would follow the desktop's font settings.
     QFont font(u"DejaVu Sans"_s);

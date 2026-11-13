@@ -84,13 +84,14 @@ void thumb(QPainter& p, const QRect& r, const Palette& palette)
     p.drawRect(r.adjusted(0, 0, -1, -1));
 }
 
-void frame(QPainter& p, const QRect& r, const Palette& palette)
+void frame(QPainter& p, const QRect& r, const Palette& palette, Qt::Edge side)
 {
-    int x = r.left();
+    const int step = side == Qt::RightEdge ? 1 : -1;
+    int x = side == Qt::RightEdge ? r.left() : r.right();
     for (int tone : { -6, 3, 0, 0, -3, -6, 3 }) {
         p.setPen(palette.tone(tone));
         p.drawLine(x, r.top(), x, r.bottom());
-        ++x;
+        x += step;
     }
 }
 

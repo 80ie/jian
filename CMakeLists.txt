@@ -15,6 +15,7 @@ add_library(shelfcore STATIC
     src/paint/sheet.cpp
     src/panel/config.cpp
     src/panel/layout.cpp
+    src/panel/panel.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp
     src/widgets/shelfwidget.h)

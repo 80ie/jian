@@ -1,4 +1,4 @@
-foreach(name palette sheet layout config)
+foreach(name palette sheet layout config dock)
     add_executable(${name}_test ${name}_test.cpp)
     target_link_libraries(${name}_test PRIVATE shelfcore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)

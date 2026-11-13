@@ -1,5 +1,7 @@
 #pragma once
 
+#include "panel/dock.h"
+
 #include <QWidget>
 
 #include <optional>
@@ -50,4 +52,5 @@ private:
     // the widgets.
     QWidget m_grip { this };
     std::optional<Drag> m_drag;
+    DockHints m_dock;
 };

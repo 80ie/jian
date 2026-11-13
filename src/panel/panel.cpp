@@ -26,6 +26,7 @@ constexpr int slotGap = 3;
 Panel::Panel(const Palette& palette)
     : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus)
     , m_palette(palette)
+    , m_dock(winId())
 {
     setWindowTitle(u"shelf"_s);
     m_grip.setCursor(Qt::SplitHCursor);
@@ -114,10 +115,13 @@ QRect Panel::frameRect() const
 
 void Panel::place(int width)
 {
-    const QRect screen = QGuiApplication::primaryScreen()->geometry();
+    const QScreen* screen = QGuiApplication::primaryScreen();
+    const QRect bounds = screen->geometry();
     width = std::clamp(width, narrowest, widest);
-    const int x = m_side == Qt::LeftEdge ? screen.left() : screen.right() + 1 - width;
-    setGeometry(x, screen.top(), width, screen.height());
+    const int x = m_side == Qt::LeftEdge ? bounds.left() : bounds.right() + 1 - width;
+    const QRect docked(x, bounds.top(), width, bounds.height());
+    setGeometry(docked);
+    m_dock.setStrut(m_side, docked, screen->virtualGeometry());
 }
 
 void Panel::relayout()

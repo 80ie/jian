@@ -1,6 +1,7 @@
 #include "palette/oklab.h"
 #include "palette/palette.h"
 
+#include <QTemporaryDir>
 #include <QTest>
 
 #include <algorithm>
@@ -100,6 +101,25 @@ private slots:
         palette.contrast = 0;
         for (int tone = darkestTone; tone <= lightestTone; ++tone)
             QCOMPARE(palette.tone(tone), palette.face);
+    }
+
+    void iniRoundTrip()
+    {
+        Palette palette;
+        palette.face = QColor(0x33, 0x66, 0x99);
+        palette.contrast = 0.85;
+        palette.ink = QColor(0x10, 0x10, 0x10);
+        palette.fill = QColor(0x20, 0x40, 0x60);
+        palette.selection = QColor(0xc0, 0x30, 0x30);
+        palette.pagerDesk = QColor(0x40, 0x20, 0x10);
+        palette.overrides = { { -2, QColor(0x8c, 0x80, 0x78) }, { 3, QColor(0xfe, 0xfe, 0xfe) } };
+
+        const QTemporaryDir dir;
+        const QString path = dir.filePath("palette.ini");
+        QVERIFY(savePalette(palette, path));
+        const std::optional<Palette> loaded = loadPalette(path);
+        QVERIFY(loaded);
+        QVERIFY(*loaded == palette);
     }
 };
 

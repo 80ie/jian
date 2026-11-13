@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QColor>
+#include <QString>
 
 #include <map>
+#include <optional>
 
 constexpr int darkestTone = -6;
 constexpr int lightestTone = 5;
@@ -21,3 +23,6 @@ struct Palette {
 
     bool operator==(const Palette&) const = default;
 };
+
+std::optional<Palette> loadPalette(const QString& path);
+bool savePalette(const Palette& palette, const QString& path);

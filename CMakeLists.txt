@@ -13,6 +13,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 add_library(shelfcore STATIC
     src/paint/bevel.cpp
     src/paint/sheet.cpp
+    src/panel/config.cpp
     src/panel/layout.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp

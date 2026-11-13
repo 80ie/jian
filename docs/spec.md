@@ -195,7 +195,9 @@ repaint times so the intermittent case can be caught when it happens.
 
 ### 7.1 Clock
 
-As now. Format string in `config.ini`.
+As now: the time at the left end, the date at the right. The clock draws
+two strings, so `config.ini` holds two QDateTime formats, `[clock] time`
+and `date`.
 
 ### 7.2 World View
 

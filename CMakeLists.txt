@@ -24,9 +24,11 @@ add_library(shelfcore STATIC
     src/palette/palette.cpp
     src/widgets/catalog.cpp
     src/widgets/clock.cpp
-    src/widgets/shelfwidget.h)
+    src/widgets/shelfwidget.h
+    src/x11/atoms.cpp
+    src/x11/connection.cpp)
 target_include_directories(shelfcore PUBLIC src)
-target_link_libraries(shelfcore PUBLIC Qt6::Widgets PRIVATE PkgConfig::XCB)
+target_link_libraries(shelfcore PUBLIC Qt6::Widgets PkgConfig::XCB)
 
 add_executable(shelf src/main.cpp)
 target_link_libraries(shelf PRIVATE shelfcore)

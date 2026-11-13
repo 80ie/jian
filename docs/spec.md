@@ -74,8 +74,20 @@ Use Qt's own xcb connection (`QNativeInterface::QX11Application`) and receive
 events through one `QAbstractNativeEventFilter`. No second connection and no
 `QSocketNotifier`. Qt already selects events on the root window and event
 masks are per client, so the filter must OR its bits into the existing mask
-rather than replace it. **VERIFY** that `SubstructureNotify` on the root
-reaches the filter this way.
+rather than replace it.
+
+Verified in `fvwm-rig` (Qt 6.11.3): bits OR-ed into Qt's root mask (enter,
+leave, `StructureNotify`, `PropertyChange`) bring their events to the
+filter, but `SubstructureNotify` on the root cannot follow frames. Qt drops
+a `ConfigureNotify` when a later one with the same `event` window is
+queued, and for a substructure event that window is the root, so a page
+switch moving ten frames delivered one or two of them: 8 of 43 over four
+switches. Qt also re-reads the RandR screens for every `ConfigureNotify`
+whose `event` is the root. Turning off `Qt::AA_CompressHighFrequencyEvents`
+brought all 43 through, at the cost of uncompressed pointer motion for the
+whole program. So the window model selects `StructureNotify` on each frame
+it tracks instead, where compression only merges moves of one frame, and the
+root needs only `PropertyChange`.
 
 ### 3.3 The widget contract
 

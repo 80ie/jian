@@ -136,11 +136,24 @@ The `flex` directive and the pinned-to-bottom rule disappear: slots above a
 spare-taking widget sit at the top, slots below it sit at the bottom, as a
 consequence of step 2.
 
-Width stays resizable by dragging the inner edge. The strut is set by the
-panel as `_NET_WM_STRUT_PARTIAL` on its own window. **VERIFY** in `fvwm-rig`
-that fvwm3 honors it on a live resize; if it does, `EwmhBaseStruts`,
-`--print-struts` and `--adjust-width` leave `config`. If not, the strut call
-stays as an optional command in `config.ini`.
+Width stays resizable by dragging the inner edge. The panel types its window
+`_NET_WM_WINDOW_TYPE_DOCK` and sets the strut on it as
+`_NET_WM_STRUT_PARTIAL` and `_NET_WM_STRUT`.
+
+Verified in `fvwm-rig` (fvwm3 1.1.5, 1600x900, `EwmhBaseStruts 0 0 0 0`):
+fvwm3 honors the strut and follows it live. A window maximized after each
+change spanned x 0 to 1439 with the panel 160 wide, 0 to 1359 after dragging
+it to 240, 0 to 1399 after editing `config.ini` to 200, and 200 to 1599
+after moving it to the left. A window maximized before a change keeps its
+size until it is maximized again, as with `EwmhBaseStruts`. fvwm3 leaves
+`_NET_WORKAREA` at the full screen throughout. So `EwmhBaseStruts`,
+`--print-struts` and `--adjust-width` leave `config`, and `config.ini` needs
+no strut command.
+
+fvwm makes a dock sticky but still gives it a title, and `config` sets
+`Style * NoDecorHint`, which ignores the frameless hint Qt sets. `config`
+therefore keeps a `Style shelf !Title, !Handles, BorderWidth 0` line in
+place of the `ShelfPanel` one.
 
 ## 5. Widget separation and edit mode
 

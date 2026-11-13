@@ -26,7 +26,10 @@ add_library(shelfcore STATIC
     src/widgets/clock.cpp
     src/widgets/shelfwidget.h
     src/x11/atoms.cpp
-    src/x11/connection.cpp)
+    src/x11/client.cpp
+    src/x11/connection.cpp
+    src/x11/reply.cpp
+    src/x11/windowmodel.cpp)
 target_include_directories(shelfcore PUBLIC src)
 target_link_libraries(shelfcore PUBLIC Qt6::Widgets PkgConfig::XCB)
 

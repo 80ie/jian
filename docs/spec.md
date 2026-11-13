@@ -85,9 +85,9 @@ switch moving ten frames delivered one or two of them: 8 of 43 over four
 switches. Qt also re-reads the RandR screens for every `ConfigureNotify`
 whose `event` is the root. Turning off `Qt::AA_CompressHighFrequencyEvents`
 brought all 43 through, at the cost of uncompressed pointer motion for the
-whole program. So the window model selects `StructureNotify` on each frame
-it tracks instead, where compression only merges moves of one frame, and the
-root needs only `PropertyChange`.
+whole program. So the window model follows each client through
+`StructureNotify` on the client itself (section 6), and the root needs only
+`PropertyChange`.
 
 ### 3.3 The widget contract
 
@@ -196,12 +196,29 @@ target it. Its position is remembered. Closing the window docks it back.
 
 `x11/WindowModel` is the single source of truth about client windows, used by
 tasks and available to anything later. It holds one record per client:
-title, class, icon, state bits, desktop, frame geometry. Records are filled
-once when a client appears and then changed only by the event that reports
-the change. A page switch then costs no round trips: the viewport property
-changes, visibility is recomputed from cached geometry, one signal fires.
-Property fetches that are needed go out as a batch of xcb cookies and are
-collected together.
+title, class, icon, state bits, desktop, and the client's geometry in root
+coordinates. Records are filled once when a client appears and then changed
+only by the event that reports the change. Property fetches that are needed
+go out as a batch of xcb cookies and are collected together, so a pass over
+a burst of events costs one round trip, and one more when windows appeared.
+
+A page switch costs no round trips. fvwm moves every frame on the desk,
+minimized ones included, before it sets `_NET_DESKTOP_VIEWPORT` (whose value
+fvwm3 leaves empty), so the viewport is not read: a client is shown when its
+geometry meets the screen. The geometry comes from the synthetic
+`ConfigureNotify` that ICCCM 4.1.5 has a window manager send a client it
+moves, which carries root coordinates. A real one, from a resize, has
+coordinates within the frame and costs one batched `TranslateCoordinates`.
+A focus change that comes with a switch costs one fetch of
+`_NET_ACTIVE_WINDOW`. An update runs 5 ms after the first event of a burst;
+a switch and its focus change span about 2 ms in `fvwm-rig`, so a switch
+fires one signal.
+
+Frames are not followed. Watching them (3.2) lost moves to Qt's compression
+a second way: fvwm follows each frame move with a synthetic `ConfigureNotify`
+on the frame, a workaround it keeps for Tk, and Qt kept that one and dropped
+the real one, so 27 of 38 moves arrived. A client's own synthetic event is
+the newest for its window, so compression only drops stale ones.
 
 This targets the page-switch lag. The current `refresh()` makes about six
 synchronous round trips per client across every page on each run. There is
@@ -210,7 +227,10 @@ first time a frame is seen moving, `_on_configure` records it and returns
 without scheduling a refresh, so if the viewport-triggered refresh ran before
 that frame landed, the list stays stale until some unrelated event arrives.
 That would explain lag that appears on first visits to a page and is hard to
-reproduce afterward.
+reproduce afterward. `_on_configure` also tests the view against the frame's
+position negated, so many moves into or out of view are not seen as changes.
+Neither path exists here: there is no frame to discover, and visibility does
+not wait for a refresh.
 
 Requirement: the list is correct within one frame (16 ms) of the last
 `ConfigureNotify` of a page switch. A `--trace-x` flag logs event arrival and

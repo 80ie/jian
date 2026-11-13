@@ -82,15 +82,17 @@ reaches the filter this way.
 ```cpp
 class ShelfWidget : public QWidget {
 public:
-    virtual QString id() const = 0;            // stable, used in config
-    virtual int heightForWidth(int w) const;   // natural height
+    virtual QString id() const = 0;                // stable, used in config
+    int heightForWidth(int w) const override = 0;  // natural height
     virtual int minimumHeightForWidth(int w) const;
-    virtual bool wantsSpare() const;           // takes leftover height
-    virtual QWidget *settingsPage();           // nullptr if none
+    virtual bool wantsSpare() const;               // takes leftover height
 signals:
     void heightChanged();
 };
 ```
+
+`settingsPage()` joins the contract with the settings window (milestone 7);
+until there is a window to put a page in, nothing would call it.
 
 A widget owns nothing outside its own rectangle, and does not know whether it
 is docked or popped out. The existing rule carries over: a widget does not

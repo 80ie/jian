@@ -14,12 +14,13 @@ add_library(shelfcore STATIC
     src/paint/bevel.cpp
     src/paint/sheet.cpp
     src/palette/oklab.cpp
-    src/palette/palette.cpp)
+    src/palette/palette.cpp
+    src/widgets/shelfwidget.h)
 target_include_directories(shelfcore PUBLIC src)
-target_link_libraries(shelfcore PUBLIC Qt6::Gui)
+target_link_libraries(shelfcore PUBLIC Qt6::Widgets)
 
 add_executable(shelf src/main.cpp)
-target_link_libraries(shelf PRIVATE shelfcore Qt6::Widgets)
+target_link_libraries(shelf PRIVATE shelfcore)
 
 enable_testing()
 add_subdirectory(tests)

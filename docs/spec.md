@@ -423,7 +423,8 @@ from.
 - A development preset with AddressSanitizer and UBSan.
 - `<name> --only <widget>` runs one widget as a plain window.
 - `<name> --render out.png --fixture <dir>` draws the panel offscreen with
-  canned data.
+  canned data. Until the panel exists, `--render out.png [--palette file.ini]`
+  draws a sheet of the painters and the ramp instead.
 - Qt Test for the pure parts: layout solver, palette derivation and file
   round-trip, export substitution, task ordering and overflow, `_NET_WM_ICON`
   decoding.
@@ -447,8 +448,9 @@ from.
 Each ends with something runnable. The Python shelf stays in service until
 the last one.
 
-1. **Skeleton.** CMake project, palette model and file, painters, `--render`,
-   first golden image of an empty panel.
+1. **Skeleton.** CMake project, palette model and file, painters, `--render`
+   of a painter sheet (the panel's frame holding one sample of each painter,
+   and the ramp), its golden image.
 2. **Panel.** Window, slots, layout solver, resize, side switch, struts,
    config file, clock.
 3. **Window model and tasks.** Including the timing trace and the new pinned

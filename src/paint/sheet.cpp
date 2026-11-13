@@ -84,9 +84,10 @@ QImage paint::sheet(const Palette& palette)
     p.fillRect(image.rect(), palette.tone(0));
     frame(p, QRect(0, 0, frameWidth, height), palette);
 
-    // Named rather than the default so the golden image does not follow the desktop's fonts.
+    // Spelled out in full, or the golden image would follow the desktop's font settings.
     QFont font(u"DejaVu Sans"_s);
     font.setPixelSize(10);
+    font.setWeight(QFont::Normal);
     p.setFont(font);
 
     int y = margin;

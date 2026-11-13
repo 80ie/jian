@@ -21,6 +21,8 @@ add_library(shelfcore STATIC
     src/panel/panel.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp
+    src/widgets/catalog.cpp
+    src/widgets/clock.cpp
     src/widgets/shelfwidget.h)
 target_include_directories(shelfcore PUBLIC src)
 target_link_libraries(shelfcore PUBLIC Qt6::Widgets PRIVATE PkgConfig::XCB)

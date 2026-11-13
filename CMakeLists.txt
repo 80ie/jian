@@ -10,7 +10,14 @@ qt_standard_project_setup()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
+add_library(shelfcore STATIC
+    src/palette/oklab.cpp
+    src/palette/palette.cpp)
+target_include_directories(shelfcore PUBLIC src)
+target_link_libraries(shelfcore PUBLIC Qt6::Gui)
+
 add_executable(shelf src/main.cpp)
 target_link_libraries(shelf PRIVATE Qt6::Widgets)
 
 enable_testing()
+add_subdirectory(tests)

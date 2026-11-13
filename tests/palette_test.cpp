@@ -1,0 +1,107 @@
+#include "palette/oklab.h"
+#include "palette/palette.h"
+
+#include <QTest>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+
+namespace {
+
+// Spec 8.1: the ramp's OKLab lightness for a face at 0.676.
+constexpr std::array specLightness { 0.30, 0.40, 0.50, 0.57, 0.61, 0.645, 0.676, 0.71, 0.77, 0.82,
+    0.876, 0.91 };
+
+double lightness(const QColor& color) { return toOklab(color).lightness; }
+
+Palette withFace(const QColor& face)
+{
+    Palette palette;
+    palette.face = face;
+    return palette;
+}
+
+} // namespace
+
+class PaletteTest : public QObject {
+    Q_OBJECT
+
+private slots:
+    void toneZeroIsFace_data()
+    {
+        QTest::addColumn<QColor>("face");
+        QTest::newRow("stock") << QColor(0xa2, 0x94, 0x8a);
+        QTest::newRow("slate") << QColor(0x33, 0x66, 0x99);
+        QTest::newRow("red") << QColor(0xff, 0x00, 0x00);
+        QTest::newRow("green") << QColor(0x00, 0xff, 0x00);
+        QTest::newRow("white") << QColor(0xff, 0xff, 0xff);
+        QTest::newRow("black") << QColor(0x00, 0x00, 0x00);
+    }
+
+    void toneZeroIsFace()
+    {
+        QFETCH(QColor, face);
+        QCOMPARE(withFace(face).tone(0), face);
+    }
+
+    void lightnessRises_data()
+    {
+        QTest::addColumn<QColor>("face");
+        QTest::newRow("stock") << QColor(0xa2, 0x94, 0x8a);
+        QTest::newRow("slate") << QColor(0x33, 0x66, 0x99);
+        QTest::newRow("red") << QColor(0xff, 0x00, 0x00);
+    }
+
+    void lightnessRises()
+    {
+        QFETCH(QColor, face);
+        const Palette palette = withFace(face);
+        for (int tone = darkestTone + 1; tone <= lightestTone; ++tone)
+            QVERIFY2(lightness(palette.tone(tone)) > lightness(palette.tone(tone - 1)),
+                qPrintable(QString::number(tone)));
+    }
+
+    // The saturated faces leave sRGB at some tones, and lightness has to survive the way back in.
+    void lightnessFollowsSpec_data()
+    {
+        QTest::addColumn<QColor>("face");
+        QTest::newRow("stock") << QColor(0xa2, 0x94, 0x8a);
+        QTest::newRow("red") << QColor(0xff, 0x00, 0x00);
+        QTest::newRow("green") << QColor(0x00, 0xff, 0x00);
+        QTest::newRow("blue") << QColor(0x00, 0x00, 0xff);
+        QTest::newRow("magenta") << QColor(0xff, 0x00, 0xff);
+    }
+
+    void lightnessFollowsSpec()
+    {
+        QFETCH(QColor, face);
+        const Palette palette = withFace(face);
+        for (int tone = darkestTone; tone <= lightestTone; ++tone) {
+            const double offset = specLightness[tone - darkestTone] - 0.676;
+            const double expected = std::clamp(lightness(face) + offset, 0.0, 1.0);
+            QVERIFY2(std::abs(lightness(palette.tone(tone)) - expected) < 0.003,
+                qPrintable(QString::number(tone)));
+        }
+    }
+
+    void overridesWin()
+    {
+        const Palette plain;
+        Palette palette;
+        palette.overrides[-2] = QColor(0x12, 0x34, 0x56);
+        for (int tone = darkestTone; tone <= lightestTone; ++tone)
+            QCOMPARE(palette.tone(tone), tone == -2 ? QColor(0x12, 0x34, 0x56) : plain.tone(tone));
+    }
+
+    void zeroContrastIsFlat()
+    {
+        Palette palette;
+        palette.contrast = 0;
+        for (int tone = darkestTone; tone <= lightestTone; ++tone)
+            QCOMPARE(palette.tone(tone), palette.face);
+    }
+};
+
+QTEST_GUILESS_MAIN(PaletteTest)
+#include "palette_test.moc"

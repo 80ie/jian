@@ -1,39 +1,167 @@
+#include "paint/bevel.h"
 #include "paint/sheet.h"
 #include "palette/palette.h"
+#include "panel/config.h"
+#include "panel/panel.h"
+#include "panel/render.h"
+#include "widgets/catalog.h"
+#include "widgets/shelfwidget.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
+#include <QDir>
+#include <QFile>
+#include <QFileSystemWatcher>
+#include <QLockFile>
+#include <QStandardPaths>
+#include <QTimer>
 
 #include <cstdio>
+#include <memory>
 #include <optional>
 
 using namespace Qt::StringLiterals;
 
+namespace {
+
+// A file that is not there gives the defaults; one that is there but bad gives nothing.
+std::optional<Palette> readPalette(const QString& path)
+{
+    return QFile::exists(path) ? loadPalette(path) : Palette();
+}
+
+std::optional<Config> readConfig(const QString& path)
+{
+    return QFile::exists(path) ? loadConfig(path) : Config();
+}
+
+int saveImage(const QImage& image, const QString& path)
+{
+    if (image.save(path))
+        return 0;
+    qWarning("%s: cannot write", qUtf8Printable(path));
+    return 1;
+}
+
+int runWidget(QStringView id, const Palette& palette, const Config& config)
+{
+    const std::unique_ptr<ShelfWidget> widget(createWidget(id, palette, config, nullptr));
+    if (!widget)
+        return 1;
+    const int width = config.width - paint::frameWidth;
+    widget->resize(width, widget->heightForWidth(width));
+    widget->show();
+    return QApplication::exec();
+}
+
+int runPanel(const QDir& dir)
+{
+    const QString configPath = dir.filePath(u"config.ini"_s);
+    const QString palettePath = dir.filePath(u"palette.ini"_s);
+    Config config = readConfig(configPath).value_or(Config());
+    Palette palette = readPalette(palettePath).value_or(Palette());
+
+    Panel panel(palette);
+    const auto apply = [&] {
+        panel.setSide(config.side);
+        panel.setWidth(config.width);
+        panel.setWidgets(createWidgets(palette, config, &panel));
+    };
+    apply();
+    QObject::connect(&panel, &Panel::widthDragged, &panel, [&](int width) {
+        config.width = width;
+        saveConfig(config, configPath);
+    });
+    QObject::connect(&panel, &Panel::sideSwitched, &panel, [&](Qt::Edge side) {
+        config.side = side;
+        saveConfig(config, configPath);
+    });
+
+    QFileSystemWatcher watcher({ dir.path() });
+    const auto rewatch = [&] {
+        // A file replaced by a rename keeps its path in the list but loses its watch.
+        if (!watcher.files().isEmpty())
+            watcher.removePaths(watcher.files());
+        for (const QString& path : { configPath, palettePath })
+            if (QFile::exists(path))
+                watcher.addPath(path);
+    };
+    rewatch();
+    // Gathers the burst of changes one save makes, from an editor or from QSettings.
+    QTimer settle;
+    settle.setSingleShot(true);
+    settle.setInterval(50);
+    QObject::connect(
+        &watcher, &QFileSystemWatcher::directoryChanged, &settle, qOverload<>(&QTimer::start));
+    QObject::connect(
+        &watcher, &QFileSystemWatcher::fileChanged, &settle, qOverload<>(&QTimer::start));
+    QObject::connect(&settle, &QTimer::timeout, &panel, [&] {
+        rewatch();
+        if (const std::optional<Palette> next = readPalette(palettePath);
+            next && *next != palette) {
+            palette = *next;
+            panel.update();
+        }
+        if (const std::optional<Config> next = readConfig(configPath); next && *next != config) {
+            config = *next;
+            apply();
+        }
+    });
+
+    panel.show();
+    return QApplication::exec();
+}
+
+} // namespace
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
+    QApplication::setApplicationName(u"shelf"_s);
     QCommandLineParser parser;
     const QCommandLineOption renderOption(
-        u"render"_s, u"Draw the painter sheet to <png>."_s, u"png"_s);
+        u"render"_s, u"Draw the panel with canned data to <png>."_s, u"png"_s);
+    const QCommandLineOption sheetOption(
+        u"render-sheet"_s, u"Draw the painter sheet to <png>."_s, u"png"_s);
     const QCommandLineOption paletteOption(
-        u"palette"_s, u"Draw it with the palette in <ini>."_s, u"ini"_s);
-    parser.addOptions({ renderOption, paletteOption });
-    if (!parser.parse(app.arguments()) || !parser.isSet(renderOption)
-        || !parser.positionalArguments().isEmpty()) {
+        u"palette"_s, u"Draw either with the palette in <ini>."_s, u"ini"_s);
+    const QCommandLineOption onlyOption(
+        u"only"_s, u"Run one widget as a plain window."_s, u"widget"_s);
+    parser.addOptions({ renderOption, sheetOption, paletteOption, onlyOption });
+    const bool parsed = parser.parse(app.arguments());
+    const bool rendering = parser.isSet(renderOption) || parser.isSet(sheetOption);
+    if (!parsed || !parser.positionalArguments().isEmpty()
+        || parser.isSet(renderOption) + parser.isSet(sheetOption) + parser.isSet(onlyOption) > 1
+        || (parser.isSet(paletteOption) && !rendering)) {
         std::fputs(qPrintable(parser.helpText()), stderr);
         return 2;
     }
 
-    std::optional<Palette> palette = Palette();
-    if (parser.isSet(paletteOption))
-        palette = loadPalette(parser.value(paletteOption));
-    if (!palette)
-        return 1;
+    if (rendering) {
+        const std::optional<Palette> palette
+            = parser.isSet(paletteOption) ? loadPalette(parser.value(paletteOption)) : Palette();
+        if (!palette)
+            return 1;
+        if (parser.isSet(renderOption))
+            return saveImage(renderPanel(*palette, Config()), parser.value(renderOption));
+        return saveImage(paint::sheet(*palette), parser.value(sheetOption));
+    }
 
-    const QString out = parser.value(renderOption);
-    if (!paint::sheet(*palette).save(out)) {
-        qWarning("%s: cannot write", qUtf8Printable(out));
+    const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    if (parser.isSet(onlyOption))
+        return runWidget(parser.value(onlyOption),
+            readPalette(dir.filePath(u"palette.ini"_s)).value_or(Palette()),
+            readConfig(dir.filePath(u"config.ini"_s)).value_or(Config()));
+
+    QLockFile lock(QDir(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
+            .filePath(u"shelf.lock"_s));
+    if (!lock.tryLock()) {
+        qWarning("shelf is already running");
         return 1;
     }
-    return 0;
+    if (!QDir().mkpath(dir.path())) {
+        qWarning("%s: cannot create", qUtf8Printable(dir.path()));
+        return 1;
+    }
+    return runPanel(dir);
 }

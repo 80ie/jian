@@ -427,8 +427,10 @@ from.
 - A development preset with AddressSanitizer and UBSan.
 - `<name> --only <widget>` runs one widget as a plain window.
 - `<name> --render out.png --fixture <dir>` draws the panel offscreen with
-  canned data. Until the panel exists, `--render out.png [--palette file.ini]`
-  draws a sheet of the painters and the ramp instead.
+  canned data. Until there are fixtures, `--render out.png [--palette
+  file.ini]` draws the default layout with a fixed time and font, and
+  `--render-sheet out.png [--palette file.ini]` draws a sheet of the painters
+  and the ramp for the tone comparison.
 - Qt Test for the pure parts: layout solver, palette derivation and file
   round-trip, export substitution, task ordering and overflow, `_NET_WM_ICON`
   decoding.

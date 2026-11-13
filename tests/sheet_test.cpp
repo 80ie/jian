@@ -11,7 +11,7 @@ class SheetTest : public QObject {
 private slots:
     void matchesGolden()
     {
-        const std::optional<Palette> palette = loadPalette(QFINDTESTDATA("golden/sheet.ini"));
+        const std::optional<Palette> palette = loadPalette(QFINDTESTDATA("golden/palette.ini"));
         QVERIFY(palette);
         const QImage golden
             = QImage(QFINDTESTDATA("golden/sheet.png")).convertToFormat(QImage::Format_RGB32);

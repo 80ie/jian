@@ -7,6 +7,7 @@
 #include <QHelpEvent>
 #include <QMenu>
 #include <QPainter>
+#include <QTextDocument>
 #include <QToolTip>
 
 #include <algorithm>
@@ -99,7 +100,9 @@ bool Tasks::event(QEvent* event)
     const auto* help = static_cast<QHelpEvent*>(event);
     const std::optional<std::size_t> task = taskAt(layout(), help->pos());
     if (task && m_tasks[*task].pinned) {
-        QToolTip::showText(help->globalPos(), titleOf(m_tasks[*task]), this);
+        // A tooltip renders anything that looks like markup, and any program can set a title.
+        QToolTip::showText(
+            help->globalPos(), Qt::convertFromPlainText(titleOf(m_tasks[*task])), this);
     } else {
         QToolTip::hideText();
         event->ignore();

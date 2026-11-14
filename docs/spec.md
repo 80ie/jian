@@ -356,11 +356,43 @@ Output selection currently goes through `FvwmCommand`. Replace with a direct
 
 ### 7.5 Tray
 
-stalonetray in a `ForeignSlot`, launched and owned by the panel. Its colors
-and geometry are passed as command-line arguments built from the palette, so
-`stalonetrayrc` and its template go away. **VERIFY** every option the rc file
-sets has a command-line form. A native XEmbed host stays rejected for the
-reason recorded in `photon_tray.py`.
+stalonetray in a `ForeignSlot`, launched and owned by the panel through
+`QProcess`, offered only when `stalonetray` is on the path. A native XEmbed
+host stays rejected for the reason recorded in `photon_tray.py`.
+
+Its colors and geometry are passed as command-line arguments built from the
+palette and the width, so `stalonetrayrc` and its template go away:
+
+    stalonetray --config /dev/null --background <tone -1> \
+        --geometry Nx1 --max-geometry Nx0 --icon-size 22 --slot-size 26 \
+        --kludges force_icons_size --skip-taskbar
+
+N is how many 26-pixel slots fit across the well. Verified against
+stalonetray 1.5.0's `--help` and man page: every option `stalonetrayrc` sets
+has a command-line form. Those it sets to stalonetray's defaults
+(`decorations`, `dockapp_mode`, `fuzzy_edges`, `grow_gravity`,
+`icon_gravity`, `log_level`, `no_shrink`, `parent_bg`, `scrollbars`,
+`tint_color`, `tint_level`, `transparent`, `vertical`, `window_layer`,
+`xsync`) are left out. Without `--config`, stalonetray reads
+`~/.stalonetrayrc` or `$XDG_CONFIG_HOME/stalonetrayrc` under its
+arguments, so `--config /dev/null` keeps such a file out. No rc file is
+generated.
+
+The panel restarts stalonetray when N changes and when the palette changes,
+starting the new one once the old has exited and given up the selection.
+stalonetray asks for SIGTERM when the panel dies (`PR_SET_PDEATHSIG`): a
+signal or a broken X connection ends the panel without its destructors, and
+in `fvwm-rig` a stalonetray whose panel was killed otherwise lived on and
+then ignored SIGTERM. One that exits on its own is reported and leaves the
+well empty. A stalonetray started while another runs takes the selection
+from it, and the other deactivates.
+
+The height follows the icons, as in the Python shelf. stalonetray's window
+holds one child per icon and two 1x1 windows of its own. The widget counts
+the icons with a `QueryTree` and one batch of `GetGeometry` when the slot
+takes the window and after each `ConfigureNotify` on it, which stalonetray
+causes whenever it gains or loses a row, and is as many 26-pixel rows as
+they need at N across.
 
 ## 8. Palette
 

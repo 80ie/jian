@@ -52,6 +52,21 @@ go through one class, `ForeignSlot`, which wraps `QWindow::fromWinId` and
 resizing it and noticing when it dies. The current code does this twice,
 separately, in `photon_pager.py` and `photon_tray.py`.
 
+A slot is handed a window id, or told to take the next client the window
+model sees appear with a given `WM_CLASS` instance. The window model
+announces each window that joins the client list, shown or not, once its
+properties are read. Taking the next one rather than one already listed is
+how the panel picks out the window of a program it has just launched, and
+keeps it from taking another program's tray or a pager left from an earlier
+run. Qt reparents the window into the panel's top-level window at the
+slot's place. The slot selects `StructureNotify` on it and lets go on a
+`DestroyNotify` or on a reparent to a window that is not the panel's.
+
+stalonetray places itself in root coordinates each time it resizes, as if it
+were still top-level; in `fvwm-rig` that took it out of the panel whenever an
+icon arrived. So the slot moves the window back to its place after every
+`ConfigureNotify`. It leaves the size alone.
+
 ### 3.1 Source layout
 
 Its own repository under `~/projects/`, name undecided (`<name>` below).

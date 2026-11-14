@@ -35,6 +35,7 @@ private slots:
         changed.clockDate = "dddd d MMMM";
         changed.tasksTile = 60;
         changed.tasksFloor = 40;
+        changed.mediaSource = "vlc";
         QTest::newRow("changed") << changed;
         Config empty;
         empty.widgets.clear();

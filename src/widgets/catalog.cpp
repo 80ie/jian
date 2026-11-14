@@ -1,6 +1,7 @@
 #include "widgets/catalog.h"
 #include "panel/config.h"
 #include "widgets/clock.h"
+#include "widgets/media.h"
 #include "widgets/tasks.h"
 #include "widgets/tray.h"
 #include "widgets/worldview.h"
@@ -21,6 +22,8 @@ ShelfWidget* createWidget(QStringView id, const Palette& palette, const Config& 
         }
         return new WorldView(palette, windows, parent);
     }
+    if (id == u"media")
+        return new Media(palette, config.mediaSource, windows, parent);
     if (id == u"tasks")
         return new Tasks(palette, { config.tasksTile, config.tasksFloor }, windows, parent);
     if (id == u"tray") {

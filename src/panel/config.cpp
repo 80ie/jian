@@ -37,6 +37,7 @@ std::optional<Config> loadConfig(const QString& path)
     config.tasksFloor = ini.value("tasks/floor", config.tasksFloor).toInt(&ok);
     if (!ok || config.tasksFloor < 1)
         return bad("tasks/floor");
+    config.mediaSource = ini.value("media/source").toString();
     return config;
 }
 
@@ -52,6 +53,7 @@ bool saveConfig(const Config& config, const QString& path)
     ini.setValue("clock/date", config.clockDate);
     ini.setValue("tasks/tile", config.tasksTile);
     ini.setValue("tasks/floor", config.tasksFloor);
+    ini.setValue("media/source", config.mediaSource);
     ini.sync();
     if (ini.status() == QSettings::NoError)
         return true;

@@ -154,8 +154,8 @@ assumes INI.
 ## 4. Layout
 
 The panel is an ordered list of slots, one widget per slot. Unless
-`config.ini` says otherwise the order is clock, World View, tasks, tray; a
-widget that is not offered (7.2, 7.5) is left out. For a given width:
+`config.ini` says otherwise the order is clock, World View, tasks, media,
+tray; a widget that is not offered (7.2, 7.5) is left out. For a given width:
 
 1. Every widget gets its natural height.
 2. Spare height goes to widgets with `wantsSpare()`, split evenly. Today that

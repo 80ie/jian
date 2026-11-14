@@ -9,7 +9,7 @@ struct Config {
     Qt::Edge side = Qt::RightEdge;
     int width = 160;
     QStringList widgets { QStringLiteral("clock"), QStringLiteral("worldview"),
-        QStringLiteral("tasks"), QStringLiteral("tray") };
+        QStringLiteral("tasks"), QStringLiteral("media"), QStringLiteral("tray") };
     // QDateTime formats, drawn at the left and right ends of the clock.
     QString clockTime = QStringLiteral("hh:mmAP");
     QString clockDate = QStringLiteral("ddd MM.dd");
@@ -17,6 +17,9 @@ struct Config {
     // window's capture shrinks to before it gives way to a plain row.
     int tasksTile = 48;
     int tasksFloor = 64;
+    // The key of the player the media controls keep to; empty follows whichever started playing
+    // last.
+    QString mediaSource;
 
     bool operator==(const Config&) const = default;
 };

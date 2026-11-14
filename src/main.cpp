@@ -5,6 +5,7 @@
 #include "panel/panel.h"
 #include "panel/render.h"
 #include "widgets/catalog.h"
+#include "widgets/media.h"
 #include "widgets/shelfwidget.h"
 #include "x11/connection.h"
 #include "x11/thumbnails.h"
@@ -71,7 +72,14 @@ int runPanel(const QDir& dir, WindowModel* windows)
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);
-        panel.setWidgets(createWidgets(palette, config, windows, &panel));
+        std::vector<ShelfWidget*> widgets = createWidgets(palette, config, windows, &panel);
+        for (ShelfWidget* widget : widgets)
+            if (auto* media = qobject_cast<Media*>(widget))
+                QObject::connect(media, &Media::sourceChosen, &panel, [&](const QString& source) {
+                    config.mediaSource = source;
+                    saveConfig(config, configPath);
+                });
+        panel.setWidgets(std::move(widgets));
     };
     apply();
     QObject::connect(&panel, &Panel::widthDragged, &panel, [&](int width) {

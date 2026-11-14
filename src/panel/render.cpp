@@ -4,6 +4,7 @@
 #include "panel/panel.h"
 #include "widgets/catalog.h"
 #include "widgets/clock.h"
+#include "widgets/media.h"
 #include "widgets/tasks.h"
 #include "widgets/worldview.h"
 
@@ -13,7 +14,7 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
-constexpr int height = 640;
+constexpr int height = 900;
 constexpr QSize screen(1600, 900);
 
 // An icon or a capture: a body with a bar across its top, in palette colors so that the render
@@ -54,6 +55,39 @@ std::vector<Client> cannedTasks(const Palette& palette)
     return tasks;
 }
 
+// Paused, so that the trackbar does not follow the clock.
+std::vector<Player> cannedPlayers()
+{
+    Player player;
+    player.service = u"org.mpris.MediaPlayer2.vlc"_s;
+    player.identity = u"VLC media player"_s;
+    player.playback = Playback::Paused;
+    player.title = u"Boards of Canada - Roygbiv"_s;
+    player.length = std::chrono::seconds(151);
+    player.position = std::chrono::seconds(60);
+    player.canControl = true;
+    player.canGoNext = true;
+    player.canSeek = true;
+    return { player };
+}
+
+Sinks cannedSinks()
+{
+    return { { { u"analog"_s, u"Built-in Audio Analog Stereo"_s, 0.6, false },
+                 { u"hdmi"_s, u"HDMI Output"_s, 1, false } },
+        u"analog"_s };
+}
+
+QImage cannedArt(const Palette& palette)
+{
+    QImage image(300, 300, QImage::Format_RGB32);
+    QPainter p(&image);
+    const QColor rings[] { palette.pagerDesk, palette.tone(-6), palette.fill, palette.pagerDesk };
+    for (int i = 0; i < 4; ++i)
+        p.fillRect(image.rect().adjusted(i * 38, i * 38, -i * 38, -i * 38), rings[i]);
+    return image;
+}
+
 } // namespace
 
 QImage renderPanel(const Palette& palette, const Config& config)
@@ -76,6 +110,11 @@ QImage renderPanel(const Palette& palette, const Config& config)
             tasks->setClients(cannedTasks(palette));
         if (auto* worldView = qobject_cast<WorldView*>(widget))
             worldView->setScreen(screen);
+        if (auto* media = qobject_cast<Media*>(widget)) {
+            media->setPlayers(cannedPlayers());
+            media->setSinks(cannedSinks());
+            media->setArt(cannedArt(palette));
+        }
     }
     panel.setWidgets(std::move(widgets));
     panel.resize(panel.width(), height);

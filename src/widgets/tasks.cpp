@@ -39,7 +39,6 @@ QString titleOf(const Client& client)
     return client.title.isEmpty() ? u"(untitled)"_s : client.title;
 }
 
-// Scaled to fit `box` and centered in it.
 void drawFitted(QPainter& p, const QImage& image, const QRect& box)
 {
     const QImage scaled = image.scaled(

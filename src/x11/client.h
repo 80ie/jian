@@ -9,7 +9,6 @@
 // The _NET_WM_DESKTOP of a window on every desktop.
 constexpr quint32 allDesktops = 0xffffffff;
 
-// One client window, as the window manager presents it.
 struct Client {
     quint32 window = 0;
     // In root coordinates, which change when a window manager changes page by moving windows.
@@ -25,7 +24,7 @@ struct Client {
     bool maximized = false;
     bool pinned = false;
     bool skipTaskbar = false;
-    // Grows with each window minimized while the panel runs; 0 for those minimized before.
+    // Grows with each window seen becoming minimized, so smaller was minimized longer ago.
     quint64 minimizedOrder = 0;
 
     bool operator==(const Client&) const = default;

@@ -22,7 +22,9 @@ void discard(xcb_connection_t* c, xcb_void_cookie_t cookie)
     xcb_discard_reply(c, cookie.sequence);
 }
 
-QImage scaledCapture(xcb_get_image_reply_t& reply, int width, int height)
+} // namespace
+
+QImage thumbnailFrom(xcb_get_image_reply_t& reply, int width, int height)
 {
     if ((reply.depth != 24 && reply.depth != 32)
         || xcb_get_image_data_length(&reply) < width * height * 4)
@@ -33,11 +35,11 @@ QImage scaledCapture(xcb_get_image_reply_t& reply, int width, int height)
         std::for_each(pixels, pixels + width * height, [](quint32& pixel) { pixel |= 0xff000000; });
     const QImage image(reinterpret_cast<const uchar*>(pixels), width, height, width * 4,
         reply.depth == 32 ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32);
-    return image.scaled(
-        largest.boundedTo(image.size()), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    // The image wraps the reply, and scaled() hands back the image itself when it fits already.
+    if (image.width() <= largest.width() && image.height() <= largest.height())
+        return image.copy();
+    return image.scaled(largest, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }
-
-} // namespace
 
 std::unique_ptr<Thumbnails> Thumbnails::open(XConnection& x, WindowModel& model)
 {
@@ -196,7 +198,7 @@ void Thumbnails::captureNext()
             xcb_get_image(
                 c, XCB_IMAGE_FORMAT_Z_PIXMAP, pixmap, 0, 0, size->width, size->height, ~0u));
         if (image) {
-            const QImage thumbnail = scaledCapture(*image, size->width, size->height);
+            const QImage thumbnail = thumbnailFrom(*image, size->width, size->height);
             if (!thumbnail.isNull())
                 m_model.setThumbnail(capture.window, thumbnail);
             qCInfo(traceX, "%.3f captured 0x%x at %dx%d in %.3f ms", traceClock(), capture.window,

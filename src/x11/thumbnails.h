@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QImage>
 #include <QObject>
 #include <QSize>
 #include <QTimer>
@@ -13,6 +14,10 @@
 
 class WindowModel;
 class XConnection;
+
+// The window in a GetImage reply, scaled to thumbnail size and apart from the reply. Null for a
+// depth other than 24 or 32.
+QImage thumbnailFrom(xcb_get_image_reply_t& reply, int width, int height);
 
 // Captures of the listed windows through the Composite extension, scaled down and handed to the
 // window model: of a window when it loses the focus, and of a pinned one as it changes, at most

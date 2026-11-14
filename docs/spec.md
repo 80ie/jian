@@ -432,6 +432,14 @@ pipewire-pulse restarts, is started again after two seconds, the wait
 doubling to about a minute while the server stays away; nothing signals that
 a server is back.
 
+`mpris:artUrl` is whatever the page a browser plays put there, so cover art
+is bounded: a fetch is abandoned past 8 MB or ten seconds, or when the track
+changes, follows at most three redirects and only to http or https, and a
+local cover must be a regular file within the same 8 MB, read directly
+rather than through Qt's network layer. Loopback and private addresses are
+not refused, since the response is only ever decoded as an image inside the
+panel and the browser that named the URL could fetch it anyway.
+
 ### 7.5 Tray
 
 stalonetray in a `ForeignSlot`, launched and owned by the panel through

@@ -2,15 +2,17 @@
 
 #include <QImage>
 #include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QObject>
+#include <QPointer>
 #include <QUrl>
 
 #include <utility>
 #include <vector>
 
-// The current track's cover, fetched when a track names one, from a file or over HTTP. A fetch
-// ends with its image or after its timeout. A failed one leaves the last good image up, and
-// one that lands after the track has changed is dropped.
+// The current track's cover, read when a track names one, from a file or over HTTP. A fetch
+// ends with its image, or is abandoned when it runs too long or too large or the track changes.
+// A failed one leaves the last good image up.
 class CoverArt : public QObject {
     Q_OBJECT
 
@@ -33,10 +35,15 @@ private:
         bool operator==(const Track&) const = default;
     };
 
+    void read(const QUrl& url);
+    void fetch(const QUrl& url);
     void received(const QByteArray& data, const QUrl& url);
     void show(const QImage& image);
 
     QNetworkAccessManager m_network;
+    // The one fetch under way, and what it has brought so far.
+    QPointer<QNetworkReply> m_reply;
+    QByteArray m_data;
     Track m_track;
     QImage m_image;
     // The most recently shown last.

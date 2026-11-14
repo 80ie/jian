@@ -5,9 +5,12 @@
 #include "x11/windowmodel.h"
 
 #include <QContextMenuEvent>
+#include <QFormLayout>
 #include <QHelpEvent>
+#include <QLabel>
 #include <QMenu>
 #include <QPainter>
+#include <QSpinBox>
 #include <QTextDocument>
 #include <QToolTip>
 
@@ -79,6 +82,43 @@ Tasks::Tasks(const Palette& palette, const TaskSizes& sizes, WindowModel* model,
 QString Tasks::id() const { return u"tasks"_s; }
 
 int Tasks::heightForWidth(int) const { return naturalHeight(m_counts, m_sizes); }
+
+QWidget* Tasks::settingsPage()
+{
+    auto* page = new QWidget;
+    const auto spinBox = [page](int value, int least) {
+        auto* box = new QSpinBox(page);
+        box->setRange(least, largestThumbnail);
+        box->setValue(value);
+        box->setSuffix(u" px"_s);
+        return box;
+    };
+    auto* tile = spinBox(m_sizes.tile, iconTileHeight);
+    auto* floor = spinBox(m_sizes.floor, rowHeight);
+    auto* hint = new QLabel(u"A pinned window is a tile with its picture until the list runs out "
+                            "of room, when the tiles drop to icons. A minimized window's picture "
+                            "shrinks as the list fills, down to the floor, below which it gives "
+                            "way to a plain row."_s,
+        page);
+    hint->setWordWrap(true);
+    auto* form = new QFormLayout(page);
+    form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    form->addRow(u"Pinned tile height"_s, tile);
+    form->addRow(u"Smallest minimized picture"_s, floor);
+    form->addRow(hint);
+    for (QSpinBox* box : { tile, floor })
+        connect(box, &QSpinBox::valueChanged, this,
+            [this, tile, floor] { setSizes({ tile->value(), floor->value() }); });
+    return page;
+}
+
+void Tasks::setSizes(const TaskSizes& sizes)
+{
+    m_sizes = sizes;
+    emit heightChanged();
+    update();
+    emit sizesChosen(sizes);
+}
 
 int Tasks::minimumHeightForWidth(int) const { return ::minimumHeight(m_counts); }
 

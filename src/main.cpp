@@ -8,8 +8,10 @@
 #include "settings/paletteeditor.h"
 #include "settings/settingswindow.h"
 #include "widgets/catalog.h"
+#include "widgets/clock.h"
 #include "widgets/media.h"
 #include "widgets/shelfwidget.h"
+#include "widgets/tasks.h"
 #include "x11/connection.h"
 #include "x11/thumbnails.h"
 #include "x11/trace.h"
@@ -66,9 +68,23 @@ int runWidget(QStringView id, const Palette& palette, const Config& config, Wind
     return QApplication::exec();
 }
 
-// What a widget's own controls change goes into config.ini.
+// What a widget's own controls or its settings page change goes into config.ini.
 void keepSettings(ShelfWidget* widget, Config& config, const QString& path)
 {
+    if (auto* clock = qobject_cast<Clock*>(widget))
+        QObject::connect(clock, &Clock::formatsChosen, clock,
+            [&config, path](const QString& time, const QString& date) {
+                config.clockTime = time;
+                config.clockDate = date;
+                saveConfig(config, path);
+            });
+    if (auto* tasks = qobject_cast<Tasks*>(widget))
+        QObject::connect(
+            tasks, &Tasks::sizesChosen, tasks, [&config, path](const TaskSizes& sizes) {
+                config.tasksTile = sizes.tile;
+                config.tasksFloor = sizes.floor;
+                saveConfig(config, path);
+            });
     if (auto* media = qobject_cast<Media*>(widget))
         QObject::connect(
             media, &Media::sourceChosen, media, [&config, path](const QString& source) {

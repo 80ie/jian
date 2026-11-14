@@ -6,7 +6,10 @@
 #include "widgets/foreignslot.h"
 #include "widgets/pip.h"
 
+#include <QComboBox>
 #include <QDBusConnection>
+#include <QFormLayout>
+#include <QLabel>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
@@ -293,28 +296,53 @@ void Media::setSource(const QString& source)
     refresh(before);
 }
 
+std::vector<Media::Source> Media::sources() const
+{
+    std::vector<Source> sources { { u"Automatic"_s, QString() } };
+    const auto listed = [&sources](const QString& key) {
+        return std::ranges::find(sources, key, &Source::key) != sources.end();
+    };
+    for (const Player& player : m_players)
+        if (const QString key = playerKey(player.service); !listed(key))
+            sources.push_back({ labelOf(player), key });
+    if (!listed(m_source))
+        sources.push_back({ m_source, m_source });
+    return sources;
+}
+
 void Media::chooseSource(const QRect& field)
 {
     auto* menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
-    const auto add = [this, menu](const QString& label, const QString& key) {
+    for (const auto& [label, key] : sources()) {
         QAction* action = menu->addAction(label, this, [this, key] { setSource(key); });
         action->setCheckable(true);
         action->setChecked(key == m_source);
-    };
-    add(u"Automatic"_s, QString());
-    menu->addSeparator();
-    QStringList keys;
-    for (const Player& player : m_players) {
-        const QString key = playerKey(player.service);
-        if (!keys.contains(key)) {
-            keys << key;
-            add(labelOf(player), key);
-        }
+        if (key.isEmpty())
+            menu->addSeparator();
     }
-    if (!m_source.isEmpty() && !keys.contains(m_source))
-        add(m_source, m_source);
     menu->popup(mapToGlobal(field.bottomLeft()));
+}
+
+QWidget* Media::settingsPage()
+{
+    auto* page = new QWidget;
+    auto* source = new QComboBox(page);
+    for (const auto& [label, key] : sources()) {
+        source->addItem(label, key);
+        if (key == m_source)
+            source->setCurrentIndex(source->count() - 1);
+    }
+    auto* hint = new QLabel(u"Automatic follows whichever player started playing last. A player "
+                            "chosen by name keeps the controls while it is not running."_s,
+        page);
+    hint->setWordWrap(true);
+    auto* form = new QFormLayout(page);
+    form->addRow(u"Player"_s, source);
+    form->addRow(hint);
+    connect(source, &QComboBox::activated, this,
+        [this, source] { setSource(source->currentData().toString()); });
+    return page;
 }
 
 void Media::chooseOutput(const QRect& field)

@@ -33,6 +33,8 @@ public:
 
     QString id() const override;
     int heightForWidth(int width) const override;
+    // The source, as the widget's own drop-down chooses it.
+    QWidget* settingsPage() override;
     void setPlayers(const std::vector<Player>& players);
     void setSinks(const Sinks& sinks);
     void setArt(const QImage& art);
@@ -59,6 +61,12 @@ private:
     QString titleText() const;
     void refresh(int heightBefore);
     void restartTimers();
+    struct Source {
+        QString label;
+        QString key;
+    };
+    // Automatic, each player by its key, and the chosen one if it is not running.
+    std::vector<Source> sources() const;
     void setSource(const QString& source);
     void chooseSource(const QRect& field);
     void chooseOutput(const QRect& field);

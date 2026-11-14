@@ -807,8 +807,10 @@ copying the previous file into `history/`.
 One window, opened from the panel's context menu ("Settings…") or `<name>
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), then one page
-per widget that returns a `settingsPage()`. Exports (9) come with milestone
-8. It is part of the same process and edits the same objects the panel
+per widget that returns a `settingsPage()`: Clock (its two formats, each
+with a preview of the time in it), Tasks (tile height and thumbnail floor)
+and Media (the source, as its drop-down chooses it). Exports (9) come with
+milestone 8. It is part of the same process and edits the same objects the panel
 draws from: the Layout page calls the panel's setters and writes
 `config.ini`, as dragging the width does.
 

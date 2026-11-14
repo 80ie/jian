@@ -22,8 +22,15 @@ public:
 
     QString id() const override;
     int heightForWidth(int width) const override;
+    // The two formats, with a preview of each.
+    QWidget* settingsPage() override;
     // Shows `time` until the next tick. Ticks follow the wall clock while the clock is visible.
     void setTime(const QDateTime& time);
+    void setFormats(const QString& timeFormat, const QString& dateFormat);
+
+signals:
+    // setFormats() changed them.
+    void formatsChosen(const QString& timeFormat, const QString& dateFormat);
 
 protected:
     void paintEvent(QPaintEvent* event) override;

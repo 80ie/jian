@@ -22,7 +22,14 @@ public:
     int heightForWidth(int width) const override;
     int minimumHeightForWidth(int width) const override;
     bool wantsSpare() const override { return true; }
+    // The pinned tile's height and the thumbnail floor.
+    QWidget* settingsPage() override;
     void setClients(const std::vector<Client>& clients);
+    void setSizes(const TaskSizes& sizes);
+
+signals:
+    // setSizes() changed them.
+    void sizesChosen(const TaskSizes& sizes);
 
 protected:
     bool event(QEvent* event) override;

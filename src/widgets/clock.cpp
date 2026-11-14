@@ -2,6 +2,9 @@
 #include "palette/palette.h"
 
 #include <QFontDatabase>
+#include <QFormLayout>
+#include <QLabel>
+#include <QLineEdit>
 #include <QPainter>
 
 #include <algorithm>
@@ -59,6 +62,49 @@ QString Clock::id() const { return u"clock"_s; }
 int Clock::heightForWidth(int width) const
 {
     return qRound(double(stripHeight) * fontFor(width).pointSize() / referencePoints);
+}
+
+QWidget* Clock::settingsPage()
+{
+    auto* page = new QWidget;
+    auto* time = new QLineEdit(m_timeFormat, page);
+    auto* date = new QLineEdit(m_dateFormat, page);
+    auto* timePreview = new QLabel(page);
+    auto* datePreview = new QLabel(page);
+    auto* hint = new QLabel(u"QDateTime formats, such as hh:mm, h:mm AP, HH:mm:ss, ddd MM.dd or "
+                            "d MMMM yyyy. Text in single quotes is shown as it is."_s,
+        page);
+    hint->setWordWrap(true);
+    auto* form = new QFormLayout(page);
+    form->addRow(u"Time, at the left"_s, time);
+    form->addRow(QString(), timePreview);
+    form->addRow(u"Date, at the right"_s, date);
+    form->addRow(QString(), datePreview);
+    form->addRow(hint);
+    const auto preview = [time, date, timePreview, datePreview] {
+        const QDateTime now = QDateTime::currentDateTime();
+        timePreview->setText(now.toString(time->text()));
+        datePreview->setText(now.toString(date->text()));
+    };
+    for (QLineEdit* edit : { time, date })
+        connect(edit, &QLineEdit::textEdited, this, [this, time, date, preview] {
+            preview();
+            setFormats(time->text(), date->text());
+        });
+    preview();
+    return page;
+}
+
+void Clock::setFormats(const QString& timeFormat, const QString& dateFormat)
+{
+    m_timeFormat = timeFormat;
+    m_dateFormat = dateFormat;
+    m_seconds = showsSeconds(timeFormat) || showsSeconds(dateFormat);
+    if (isVisible())
+        tick();
+    else
+        setTime(QDateTime::currentDateTime());
+    emit formatsChosen(timeFormat, dateFormat);
 }
 
 void Clock::setTime(const QDateTime& time)

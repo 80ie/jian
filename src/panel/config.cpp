@@ -10,6 +10,12 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
+// QSettings would write an empty list as @Invalid().
+QVariant listValue(const QStringList& list)
+{
+    return list.isEmpty() ? QVariant(QString()) : QVariant(list);
+}
+
 struct SeparationName {
     Separation separation;
     QLatin1StringView name;
@@ -31,7 +37,7 @@ std::optional<Config> loadConfig(const QString& path)
         return std::nullopt;
     };
 
-    const QSettings ini(path, QSettings::IniFormat);
+    QSettings ini(path, QSettings::IniFormat);
     Config config;
     const QString side = ini.value("panel/side").toString();
     if (side == "left"_L1)
@@ -51,6 +57,19 @@ std::optional<Config> loadConfig(const QString& path)
     }
     config.widgets = ini.value("panel/widgets", config.widgets).toStringList();
     config.widgets.removeAll(QString());
+    config.poppedOut = ini.value("panel/popped").toStringList();
+    config.poppedOut.removeAll(QString());
+    ini.beginGroup("popout");
+    for (const QString& id : ini.childKeys()) {
+        const QStringList at = ini.value(id).toStringList();
+        bool okX = false;
+        bool okY = false;
+        if (at.size() == 2)
+            config.windowPositions[id] = QPoint(at[0].toInt(&okX), at[1].toInt(&okY));
+        if (!okX || !okY)
+            return bad(qPrintable(u"popout/"_s + id));
+    }
+    ini.endGroup();
     config.clockTime = ini.value("clock/time", config.clockTime).toString();
     config.clockDate = ini.value("clock/date", config.clockDate).toString();
     config.tasksTile = ini.value("tasks/tile", config.tasksTile).toInt(&ok);
@@ -71,9 +90,12 @@ bool saveConfig(const Config& config, const QString& path)
     ini.setValue("panel/separation",
         std::ranges::find(separationNames, config.separation, &SeparationName::separation)
             ->name.toString());
-    // QSettings would write an empty list as @Invalid().
-    ini.setValue(
-        "panel/widgets", config.widgets.isEmpty() ? QVariant(QString()) : QVariant(config.widgets));
+    ini.setValue("panel/widgets", listValue(config.widgets));
+    ini.setValue("panel/popped", listValue(config.poppedOut));
+    ini.remove("popout");
+    for (const auto& [id, at] : config.windowPositions)
+        ini.setValue(
+            u"popout/"_s + id, QStringList { QString::number(at.x()), QString::number(at.y()) });
     ini.setValue("clock/time", config.clockTime);
     ini.setValue("clock/date", config.clockDate);
     ini.setValue("tasks/tile", config.tasksTile);

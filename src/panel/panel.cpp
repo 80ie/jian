@@ -2,6 +2,7 @@
 #include "paint/bevel.h"
 #include "palette/palette.h"
 #include "panel/layout.h"
+#include "panel/popout.h"
 #include "widgets/shelfwidget.h"
 
 #include <QContextMenuEvent>
@@ -19,6 +20,8 @@ namespace {
 
 constexpr int narrowest = 110;
 constexpr int widest = 420;
+// Between the panel and a widget's window the first time it pops out.
+constexpr int windowGap = 8;
 
 struct SlotLook {
     // Between the panel's edges and the slots, between one slot and the next, and between a
@@ -67,9 +70,10 @@ SlotLook slotLook(Separation separation)
 
 } // namespace
 
-Panel::Panel(const Palette& palette)
+Panel::Panel(const Palette& palette, Create create)
     : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus)
     , m_palette(palette)
+    , m_create(std::move(create))
     , m_dock(winId())
 {
     setWindowTitle(u"shelf"_s);
@@ -78,16 +82,34 @@ Panel::Panel(const Palette& palette)
         [this] { place(width()); });
 }
 
-void Panel::setWidgets(std::vector<ShelfWidget*> widgets)
+// A window takes its widget with it; the docked ones go with the panel.
+Panel::~Panel() = default;
+
+void Panel::arrange(const QStringList& order, const QStringList& poppedOut)
 {
-    for (ShelfWidget* widget : m_widgets)
-        delete widget;
-    m_widgets = std::move(widgets);
-    for (ShelfWidget* widget : m_widgets) {
-        connect(widget, &ShelfWidget::heightChanged, this, &Panel::relayout);
-        widget->show();
+    for (Slot& slot : m_slots)
+        if (slot.docked())
+            delete slot.widget;
+    m_slots.clear();
+    for (const QString& id : order) {
+        Slot slot;
+        slot.id = id;
+        slot.widget = m_create(id, this);
+        if (slot.widget) {
+            connect(slot.widget, &ShelfWidget::heightChanged, this, &Panel::relayout);
+            slot.widget->show();
+        }
+        m_slots.push_back(std::move(slot));
     }
     relayout();
+    for (Slot& slot : m_slots)
+        if (slot.docked() && poppedOut.contains(slot.id))
+            lift(slot);
+}
+
+void Panel::setWindowPositions(const std::map<QString, QPoint>& positions)
+{
+    m_windowPositions = positions;
 }
 
 void Panel::setSide(Qt::Edge side)
@@ -111,8 +133,37 @@ void Panel::setSeparation(Separation separation)
 void Panel::paletteChanged()
 {
     update();
-    for (ShelfWidget* widget : m_widgets)
-        widget->paletteChanged();
+    for (const Slot& slot : m_slots) {
+        if (slot.widget)
+            slot.widget->paletteChanged();
+        if (slot.window)
+            slot.window->update();
+    }
+}
+
+QStringList Panel::order() const
+{
+    QStringList ids;
+    for (const Slot& slot : m_slots)
+        ids.append(slot.id);
+    return ids;
+}
+
+QStringList Panel::poppedOut() const
+{
+    QStringList ids;
+    for (const Slot& slot : m_slots)
+        if (slot.window)
+            ids.append(slot.id);
+    return ids;
+}
+
+void Panel::popOut(const QString& id)
+{
+    if (Slot* slot = find(id); slot && slot->docked()) {
+        lift(*slot);
+        emit arranged();
+    }
 }
 
 void Panel::paintEvent(QPaintEvent*)
@@ -122,13 +173,17 @@ void Panel::paintEvent(QPaintEvent*)
     paint::frame(p, frameRect(), m_palette, m_side);
     const SlotLook look = slotLook(m_separation);
     p.fillRect(slotArea(), m_palette.tone(look.ground));
-    for (std::size_t i = 0; i < m_slots.size(); ++i) {
+    const Slot* above = nullptr;
+    for (const Slot& slot : m_slots) {
+        if (!slot.docked())
+            continue;
         if (look.around)
-            look.around(p, m_slots[i], m_palette);
-        if (look.between && i > 0)
+            look.around(p, slot.rect, m_palette);
+        if (look.between && above)
             look.between(p,
-                QRect(m_slots[i].left(), m_slots[i - 1].bottom() + 1, m_slots[i].width(), look.gap),
+                QRect(slot.rect.left(), above->rect.bottom() + 1, slot.rect.width(), look.gap),
                 m_palette);
+        above = &slot;
     }
 }
 
@@ -203,13 +258,73 @@ void Panel::relayout()
     const SlotLook look = slotLook(m_separation);
     const QRect area = slotArea().adjusted(look.margin, look.margin, -look.margin, -look.margin);
     const int width = area.width() - 2 * look.inset;
+    std::vector<Slot*> docked;
     std::vector<SlotHeights> heights;
-    for (const ShelfWidget* widget : m_widgets)
-        heights.push_back({ widget->heightForWidth(width) + 2 * look.inset,
-            widget->minimumHeightForWidth(width) + 2 * look.inset, widget->wantsSpare() });
-    m_slots = layoutSlots(area, look.gap, heights);
-    for (std::size_t i = 0; i < m_slots.size(); ++i)
-        m_widgets[i]->setGeometry(
-            m_slots[i].adjusted(look.inset, look.inset, -look.inset, -look.inset));
+    for (Slot& slot : m_slots) {
+        if (!slot.docked())
+            continue;
+        docked.push_back(&slot);
+        heights.push_back({ slot.widget->heightForWidth(width) + 2 * look.inset,
+            slot.widget->minimumHeightForWidth(width) + 2 * look.inset,
+            slot.widget->wantsSpare() });
+    }
+    const std::vector<QRect> rects = layoutSlots(area, look.gap, heights);
+    for (std::size_t i = 0; i < rects.size(); ++i) {
+        docked[i]->rect = rects[i];
+        docked[i]->widget->setGeometry(
+            rects[i].adjusted(look.inset, look.inset, -look.inset, -look.inset));
+    }
     update();
+}
+
+Panel::Slot* Panel::find(const QString& id)
+{
+    const auto slot = std::ranges::find(m_slots, id, &Slot::id);
+    return slot == m_slots.end() ? nullptr : &*slot;
+}
+
+// The first time, the window opens beside the panel, level with the slot as far as the screen
+// allows.
+void Panel::lift(Slot& slot)
+{
+    const QRect docked(slot.widget->mapToGlobal(QPoint(0, 0)), slot.widget->size());
+    slot.window = std::make_unique<PopOut>(*slot.widget, docked.width(), m_palette);
+    PopOut& window = *slot.window;
+    const QString id = slot.id;
+    // Queued, so that the window is not deleted inside its own close event.
+    connect(
+        &window, &PopOut::closing, this,
+        [this, id] {
+            if (Slot* slot = find(id); slot && slot->window)
+                dock(*slot);
+        },
+        Qt::QueuedConnection);
+    connect(&window, &PopOut::settled, this, [this, id](QPoint at) {
+        m_windowPositions[id] = at;
+        emit arranged();
+    });
+    // The place is the frame's, as pos() reads it back. Qt takes it so only for a window it has
+    // yet to make; one made already goes by its inside, which fvwm put 11 pixels low.
+    QPoint at = docked.topLeft();
+    if (const auto remembered = m_windowPositions.find(id); remembered != m_windowPositions.end()) {
+        at = remembered->second;
+    } else {
+        const QRect bounds = screen()->geometry();
+        at.setX(m_side == Qt::LeftEdge ? geometry().right() + 1 + windowGap
+                                       : geometry().left() - windowGap - window.width());
+        at.setY(std::clamp(at.y(), bounds.top(), bounds.bottom() + 1 - window.height()));
+    }
+    window.move(at);
+    window.show();
+    relayout();
+}
+
+void Panel::dock(Slot& slot)
+{
+    m_windowPositions[slot.id] = slot.window->pos();
+    slot.widget->setParent(this);
+    slot.widget->show();
+    slot.window.reset();
+    relayout();
+    emit arranged();
 }

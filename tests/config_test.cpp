@@ -32,6 +32,8 @@ private slots:
         changed.width = 233;
         changed.separation = Separation::Grooves;
         changed.widgets = QStringList { "tasks", "clock", "media" };
+        changed.poppedOut = QStringList { "media" };
+        changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
         changed.clockTime = "HH:mm:ss";
         changed.clockDate = "dddd d MMMM";
         changed.tasksTile = 60;
@@ -70,13 +72,14 @@ private slots:
         QTest::newRow("width") << QByteArray("[panel]\nwidth=wide\n");
         QTest::newRow("separation") << QByteArray("[panel]\nseparation=none\n");
         QTest::newRow("tile") << QByteArray("[tasks]\ntile=big\n");
+        QTest::newRow("pop-out position") << QByteArray("[popout]\nmedia=12\n");
         QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");
     }
 
     void badValuesAreRejected()
     {
         QFETCH(QByteArray, text);
-        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks)/"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks|popout)/"));
         QVERIFY(!loadText(text));
     }
 };

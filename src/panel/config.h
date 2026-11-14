@@ -1,8 +1,10 @@
 #pragma once
 
+#include <QPoint>
 #include <QString>
 #include <QStringList>
 
+#include <map>
 #include <optional>
 
 // How a slot's edge is drawn. Scaffolding for the choice in spec 14.3: the candidates that lose
@@ -15,6 +17,11 @@ struct Config {
     Separation separation = Separation::Tiles;
     QStringList widgets { QStringLiteral("clock"), QStringLiteral("worldview"),
         QStringLiteral("tasks"), QStringLiteral("media"), QStringLiteral("tray") };
+    // Widgets out of the panel in windows of their own. Each keeps its place in `widgets`, where
+    // it docks again.
+    QStringList poppedOut;
+    // Where each widget's window was last, kept once it docks for the next time it pops out.
+    std::map<QString, QPoint> windowPositions;
     // QDateTime formats, drawn at the left and right ends of the clock.
     QString clockTime = QStringLiteral("hh:mmAP");
     QString clockDate = QStringLiteral("ddd MM.dd");

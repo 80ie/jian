@@ -136,7 +136,7 @@ definition and keeps all fvwm traffic inside its own file.
 `~/.config/<name>/`:
 
 ```
-config.ini          panel side, width, widget order, per-widget settings
+config.ini          panel side, width, widget order, pop-outs, per-widget settings
 palette.ini         the live palette (section 8)
 palettes/           named presets, same format
 history/            timestamped copies of palette.ini, written on each save
@@ -228,6 +228,34 @@ from the strip.
 Pop-out reparents the widget to a normal top-level window with its own
 `WM_CLASS` instance (`<name>-media` and so on), so a window manager rule can
 target it. Its position is remembered. Closing the window docks it back.
+
+The class is `Shelf`. fvwm matches `Style` names with case, so `config`'s
+`Style shelf` line for the panel, whose instance and class are both `shelf`,
+leaves the windows alone; with the class `shelf` they lost their titles in
+`fvwm-rig`. A window is as tall as its widget's natural height at its width,
+which is the width the widget had in the panel.
+
+`config.ini` keeps the state, and it survives a restart of the panel:
+
+```ini
+[panel]
+widgets=clock, worldview, tasks, media, tray
+popped=media
+
+[popout]
+media=188, 420
+```
+
+A popped-out widget keeps its place in `widgets`, where it docks again.
+`[popout]` holds where each window's frame was last, written once a move has
+settled for half a second and when the window closes, and kept after the
+widget docks for the next time it pops out. A widget with no place yet opens
+beside the panel, level with its slot as far as the screen allows. Qt takes a
+position as the frame's only when it is set before the window exists; a
+window placed by its inside instead came up 11 pixels lower in `fvwm-rig`
+than asked, on every restart. Widgets that `widgets` names but that cannot
+run here (7.2, 7.5) keep their place in it too, so that a panel started
+without fvwm does not drop World View from the file.
 
 ## 6. Window model
 

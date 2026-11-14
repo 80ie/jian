@@ -68,19 +68,22 @@ int runPanel(const QDir& dir, WindowModel* windows)
     Config config = readConfig(configPath).value_or(Config());
     Palette palette = readPalette(palettePath).value_or(Palette());
 
-    Panel panel(palette);
+    const auto create = [&](const QString& id, QWidget* parent) {
+        ShelfWidget* widget = createWidget(id, palette, config, windows, parent);
+        if (auto* media = qobject_cast<Media*>(widget))
+            QObject::connect(media, &Media::sourceChosen, media, [&](const QString& source) {
+                config.mediaSource = source;
+                saveConfig(config, configPath);
+            });
+        return widget;
+    };
+    Panel panel(palette, create);
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);
         panel.setSeparation(config.separation);
-        std::vector<ShelfWidget*> widgets = createWidgets(palette, config, windows, &panel);
-        for (ShelfWidget* widget : widgets)
-            if (auto* media = qobject_cast<Media*>(widget))
-                QObject::connect(media, &Media::sourceChosen, &panel, [&](const QString& source) {
-                    config.mediaSource = source;
-                    saveConfig(config, configPath);
-                });
-        panel.setWidgets(std::move(widgets));
+        panel.setWindowPositions(config.windowPositions);
+        panel.arrange(config.widgets, config.poppedOut);
     };
     apply();
     QObject::connect(&panel, &Panel::widthDragged, &panel, [&](int width) {
@@ -89,6 +92,12 @@ int runPanel(const QDir& dir, WindowModel* windows)
     });
     QObject::connect(&panel, &Panel::sideSwitched, &panel, [&](Qt::Edge side) {
         config.side = side;
+        saveConfig(config, configPath);
+    });
+    QObject::connect(&panel, &Panel::arranged, &panel, [&] {
+        config.widgets = panel.order();
+        config.poppedOut = panel.poppedOut();
+        config.windowPositions = panel.windowPositions();
         saveConfig(config, configPath);
     });
 

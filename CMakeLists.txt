@@ -24,6 +24,7 @@ add_library(shelfcore STATIC
     src/panel/layout.cpp
     src/panel/order.cpp
     src/panel/panel.cpp
+    src/panel/popout.cpp
     src/panel/render.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp

@@ -98,12 +98,10 @@ QImage renderPanel(const Palette& palette, const Config& config)
     font.setStyleName(QString());
     const QDateTime time(QDate(2026, 11, 13), QTime(9, 41));
 
-    Panel panel(palette);
-    panel.setSide(config.side);
-    panel.setWidth(config.width);
-    panel.setSeparation(config.separation);
-    std::vector<ShelfWidget*> widgets = createWidgets(palette, config, nullptr, &panel);
-    for (ShelfWidget* widget : widgets) {
+    Panel panel(palette, [&](const QString& id, QWidget* parent) {
+        ShelfWidget* widget = createWidget(id, palette, config, nullptr, parent);
+        if (!widget)
+            return widget;
         widget->setFont(font);
         if (auto* clock = qobject_cast<Clock*>(widget))
             clock->setTime(time);
@@ -116,8 +114,12 @@ QImage renderPanel(const Palette& palette, const Config& config)
             media->setSinks(cannedSinks());
             media->setArt(cannedArt(palette));
         }
-    }
-    panel.setWidgets(std::move(widgets));
+        return widget;
+    });
+    panel.setSide(config.side);
+    panel.setWidth(config.width);
+    panel.setSeparation(config.separation);
+    panel.arrange(config.widgets, { });
     panel.resize(panel.width(), height);
     return panel.grab().toImage();
 }

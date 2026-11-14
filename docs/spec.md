@@ -427,7 +427,9 @@ reaches neither the window nor the panel. A drag of four pixels puts the
 window back on the root under the pointer and, once the window manager has
 it again, asks for the move with `_NET_WM_MOVERESIZE`, where the Python
 widget sent fvwm a `Move`. A held window goes back on the root with the
-widget.
+widget. The drag out relies on the panel's style having `FixedPosition`, as
+`ShelfPanel`'s does: in `fvwm-rig` without it, the same Win+drag let the
+window go and moved the whole panel as well.
 
 Added:
 
@@ -455,8 +457,8 @@ the top and no source. Both are drop-downs drawn with the painters that open
 a menu. The speaker is drawn rather than taken from the Haiku icon theme, so
 that a render depends on nothing installed.
 
-Output selection currently goes through `FvwmCommand`. Replace with a direct
-`pactl` call so the widget has no fvwm dependency.
+Output selection is a direct `pactl` call, where the Python widget went
+through `FvwmCommand`, so the widget has no fvwm dependency.
 
 The sink side is `pactl` alone, where the Python widget read with `wpctl`.
 After each burst of `pactl subscribe` events about a sink or the server,

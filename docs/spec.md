@@ -363,7 +363,7 @@ purposes.
   not a compositor runs, rather than the root's subwindows. A capture then
   shows the client without its frame, and the panel's own windows and every
   popup stay unredirected. Under `xcompmgr` the client's storage nests in
-  its frame's at the cost of one more copy per redraw; not yet tried there.
+  its frame's at the cost of one more copy per redraw.
 - No Composite extension: icons only.
 
 Verified in `fvwm-rig` (Xvfb, no compositor): automatic redirection of each
@@ -372,6 +372,15 @@ and costs nothing visible. A screenshot of four windows before and after
 they were redirected differed in no pixel, and page switches with two pinned
 windows redrawing all the time still painted the list 5.8 to 7.1 ms after
 the last `ConfigureNotify`.
+
+Tried under `xcompmgr` in `fvwm-rig`, both as the live session runs it,
+`xcompmgr -o -Cc`, and as `xcompmgr -c -C`. The live command is not what it
+reads as: `-o` takes a value, so `-Cc` becomes the shadow opacity and
+neither `-C` nor `-c` applies. Pinned tiles went on recapturing about once a
+second, a window minimized while the compositor ran showed its capture, and
+ten screenshots over two seconds under `-c -C` differed only in the second
+hand of a pinned `xclock`. Nothing flickered or went black, and the pager
+and the tray drew as without a compositor.
 
 A capture is a `GetGeometry` and a `GetImage` round trip and a scale to at
 most 400x400, taken one per turn of the event loop. A 1250x868 window took

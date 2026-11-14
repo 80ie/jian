@@ -210,7 +210,7 @@ twice. Three treatments are built, chosen by `[panel] separation=` in
 one in which the space between widgets is plainly not part of any of them;
 it costs 12 pixels of the width. **OPEN**: pick one. The key is scaffolding
 for that decision and goes with the two that lose: one enum, one name table
-in the config file, one switch in the panel.
+in the config file, and the switch in `panel/slotlook.cpp`.
 
 Edit mode is entered from the panel's context menu or the settings window.
 While it is on:

@@ -3,6 +3,7 @@
 #include "palette/palette.h"
 #include "panel/layout.h"
 #include "panel/popout.h"
+#include "panel/slotlook.h"
 #include "widgets/shelfwidget.h"
 
 #include <QContextMenuEvent>
@@ -22,51 +23,6 @@ constexpr int narrowest = 110;
 constexpr int widest = 420;
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
-
-struct SlotLook {
-    // Between the panel's edges and the slots, between one slot and the next, and between a
-    // slot's edge and its widget.
-    int margin = 0;
-    int gap = 0;
-    int inset = 0;
-    // The tone between the slots.
-    int ground = 0;
-    void (*around)(QPainter& p, const QRect& slot, const Palette& palette) = nullptr;
-    void (*between)(QPainter& p, const QRect& gap, const Palette& palette) = nullptr;
-};
-
-void tile(QPainter& p, const QRect& r, const Palette& palette)
-{
-    p.fillRect(r, palette.tone(0));
-    paint::raised(p, r, palette);
-}
-
-// `raised` turned half round: shaded at the top and left, lit at the bottom and right.
-void recessed(QPainter& p, const QRect& r, const Palette& palette)
-{
-    p.save();
-    p.setTransform(QTransform(-1, 0, 0, -1, r.left() + r.right(), r.top() + r.bottom()), true);
-    paint::raised(p, r, palette);
-    p.restore();
-}
-
-void groove(QPainter& p, const QRect& gap, const Palette& palette)
-{
-    paint::groove(p, QRect(gap.left(), gap.center().y() - 2, gap.width(), 5), palette);
-}
-
-SlotLook slotLook(Separation separation)
-{
-    switch (separation) {
-    case Separation::Tiles:
-        return { 3, 5, 3, -2, tile, nullptr };
-    case Separation::Bays:
-        return { 2, 5, 1, 0, recessed, nullptr };
-    case Separation::Grooves:
-        return { 0, 13, 0, 0, nullptr, groove };
-    }
-    return { };
-}
 
 } // namespace
 

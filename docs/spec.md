@@ -742,8 +742,11 @@ from color7, pager desk from color14, as `roles.j2` maps them today.
 ### 8.4 Presets and history
 
 Save As writes `palettes/<name>.ini`. The preset list shows each as a strip.
-History lists timestamped saves, newest first, each restorable. History is
-pruned to a fixed count.
+History lists timestamped saves, newest first, each restorable. Each Save
+writes `palette.ini` and a copy as `history/<yyyyMMdd-HHmmss>.ini`; a second
+save within the same second replaces that second's copy. History keeps the
+50 newest. Loading a preset or restoring a copy puts it in the editor as
+unsaved changes, as picking a candidate does.
 
 ## 9. Exports
 

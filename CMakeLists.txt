@@ -29,6 +29,7 @@ add_library(shelfcore STATIC
     src/panel/render.cpp
     src/panel/slotlook.cpp
     src/palette/extract.cpp
+    src/palette/library.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp
     src/widgets/catalog.cpp

@@ -118,7 +118,6 @@ QImage renderPanel(const Palette& palette, const Config& config)
     });
     panel.setSide(config.side);
     panel.setWidth(config.width);
-    panel.setSeparation(config.separation);
     panel.arrange(config.widgets, { });
     panel.resize(panel.width(), height);
     return panel.grab().toImage();

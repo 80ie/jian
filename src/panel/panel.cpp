@@ -5,7 +5,6 @@
 #include "panel/layout.h"
 #include "panel/order.h"
 #include "panel/popout.h"
-#include "panel/slotlook.h"
 #include "widgets/foreignslot.h"
 #include "widgets/shelfwidget.h"
 
@@ -24,6 +23,20 @@ namespace {
 
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
+// Each widget sits in a bay sunk into the face behind a one-pixel bevel: bays this far from the
+// panel's edges and from each other.
+constexpr int bayMargin = 2;
+constexpr int bayGap = 5;
+constexpr int bayBevel = 1;
+
+// `raised` turned half round: shaded at the top and left, lit at the bottom and right.
+void bay(QPainter& p, const QRect& r, const Palette& palette)
+{
+    p.save();
+    p.setTransform(QTransform(-1, 0, 0, -1, r.left() + r.right(), r.top() + r.bottom()), true);
+    paint::raised(p, r, palette);
+    p.restore();
+}
 
 // The windows of other programs that `widget` holds stop taking input while it is edited.
 void freeze(ShelfWidget& widget, bool frozen)
@@ -82,13 +95,6 @@ void Panel::setSide(Qt::Edge side)
 }
 
 void Panel::setWidth(int width) { place(width); }
-
-void Panel::setSeparation(Separation separation)
-{
-    m_separation = separation;
-    relayout();
-    update();
-}
 
 void Panel::paletteChanged()
 {
@@ -159,20 +165,9 @@ void Panel::paintEvent(QPaintEvent*)
     QPainter p(this);
     p.fillRect(rect(), m_palette.tone(0));
     paint::frame(p, frameRect(), m_palette, m_side);
-    const SlotLook look = slotLook(m_separation);
-    p.fillRect(slotArea(), m_palette.tone(look.ground));
-    const Slot* above = nullptr;
-    for (const Slot& slot : m_slots) {
-        if (!slot.docked())
-            continue;
-        if (look.around)
-            look.around(p, slot.rect, m_palette);
-        if (look.between && above)
-            look.between(p,
-                QRect(slot.rect.left(), above->rect.bottom() + 1, slot.rect.width(), look.gap),
-                m_palette);
-        above = &slot;
-    }
+    for (const Slot& slot : m_slots)
+        if (slot.docked())
+            bay(p, slot.rect, m_palette);
 }
 
 void Panel::resizeEvent(QResizeEvent*)
@@ -247,29 +242,26 @@ void Panel::place(int width)
 
 void Panel::relayout()
 {
-    const SlotLook look = slotLook(m_separation);
-    QRect area = slotArea().adjusted(look.margin, look.margin, -look.margin, -look.margin);
+    QRect area = slotArea().adjusted(bayMargin, bayMargin, -bayMargin, -bayMargin);
     QStringList unplaced;
     if (m_overlay) {
         unplaced = ::unplaced(m_offered, order());
         area.setBottom(area.bottom() - EditOverlay::stripHeight(int(unplaced.size())));
     }
-    const int width = area.width() - 2 * look.inset;
+    const int width = area.width() - 2 * bayBevel;
     std::vector<Slot*> docked;
     std::vector<SlotHeights> heights;
     for (Slot& slot : m_slots) {
         if (!slot.docked())
             continue;
         docked.push_back(&slot);
-        heights.push_back({ slot.widget->heightForWidth(width) + 2 * look.inset,
-            slot.widget->minimumHeightForWidth(width) + 2 * look.inset,
-            slot.widget->wantsSpare() });
+        heights.push_back({ slot.widget->heightForWidth(width) + 2 * bayBevel,
+            slot.widget->minimumHeightForWidth(width) + 2 * bayBevel, slot.widget->wantsSpare() });
     }
-    const std::vector<QRect> rects = layoutSlots(area, look.gap, heights);
+    const std::vector<QRect> rects = layoutSlots(area, bayGap, heights);
     for (std::size_t i = 0; i < rects.size(); ++i) {
         docked[i]->rect = rects[i];
-        docked[i]->widget->setGeometry(
-            rects[i].adjusted(look.inset, look.inset, -look.inset, -look.inset));
+        docked[i]->widget->setGeometry(rects[i].adjusted(bayBevel, bayBevel, -bayBevel, -bayBevel));
     }
     if (m_overlay) {
         const QPoint origin = slotArea().topLeft();

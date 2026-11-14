@@ -41,7 +41,6 @@ public:
     void setSide(Qt::Edge side);
     // Clamped between narrowestPanel and widestPanel.
     void setWidth(int width);
-    void setSeparation(Separation separation);
     // Redraws, and tells each widget.
     void paletteChanged();
 
@@ -111,7 +110,6 @@ private:
     QStringList m_offered;
     Create m_create;
     Qt::Edge m_side = Qt::RightEdge;
-    Separation m_separation = Separation::Tiles;
     std::vector<Slot> m_slots;
     std::map<QString, QPoint> m_windowPositions;
     EditOverlay* m_overlay = nullptr;

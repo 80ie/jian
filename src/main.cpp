@@ -126,7 +126,6 @@ int runPanel(const QDir& dir, WindowModel* windows, const QString& socket, bool 
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);
-        panel.setSeparation(config.separation);
         panel.setWindowPositions(config.windowPositions);
         panel.arrange(config.widgets, config.poppedOut);
     };

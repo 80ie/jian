@@ -30,7 +30,6 @@ private slots:
         Config changed;
         changed.side = Qt::LeftEdge;
         changed.width = 233;
-        changed.separation = Separation::Grooves;
         changed.widgets = QStringList { "tasks", "clock", "media" };
         changed.poppedOut = QStringList { "media" };
         changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
@@ -70,7 +69,6 @@ private slots:
         QTest::addColumn<QByteArray>("text");
         QTest::newRow("side") << QByteArray("[panel]\nside=top\n");
         QTest::newRow("width") << QByteArray("[panel]\nwidth=wide\n");
-        QTest::newRow("separation") << QByteArray("[panel]\nseparation=none\n");
         QTest::newRow("tile") << QByteArray("[tasks]\ntile=big\n");
         QTest::newRow("pop-out position") << QByteArray("[popout]\nmedia=12\n");
         QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");

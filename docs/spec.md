@@ -196,23 +196,14 @@ Headers go. Each slot is drawn as its own unit, so that a widget reads as an
 object sitting in the panel and not as a region of it. Most widgets meet
 their edge with a well (World View, tasks, tray) or a full-width field
 (media), so a closed edge drawn just around such a widget would frame it
-twice. Three treatments are built, chosen by `[panel] separation=` in
-`config.ini`:
+twice. So each widget sits in a bay: sunk into the face behind a one-pixel
+soft bevel, `raised` turned half round, flush with the widget, the bays 5
+pixels apart and 2 from the panel's edges. A well at the edge merges with
+the bay into one deeper well. `tests/golden/panel.png` shows it.
 
-- `tiles`: each widget on a raised tile of face, with two pixels of face
-  around it, the tiles 5 pixels apart on a ground of tone -2. A well sits on
-  the tile rather than inside a second outline.
-- `bays`: each widget sunk into the face behind a one-pixel soft bevel,
-  `raised` turned half round, flush with the widget, the bays 5 pixels apart.
-  A well at the edge merges with it into one deeper well.
-- `grooves`: no edge; slots 13 pixels apart with the five-row `groove`
-  between them.
-
-`tests/golden/panel-<name>.png` shows each. The default is `tiles`, the only
-one in which the space between widgets is plainly not part of any of them;
-it costs 12 pixels of the width. **OPEN**: pick one. The key is scaffolding
-for that decision and goes with the two that lose: one enum, one name table
-in the config file, and the switch in `panel/slotlook.cpp`.
+Tiles (each widget on a raised tile on a ground of tone -2) and grooves (no
+edge, the five-row `groove` between slots) were built beside it in
+milestone 6 to compare, and bays were chosen.
 
 Edit mode is entered from the panel's context menu or the settings window.
 While it is on:
@@ -810,8 +801,8 @@ Palette (8.2), From image (8.3), Presets and History (8.4), then one page
 per widget that returns a `settingsPage()`: Clock (its two formats, each
 with a preview of the time in it), Tasks (tile height and thumbnail floor)
 and Media (the source, as its drop-down chooses it). Exports (9) come with
-milestone 8. It is part of the same process and edits the same objects the panel
-draws from: the Layout page calls the panel's setters and writes
+milestone 8. It is part of the same process and edits the same objects the
+panel draws from: the Layout page calls the panel's setters and writes
 `config.ini`, as dragging the width does.
 
 `--settings` reaches a running panel through a local socket,
@@ -879,10 +870,10 @@ the last one.
 
 1. Name of the program.
 2. Config format: INI or TOML (3.4).
-3. Widget separation treatment: `tiles`, `bays` or `grooves` (5).
-4. Tone count and offsets (8.1), settled by rendering in milestone 1.
-5. Terminal colors and the Xresources export (9).
+3. Tone count and offsets (8.1), settled by rendering in milestone 1.
+4. Terminal colors and the Xresources export (9).
 
 Decided: own repository in `~/projects/`; launcher rows dropped; thumbnails
 captured by the panel through Composite; extraction in-process, no wallust;
-palette is a tonal ramp plus named colors, not a role list.
+palette is a tonal ramp plus named colors, not a role list; widgets sit in
+bays (5).

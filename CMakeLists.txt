@@ -26,6 +26,7 @@ add_library(shelfcore STATIC
     src/widgets/clock.cpp
     src/widgets/shelfwidget.h
     src/widgets/tasklayout.cpp
+    src/widgets/tasks.cpp
     src/x11/atoms.cpp
     src/x11/client.cpp
     src/x11/connection.cpp

@@ -62,7 +62,7 @@ LayoutPage::LayoutPage(Panel& panel, Config& config, QString configPath, QWidget
 
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(form);
-    layout->addWidget(new QLabel(u"Widgets, top to bottom:"_s, this));
+    layout->addWidget(new QLabel(u"Widgets"_s, this));
     layout->addLayout(order, 1);
     layout->addWidget(m_edit);
 

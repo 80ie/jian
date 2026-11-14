@@ -95,11 +95,6 @@ QWidget* Tasks::settingsPage()
     };
     auto* tile = spinBox(m_sizes.tile, iconTileHeight);
     auto* floor = spinBox(m_sizes.floor, rowHeight);
-    auto* hint = new QLabel(u"A pinned window is a tile with its picture until the list runs out "
-                            "of room, when the tiles drop to icons. A minimized window's picture "
-                            "shrinks as the list fills, down to the floor, below which it gives "
-                            "way to a plain row."_s,
-        page);
     hint->setWordWrap(true);
     auto* form = new QFormLayout(page);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);

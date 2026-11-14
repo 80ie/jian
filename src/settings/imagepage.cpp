@@ -66,7 +66,7 @@ QLabel* wrapped(const QString& text, QWidget* parent)
 ImagePage::ImagePage(PaletteEditor& editor, QWidget* parent)
     : QWidget(parent)
     , m_editor(editor)
-    , m_source(new QLabel(u"Open an image, or drop one on this page."_s, this))
+    , m_source(new QLabel(u"or drag-and-drop."_s, this))
     , m_picture(new QLabel(this))
     , m_colors(new QLabel(this))
     , m_candidates(new QListWidget(this))
@@ -81,13 +81,9 @@ ImagePage::ImagePage(PaletteEditor& editor, QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(top);
     layout->addWidget(m_picture);
-    layout->addWidget(
-        wrapped(u"The colors the image is made of, each as wide as its share:"_s, this));
+    layout->addWidget(wrapped(u"Distribution:"_s, this));
     layout->addWidget(m_colors);
-    layout->addWidget(wrapped(u"Candidates: each common color made into a face quiet enough for a "
-                              "panel, with the named colors taken from the others. Click one to "
-                              "try it on the panel; Save keeps it."_s,
-        this));
+    layout->addWidget(wrapped(u"Candidates:", this));
     layout->addWidget(m_candidates, 1);
 
     connect(openButton, &QPushButton::clicked, this, &ImagePage::choose);

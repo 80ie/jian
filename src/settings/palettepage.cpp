@@ -59,22 +59,11 @@ PalettePage::PalettePage(PaletteEditor& editor, QWidget* parent)
     contrast->addWidget(m_contrast, 1);
     contrast->addWidget(m_contrastValue);
     rampLayout->addLayout(contrast);
-    auto* hint = new QLabel(u"The face is tone 0: change it and every other tone is made anew "
-                            "from it. Contrast spreads the tones apart or draws them together. Any "
-                            "other tone can be set by hand, and then carries a dot until it is "
-                            "put back on the ramp."_s,
-        ramp);
     hint->setWordWrap(true);
     rampLayout->addWidget(hint);
 
     auto* named = new QGroupBox(u"Named colors"_s, this);
     auto* form = new QFormLayout(named);
-    const Named colors[] {
-        { u"Ink"_s, u"text and symbols"_s, &Palette::ink },
-        { u"Fill"_s, u"the trackbar's progress"_s, &Palette::fill },
-        { u"Selection"_s, u"edit mode's drop line and clipped widgets"_s, &Palette::selection },
-        { u"Pager desk"_s, u"kept for exports; the panel does not draw it"_s, &Palette::pagerDesk },
-    };
     for (const Named& color : colors) {
         auto* button = new QPushButton(named);
         const auto member = color.member;
@@ -136,8 +125,8 @@ void PalettePage::refresh()
         button->setText((palette.*member).name());
     }
     const bool overridden = m_current && palette.overrides.contains(*m_current);
-    m_reset->setText(overridden ? u"Put tone %1 back on the ramp"_s.arg(toneName(*m_current))
-                                : u"Put the tone back on the ramp"_s);
+    // Buttons cannot have sentences like this.
+    m_reset->setText(u"Reset"_s);
     m_reset->setEnabled(overridden);
 }
 

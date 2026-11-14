@@ -3,7 +3,22 @@
 #include <QFileInfo>
 #include <QSettings>
 
+#include <algorithm>
+#include <array>
+
 using namespace Qt::StringLiterals;
+
+namespace {
+
+struct SeparationName {
+    Separation separation;
+    QLatin1StringView name;
+};
+
+constexpr std::array<SeparationName, 3> separationNames { { { Separation::Tiles, "tiles"_L1 },
+    { Separation::Bays, "bays"_L1 }, { Separation::Grooves, "grooves"_L1 } } };
+
+} // namespace
 
 std::optional<Config> loadConfig(const QString& path)
 {
@@ -27,6 +42,13 @@ std::optional<Config> loadConfig(const QString& path)
     config.width = ini.value("panel/width", config.width).toInt(&ok);
     if (!ok)
         return bad("panel/width");
+    const QString separation = ini.value("panel/separation").toString();
+    if (!separation.isEmpty()) {
+        const auto named = std::ranges::find(separationNames, separation, &SeparationName::name);
+        if (named == separationNames.end())
+            return bad("panel/separation");
+        config.separation = named->separation;
+    }
     config.widgets = ini.value("panel/widgets", config.widgets).toStringList();
     config.widgets.removeAll(QString());
     config.clockTime = ini.value("clock/time", config.clockTime).toString();
@@ -46,6 +68,9 @@ bool saveConfig(const Config& config, const QString& path)
     QSettings ini(path, QSettings::IniFormat);
     ini.setValue("panel/side", config.side == Qt::LeftEdge ? u"left"_s : u"right"_s);
     ini.setValue("panel/width", config.width);
+    ini.setValue("panel/separation",
+        std::ranges::find(separationNames, config.separation, &SeparationName::separation)
+            ->name.toString());
     // QSettings would write an empty list as @Invalid().
     ini.setValue(
         "panel/widgets", config.widgets.isEmpty() ? QVariant(QString()) : QVariant(config.widgets));

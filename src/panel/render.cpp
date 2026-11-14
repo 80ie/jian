@@ -101,6 +101,7 @@ QImage renderPanel(const Palette& palette, const Config& config)
     Panel panel(palette);
     panel.setSide(config.side);
     panel.setWidth(config.width);
+    panel.setSeparation(config.separation);
     std::vector<ShelfWidget*> widgets = createWidgets(palette, config, nullptr, &panel);
     for (ShelfWidget* widget : widgets) {
         widget->setFont(font);

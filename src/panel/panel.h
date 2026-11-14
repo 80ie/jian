@@ -1,5 +1,6 @@
 #pragma once
 
+#include "panel/config.h"
 #include "panel/dock.h"
 
 #include <QWidget>
@@ -21,6 +22,7 @@ public:
     void setWidgets(std::vector<ShelfWidget*> widgets);
     void setSide(Qt::Edge side);
     void setWidth(int width);
+    void setSeparation(Separation separation);
     // Redraws, and tells each widget.
     void paletteChanged();
 
@@ -44,12 +46,16 @@ private:
     };
 
     QRect frameRect() const;
+    QRect slotArea() const;
     void place(int width);
     void relayout();
 
     const Palette& m_palette;
     Qt::Edge m_side = Qt::RightEdge;
+    Separation m_separation = Separation::Tiles;
     std::vector<ShelfWidget*> m_widgets;
+    // Where each widget's slot is drawn, its edge included.
+    std::vector<QRect> m_slots;
     // Carries the resize cursor over the frame, where a cursor on the panel would leak into
     // the widgets.
     QWidget m_grip { this };

@@ -5,9 +5,14 @@
 
 #include <optional>
 
+// How a slot's edge is drawn. Scaffolding for the choice in spec 14.3: the candidates that lose
+// go, and the key with them.
+enum class Separation { Tiles, Bays, Grooves };
+
 struct Config {
     Qt::Edge side = Qt::RightEdge;
     int width = 160;
+    Separation separation = Separation::Tiles;
     QStringList widgets { QStringLiteral("clock"), QStringLiteral("worldview"),
         QStringLiteral("tasks"), QStringLiteral("media"), QStringLiteral("tray") };
     // QDateTime formats, drawn at the left and right ends of the clock.

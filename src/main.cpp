@@ -72,6 +72,7 @@ int runPanel(const QDir& dir, WindowModel* windows)
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);
+        panel.setSeparation(config.separation);
         std::vector<ShelfWidget*> widgets = createWidgets(palette, config, windows, &panel);
         for (ShelfWidget* widget : widgets)
             if (auto* media = qobject_cast<Media*>(widget))

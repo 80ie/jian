@@ -10,16 +10,29 @@ class PanelTest : public QObject {
     Q_OBJECT
 
 private slots:
+    void matchesGolden_data()
+    {
+        QTest::addColumn<Separation>("separation");
+        QTest::newRow("tiles") << Separation::Tiles;
+        QTest::newRow("bays") << Separation::Bays;
+        QTest::newRow("grooves") << Separation::Grooves;
+    }
+
     void matchesGolden()
     {
+        QFETCH(Separation, separation);
         const std::optional<Palette> palette = loadPalette(QFINDTESTDATA("golden/palette.ini"));
         QVERIFY(palette);
+        const QString name = QStringLiteral("panel-%1.png").arg(QTest::currentDataTag());
         const QImage golden
-            = QImage(QFINDTESTDATA("golden/panel.png")).convertToFormat(QImage::Format_RGB32);
-        const QImage panel = renderPanel(*palette, Config()).convertToFormat(QImage::Format_RGB32);
+            = QImage(QFINDTESTDATA("golden/" + name)).convertToFormat(QImage::Format_RGB32);
+        Config config;
+        config.separation = separation;
+        const QImage panel = renderPanel(*palette, config).convertToFormat(QImage::Format_RGB32);
         if (panel != golden)
-            panel.save("panel-actual.png");
-        QVERIFY2(panel == golden, "differs from golden/panel.png, see panel-actual.png");
+            panel.save("actual-" + name);
+        QVERIFY2(
+            panel == golden, qPrintable("differs from golden/" + name + ", see actual-" + name));
     }
 };
 

@@ -190,11 +190,27 @@ place of the `ShelfPanel` one.
 
 ## 5. Widget separation and edit mode
 
-Headers go. Each slot is drawn as its own unit, with a strip of panel face
-between neighbors, so that a widget reads as an object sitting in the panel
-and not as a region of it. The exact treatment (raised tile, sunken bay,
-spacing) is a visual design task: build two or three variants behind a flag,
-screenshot them in the rig and pick. **OPEN** until those exist.
+Headers go. Each slot is drawn as its own unit, so that a widget reads as an
+object sitting in the panel and not as a region of it. Most widgets meet
+their edge with a well (World View, tasks, tray) or a full-width field
+(media), so a closed edge drawn just around such a widget would frame it
+twice. Three treatments are built, chosen by `[panel] separation=` in
+`config.ini`:
+
+- `tiles`: each widget on a raised tile of face, with two pixels of face
+  around it, the tiles 5 pixels apart on a ground of tone -2. A well sits on
+  the tile rather than inside a second outline.
+- `bays`: each widget sunk into the face behind a one-pixel soft bevel,
+  `raised` turned half round, flush with the widget, the bays 5 pixels apart.
+  A well at the edge merges with it into one deeper well.
+- `grooves`: no edge; slots 13 pixels apart with the five-row `groove`
+  between them.
+
+`tests/golden/panel-<name>.png` shows each. The default is `tiles`, the only
+one in which the space between widgets is plainly not part of any of them;
+it costs 12 pixels of the width. **OPEN**: pick one. The key is scaffolding
+for that decision and goes with the two that lose: one enum, one name table
+in the config file, one switch in the panel.
 
 Edit mode is entered from the panel's context menu or the settings window.
 While it is on:
@@ -726,7 +742,7 @@ the last one.
 
 1. Name of the program.
 2. Config format: INI or TOML (3.4).
-3. Widget separation treatment (5).
+3. Widget separation treatment: `tiles`, `bays` or `grooves` (5).
 4. Tone count and offsets (8.1), settled by rendering in milestone 1.
 5. Terminal colors and the Xresources export (9).
 

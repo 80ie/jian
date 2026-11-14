@@ -9,6 +9,9 @@
 constexpr int darkestTone = -6;
 constexpr int lightestTone = 5;
 
+// How far the OKLab lightness of `tone` lies from the face's at contrast 1.
+double lightnessOffset(int tone);
+
 struct Palette {
     QColor face { 0xa2, 0x94, 0x8a };
     double contrast = 1;

@@ -37,12 +37,14 @@ constexpr std::pair<QLatin1StringView, QColor Palette::*> colorKeys[] {
 
 } // namespace
 
+double lightnessOffset(int tone) { return lightnessOffsets[tone - darkestTone]; }
+
 QColor Palette::tone(int number) const
 {
     if (const auto it = overrides.find(number); it != overrides.end())
         return it->second;
     const Oklab base = toOklab(face);
-    const double offset = contrast * lightnessOffsets[number - darkestTone];
+    const double offset = contrast * lightnessOffset(number);
     const double lightness = std::clamp(base.lightness + offset, 0.0, 1.0);
     const double scale = chromaScale(lightness, base.lightness);
     return fromOklab({ lightness, base.a * scale, base.b * scale });

@@ -11,12 +11,14 @@
 #include <optional>
 #include <vector>
 
+class EditOverlay;
 class PopOut;
 class ShelfWidget;
 struct Palette;
 
 // The top-level window down one side of the primary screen, holding a column of widgets. A
-// widget can leave the column for a window of its own and come back to its place.
+// widget can leave the column for a window of its own and come back to its place. In edit mode
+// the widgets are moved, added and removed rather than used.
 class Panel : public QWidget {
     Q_OBJECT
 
@@ -24,7 +26,8 @@ public:
     // Makes the widget config.ini calls `id`, or gives null for one that cannot run here.
     using Create = std::function<ShelfWidget*(const QString& id, QWidget* parent)>;
 
-    Panel(const Palette& palette, Create create);
+    // `offered` names the widgets that can run here, which edit mode offers to add.
+    Panel(const Palette& palette, QStringList offered, Create create);
     ~Panel() override;
 
     // Replaces the widgets with those `order` names, `poppedOut` of them in windows of their own.
@@ -44,12 +47,15 @@ public:
 
     // Moves the widget `id` into a window of its own.
     void popOut(const QString& id);
+    bool editing() const { return m_overlay; }
+    void setEditing(bool editing);
 
 signals:
     // Changes made on the panel itself, not through the setters.
     void widthDragged(int width);
     void sideSwitched(Qt::Edge side);
-    // A widget popped out or came back, or a window holding one settled somewhere new.
+    // Edit mode ended, a widget popped out or came back, or a window holding one settled
+    // somewhere new.
     void arranged();
 
 protected:
@@ -80,16 +86,21 @@ private:
     QRect slotArea() const;
     void place(int width);
     void relayout();
+    Slot make(const QString& id);
     Slot* find(const QString& id);
     void lift(Slot& slot);
     void dock(Slot& slot);
+    void put(const QString& id, const QString& before);
+    void remove(const QString& id);
 
     const Palette& m_palette;
+    QStringList m_offered;
     Create m_create;
     Qt::Edge m_side = Qt::RightEdge;
     Separation m_separation = Separation::Tiles;
     std::vector<Slot> m_slots;
     std::map<QString, QPoint> m_windowPositions;
+    EditOverlay* m_overlay = nullptr;
     // Carries the resize cursor over the frame, where a cursor on the panel would leak into
     // the widgets.
     QWidget m_grip { this };

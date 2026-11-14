@@ -3,7 +3,11 @@
 #include "x11/reply.h"
 #include "x11/windowmodel.h"
 
+#include <QPainter>
+#include <QScreen>
 #include <QWindow>
+
+#include <xcb/composite.h>
 
 #include <utility>
 
@@ -23,11 +27,18 @@ void ForeignSlot::embed(quint32 window)
     xcb_connection_t* c = m_windows.connection().xcb();
     const quint32 events = XCB_EVENT_MASK_STRUCTURE_NOTIFY;
     discard(c, xcb_change_window_attributes_checked(c, window, XCB_CW_EVENT_MASK, &events));
+    // The storage of its own that redirection gives the window keeps what is under a menu or the
+    // like, so that a picture taken as the menu goes is whole. A request for an extension the
+    // server lacks would end the connection.
+    if (const xcb_query_extension_reply_t* composite = xcb_get_extension_data(c, &xcb_composite_id);
+        composite && composite->present)
+        discard(
+            c, xcb_composite_redirect_window_checked(c, window, XCB_COMPOSITE_REDIRECT_AUTOMATIC));
     m_window = window;
     m_foreign = QWindow::fromWinId(window);
     m_container = QWidget::createWindowContainer(m_foreign, this);
     m_container->setGeometry(rect());
-    m_container->show();
+    m_container->setVisible(!m_frozen);
     emit embedded();
 }
 
@@ -39,6 +50,23 @@ quint32 ForeignSlot::letGo()
     m_container = nullptr;
     m_foreign = nullptr;
     return std::exchange(m_window, 0);
+}
+
+void ForeignSlot::setFrozen(bool frozen)
+{
+    if (frozen == m_frozen)
+        return;
+    m_frozen = frozen;
+    m_still = frozen && m_window ? screen()->grabWindow(m_window) : QPixmap();
+    if (m_container)
+        m_container->setVisible(!frozen);
+    update();
+}
+
+void ForeignSlot::paintEvent(QPaintEvent*)
+{
+    if (!m_still.isNull())
+        QPainter(this).drawPixmap(0, 0, m_still);
 }
 
 void ForeignSlot::resizeEvent(QResizeEvent*)

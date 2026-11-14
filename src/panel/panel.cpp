@@ -1,9 +1,12 @@
 #include "panel/panel.h"
 #include "paint/bevel.h"
 #include "palette/palette.h"
+#include "panel/editoverlay.h"
 #include "panel/layout.h"
+#include "panel/order.h"
 #include "panel/popout.h"
 #include "panel/slotlook.h"
+#include "widgets/foreignslot.h"
 #include "widgets/shelfwidget.h"
 
 #include <QContextMenuEvent>
@@ -24,11 +27,19 @@ constexpr int widest = 420;
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
 
+// The windows of other programs that `widget` holds stop taking input while it is edited.
+void freeze(ShelfWidget& widget, bool frozen)
+{
+    for (ForeignSlot* slot : widget.findChildren<ForeignSlot*>())
+        slot->setFrozen(frozen);
+}
+
 } // namespace
 
-Panel::Panel(const Palette& palette, Create create)
+Panel::Panel(const Palette& palette, QStringList offered, Create create)
     : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus)
     , m_palette(palette)
+    , m_offered(std::move(offered))
     , m_create(std::move(create))
     , m_dock(winId())
 {
@@ -47,20 +58,14 @@ void Panel::arrange(const QStringList& order, const QStringList& poppedOut)
         if (slot.docked())
             delete slot.widget;
     m_slots.clear();
-    for (const QString& id : order) {
-        Slot slot;
-        slot.id = id;
-        slot.widget = m_create(id, this);
-        if (slot.widget) {
-            connect(slot.widget, &ShelfWidget::heightChanged, this, &Panel::relayout);
-            slot.widget->show();
-        }
-        m_slots.push_back(std::move(slot));
-    }
+    for (const QString& id : order)
+        m_slots.push_back(make(id));
     relayout();
     for (Slot& slot : m_slots)
         if (slot.docked() && poppedOut.contains(slot.id))
             lift(slot);
+    if (m_overlay)
+        m_overlay->raise();
 }
 
 void Panel::setWindowPositions(const std::map<QString, QPoint>& positions)
@@ -122,6 +127,27 @@ void Panel::popOut(const QString& id)
     }
 }
 
+void Panel::setEditing(bool editing)
+{
+    if (editing == this->editing())
+        return;
+    if (editing) {
+        m_overlay = new EditOverlay(m_palette, this);
+        connect(m_overlay, &EditOverlay::placeRequested, this, &Panel::put);
+        connect(m_overlay, &EditOverlay::popOutRequested, this, &Panel::popOut);
+        connect(m_overlay, &EditOverlay::removeRequested, this, &Panel::remove);
+        m_overlay->show();
+    } else {
+        delete std::exchange(m_overlay, nullptr);
+    }
+    for (Slot& slot : m_slots)
+        if (slot.docked())
+            freeze(*slot.widget, editing);
+    relayout();
+    if (!editing)
+        emit arranged();
+}
+
 void Panel::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
@@ -179,6 +205,8 @@ void Panel::contextMenuEvent(QContextMenuEvent* event)
     const Qt::Edge other = m_side == Qt::RightEdge ? Qt::LeftEdge : Qt::RightEdge;
     auto* menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
+    menu->addAction(editing() ? u"Done editing"_s : u"Edit widgets"_s, this,
+        [this] { setEditing(!editing()); });
     menu->addAction(other == Qt::LeftEdge ? u"Dock left"_s : u"Dock right"_s, this, [this, other] {
         setSide(other);
         emit sideSwitched(other);
@@ -212,7 +240,12 @@ void Panel::place(int width)
 void Panel::relayout()
 {
     const SlotLook look = slotLook(m_separation);
-    const QRect area = slotArea().adjusted(look.margin, look.margin, -look.margin, -look.margin);
+    QRect area = slotArea().adjusted(look.margin, look.margin, -look.margin, -look.margin);
+    QStringList unplaced;
+    if (m_overlay) {
+        unplaced = ::unplaced(m_offered, order());
+        area.setBottom(area.bottom() - EditOverlay::stripHeight(int(unplaced.size())));
+    }
     const int width = area.width() - 2 * look.inset;
     std::vector<Slot*> docked;
     std::vector<SlotHeights> heights;
@@ -230,7 +263,30 @@ void Panel::relayout()
         docked[i]->widget->setGeometry(
             rects[i].adjusted(look.inset, look.inset, -look.inset, -look.inset));
     }
+    if (m_overlay) {
+        const QPoint origin = slotArea().topLeft();
+        std::vector<EditSlot> edited;
+        for (const Slot* slot : docked)
+            edited.push_back({ slot->id, slot->rect.translated(-origin) });
+        m_overlay->setGeometry(slotArea());
+        m_overlay->setDocked(std::move(edited), area.translated(-origin));
+        m_overlay->setUnplaced(unplaced);
+    }
     update();
+}
+
+// A slot for `id`, holding a new widget unless the widget cannot run here.
+Panel::Slot Panel::make(const QString& id)
+{
+    Slot slot;
+    slot.id = id;
+    slot.widget = m_create(id, this);
+    if (slot.widget) {
+        connect(slot.widget, &ShelfWidget::heightChanged, this, &Panel::relayout);
+        freeze(*slot.widget, editing());
+        slot.widget->show();
+    }
+    return slot;
 }
 
 Panel::Slot* Panel::find(const QString& id)
@@ -272,6 +328,7 @@ void Panel::lift(Slot& slot)
     }
     window.move(at);
     window.show();
+    freeze(*slot.widget, false);
     relayout();
 }
 
@@ -279,8 +336,36 @@ void Panel::dock(Slot& slot)
 {
     m_windowPositions[slot.id] = slot.window->pos();
     slot.widget->setParent(this);
+    freeze(*slot.widget, editing());
     slot.widget->show();
     slot.window.reset();
+    if (m_overlay)
+        m_overlay->raise();
     relayout();
     emit arranged();
+}
+
+void Panel::put(const QString& id, const QString& before)
+{
+    if (!find(id)) {
+        Slot slot = make(id);
+        if (!slot.widget)
+            return;
+        m_slots.push_back(std::move(slot));
+        m_overlay->raise();
+    }
+    const QStringList order = placed(this->order(), id, before);
+    std::ranges::sort(m_slots, { }, [&order](const Slot& slot) { return order.indexOf(slot.id); });
+    relayout();
+}
+
+void Panel::remove(const QString& id)
+{
+    const auto slot = std::ranges::find(m_slots, id, &Slot::id);
+    if (slot == m_slots.end())
+        return;
+    if (slot->docked())
+        delete slot->widget;
+    m_slots.erase(slot);
+    relayout();
 }

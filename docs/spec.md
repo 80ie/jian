@@ -136,7 +136,7 @@ definition and keeps all fvwm traffic inside its own file.
 `~/.config/<name>/`:
 
 ```
-config.ini          panel side, width, widget order, pop-outs, per-widget settings
+config.ini          side, width, widget order, pop-outs, per-widget settings
 palette.ini         the live palette (section 8)
 palettes/           named presets, same format
 history/            timestamped copies of palette.ini, written on each save
@@ -225,6 +225,42 @@ Leaving edit mode writes `config.ini`. Collapse does not survive as a
 separate feature: removing a widget is the same operation, and it comes back
 from the strip.
 
+The context menu reads "Edit widgets", and "Done editing" while edit mode is
+on. The overlay is a layer over the slots that takes every press. Across the
+top of each docked slot it puts a 20-pixel raised bar: a grip of the scale's
+marks at the left, the widget's name, then pop-out and remove `button`s. The
+rest of the slot is veiled with face at 60%, so the widget shows through
+dimmed. The bar is what drags. While it does, a copy of the bar follows the
+pointer and a 3-pixel line in the selection color marks the gap the slot
+will go into: the gap before the first slot whose middle is below the
+pointer. A drop outside the slots does nothing.
+
+The strip is a sunken well under the slots holding a `button` for each
+widget the catalog offers on this system (World View only with fvwm, the
+tray only with stalonetray) that the order lacks, in the default order. A
+click puts the widget last; a drag puts it at the line. The strip takes its
+height from the slots, which are laid out above it, and is gone when there
+is nothing left to add. Remove deletes the widget, so a pager or tray stops,
+and adding one back makes it anew.
+
+A slot that the layout runs past the bottom (section 4, step 4) gets its
+bar in the selection color, its name followed by "(clipped)". Slots with no
+room left for a bar are named in a band of the selection color along the
+bottom: "No room: Tasks, Tray". Both are measured against the room above
+the strip, as the column is drawn.
+
+A foreign window sits above anything Qt paints in the panel, so the overlay
+can neither cover nor intercept it. In edit mode the foreign slots freeze:
+each hides its window and draws a picture of it in its place. The slot asks
+for automatic Composite redirection of the window it embeds, so that the
+picture comes whole from the window's own storage even though the context
+menu covered it a moment before; without Composite the picture may show
+what covered it. A window that arrives while frozen, such as a relaunched
+pager or a re-added tray, stays hidden until edit mode ends. Verified in
+`fvwm-rig`: two clicks on other pages of the frozen pager left fvwm on page
+0 0 of desk 0, and the same click after edit mode moved it. A widget popped
+out stays live in edit mode.
+
 Pop-out reparents the widget to a normal top-level window with its own
 `WM_CLASS` instance (`<name>-media` and so on), so a window manager rule can
 target it. Its position is remembered. Closing the window docks it back.
@@ -256,6 +292,15 @@ window placed by its inside instead came up 11 pixels lower in `fvwm-rig`
 than asked, on every restart. Widgets that `widgets` names but that cannot
 run here (7.2, 7.5) keep their place in it too, so that a panel started
 without fvwm does not drop World View from the file.
+
+Verified in `fvwm-rig`: the pager and the tray survive the reparent both
+ways. Qt moves the window a slot holds to the new top-level window, which is
+the panel's own, so the slot does not let go. Popped out from edit mode and
+closed again, each kept the same window and process, the tray took a new
+icon while out, and the pager changed page from its window. Neither needs a
+relaunch; the pager is started again only when its size changes, as it is
+anywhere. A popped-out window is an ordinary one, so it stays on its page
+unless a window manager rule makes it sticky.
 
 ## 6. Window model
 

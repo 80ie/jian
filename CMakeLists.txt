@@ -21,6 +21,7 @@ add_library(shelfcore STATIC
     src/paint/sheet.cpp
     src/panel/config.cpp
     src/panel/dock.cpp
+    src/panel/editoverlay.cpp
     src/panel/layout.cpp
     src/panel/order.cpp
     src/panel/panel.cpp

@@ -98,7 +98,7 @@ QImage renderPanel(const Palette& palette, const Config& config)
     font.setStyleName(QString());
     const QDateTime time(QDate(2026, 11, 13), QTime(9, 41));
 
-    Panel panel(palette, [&](const QString& id, QWidget* parent) {
+    Panel panel(palette, { }, [&](const QString& id, QWidget* parent) {
         ShelfWidget* widget = createWidget(id, palette, config, nullptr, parent);
         if (!widget)
             return widget;

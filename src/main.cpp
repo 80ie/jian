@@ -77,7 +77,7 @@ int runPanel(const QDir& dir, WindowModel* windows)
             });
         return widget;
     };
-    Panel panel(palette, create);
+    Panel panel(palette, offeredWidgets(windows), create);
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);

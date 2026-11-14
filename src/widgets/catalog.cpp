@@ -37,6 +37,15 @@ const char* missing(QStringView id, const WindowModel* windows)
 
 } // namespace
 
+QStringList offeredWidgets(const WindowModel* windows)
+{
+    QStringList offered;
+    for (const Entry& entry : entries)
+        if (!missing(entry.id, windows))
+            offered.append(entry.id.toString());
+    return offered;
+}
+
 QString widgetName(QStringView id)
 {
     const auto entry = std::ranges::find(entries, id, &Entry::id);

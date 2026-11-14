@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QPixmap>
 #include <QWidget>
 
 #include <xcb/xcb.h>
@@ -26,6 +27,9 @@ public:
     // Hands the window held back to the root window, where Qt leaves it unmapped, and returns
     // it.
     quint32 letGo();
+    // While frozen the window is hidden, so that it takes no input, and a picture of it taken
+    // as it froze is drawn in its place.
+    void setFrozen(bool frozen);
 
 signals:
     void embedded();
@@ -35,6 +39,7 @@ signals:
     void lost();
 
 protected:
+    void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
 private:
@@ -47,4 +52,6 @@ private:
     quint32 m_window = 0;
     QWindow* m_foreign = nullptr;
     QWidget* m_container = nullptr;
+    bool m_frozen = false;
+    QPixmap m_still;
 };

@@ -10,4 +10,5 @@ in; `AGENTS.md` holds the rules for working on it.
 reading `~/.config/shelf/config.ini` and `palette.ini`; `shelf --only clock`
 runs one widget as a plain window. To draw the panel or the painters without
 a display: `QT_QPA_PLATFORM=offscreen build/dev/shelf --render panel.png` or
-`--render-sheet sheet.png`.
+`--render-sheet sheet.png`. `shelf --import-scheme scheme.json palette.ini`
+converts one of the old wallust schemes.

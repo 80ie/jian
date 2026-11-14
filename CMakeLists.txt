@@ -32,6 +32,7 @@ add_library(shelfcore STATIC
     src/palette/library.cpp
     src/palette/oklab.cpp
     src/palette/palette.cpp
+    src/palette/scheme.cpp
     src/widgets/catalog.cpp
     src/widgets/clock.cpp
     src/widgets/foreignslot.cpp

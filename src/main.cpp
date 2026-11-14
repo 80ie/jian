@@ -1,6 +1,7 @@
 #include "paint/bevel.h"
 #include "paint/sheet.h"
 #include "palette/palette.h"
+#include "palette/scheme.h"
 #include "panel/config.h"
 #include "panel/panel.h"
 #include "panel/render.h"
@@ -153,10 +154,18 @@ int main(int argc, char* argv[])
         u"only"_s, u"Run one widget as a plain window."_s, u"widget"_s);
     const QCommandLineOption traceOption(
         u"trace-x"_s, u"Log X events and task repaints with their times to stderr."_s);
-    parser.addOptions({ renderOption, sheetOption, paletteOption, onlyOption, traceOption });
+    const QCommandLineOption importOption(u"import-scheme"_s,
+        u"Convert the wallust scheme <json> to the palette file named after it."_s, u"json"_s);
+    parser.addOptions(
+        { renderOption, sheetOption, paletteOption, onlyOption, traceOption, importOption });
     const bool parsed = parser.parse(app.arguments());
+    if (parsed && parser.isSet(importOption) && parser.optionNames().size() == 1
+        && parser.positionalArguments().size() == 1) {
+        const std::optional<Palette> palette = importScheme(parser.value(importOption));
+        return palette && savePalette(*palette, parser.positionalArguments().front()) ? 0 : 1;
+    }
     const bool rendering = parser.isSet(renderOption) || parser.isSet(sheetOption);
-    if (!parsed || !parser.positionalArguments().isEmpty()
+    if (!parsed || !parser.positionalArguments().isEmpty() || parser.isSet(importOption)
         || parser.isSet(renderOption) + parser.isSet(sheetOption) + parser.isSet(onlyOption) > 1
         || (parser.isSet(paletteOption) && !rendering)
         || (parser.isSet(traceOption) && rendering)) {

@@ -736,8 +736,13 @@ Each candidate is shown as its ramp strip plus named colors. Picking one
 loads it into the editor as unsaved changes. Nothing is written until Save.
 This replaces `palette sweep`.
 
-Existing `palette/schemes/*.json` are imported once at switch-over: face
-from color7, pager desk from color14, as `roles.j2` maps them today.
+Existing `palette/schemes/*.json` are imported once at switch-over, one at
+a time, with `<name> --import-scheme scheme.json out.ini`, as `roles.j2`
+maps them today: face from color7, ink from color0 with each sRGB channel
+scaled by 0.1 (wallust's `darken(0.9)`), fill from color10 (`fill_mem`),
+selection from color4, pager desk from color14; contrast 1, no overrides.
+`tang-beige.json`, the scheme the live palette came from, imports as the
+stock palette exactly.
 
 ### 8.4 Presets and history
 

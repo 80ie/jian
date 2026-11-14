@@ -57,6 +57,13 @@ void Panel::setSide(Qt::Edge side)
 
 void Panel::setWidth(int width) { place(width); }
 
+void Panel::paletteChanged()
+{
+    update();
+    for (ShelfWidget* widget : m_widgets)
+        widget->paletteChanged();
+}
+
 void Panel::paintEvent(QPaintEvent*)
 {
     QPainter p(this);

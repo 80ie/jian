@@ -113,10 +113,14 @@ public:
     int heightForWidth(int w) const override = 0;  // natural height
     virtual int minimumHeightForWidth(int w) const;
     virtual bool wantsSpare() const;               // takes leftover height
+    virtual void paletteChanged();                 // repaints, passes colors on
 signals:
     void heightChanged();
 };
 ```
+
+`paletteChanged()` is how the pager and the tray hand new colors to the
+programs that draw them (7.2, 7.5).
 
 `settingsPage()` joins the contract with the settings window (milestone 7);
 until there is a window to put a page in, nothing would call it.

@@ -17,6 +17,9 @@ public:
     virtual int minimumHeightForWidth(int width) const { return heightForWidth(width); }
     // Takes a share of the height the panel has left over.
     virtual bool wantsSpare() const { return false; }
+    // The palette it draws from has changed. A widget that hands colors to another program
+    // hands them over again.
+    virtual void paletteChanged() { update(); }
 
 signals:
     void heightChanged();

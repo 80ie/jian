@@ -104,7 +104,7 @@ int runPanel(const QDir& dir, WindowModel* windows)
         if (const std::optional<Palette> next = readPalette(palettePath);
             next && *next != palette) {
             palette = *next;
-            panel.update();
+            panel.paletteChanged();
         }
         if (const std::optional<Config> next = readConfig(configPath); next && *next != config) {
             config = *next;

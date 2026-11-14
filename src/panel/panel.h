@@ -21,6 +21,8 @@ public:
     void setWidgets(std::vector<ShelfWidget*> widgets);
     void setSide(Qt::Edge side);
     void setWidth(int width);
+    // Redraws, and tells each widget.
+    void paletteChanged();
 
 signals:
     // Changes made on the panel itself, not through the setters.

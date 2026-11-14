@@ -421,6 +421,17 @@ Added:
 Output selection currently goes through `FvwmCommand`. Replace with a direct
 `pactl` call so the widget has no fvwm dependency.
 
+The sink side is `pactl` alone, where the Python widget read with `wpctl`.
+After each burst of `pactl subscribe` events about a sink or the server,
+`pactl -f json info` and `pactl -f json list sinks` give the default sink and
+every sink's volume; `pactl set-sink-volume`, `set-sink-mute` and
+`set-default-sink` make the changes. Choosing an output sets the default
+sink, which `@DEFAULT_SINK@` follows, so nothing is published to fvwm: the
+`InfoStoreAdd media_output` goes. A subscription that ends, as it does when
+pipewire-pulse restarts, is started again after two seconds, the wait
+doubling to about a minute while the server stays away; nothing signals that
+a server is back.
+
 ### 7.5 Tray
 
 stalonetray in a `ForeignSlot`, launched and owned by the panel through

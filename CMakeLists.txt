@@ -15,6 +15,7 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 add_library(shelfcore STATIC
     src/media/mpris.cpp
     src/media/player.cpp
+    src/media/pulse.cpp
     src/paint/bevel.cpp
     src/paint/sheet.cpp
     src/panel/config.cpp

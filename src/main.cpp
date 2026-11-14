@@ -54,6 +54,8 @@ int runWidget(QStringView id, const Palette& palette, const Config& config, Wind
         return 1;
     const int width = config.width - paint::frameWidth;
     widget->resize(width, widget->heightForWidth(width));
+    QObject::connect(widget.get(), &ShelfWidget::heightChanged, widget.get(),
+        [&widget] { widget->resize(widget->width(), widget->heightForWidth(widget->width())); });
     widget->show();
     return QApplication::exec();
 }

@@ -518,7 +518,8 @@ from.
   Network), xcb, xcb-composite if 7.3 goes that way. All present on this
   machine.
 - A development preset with AddressSanitizer and UBSan.
-- `<name> --only <widget>` runs one widget as a plain window.
+- `<name> --only <widget>` runs one widget as a plain window, as tall as
+  the widget asks to be.
 - `<name> --render out.png --fixture <dir>` draws the panel offscreen with
   canned data. Until there are fixtures, `--render out.png [--palette
   file.ini]` draws the default layout with a fixed time and font, and

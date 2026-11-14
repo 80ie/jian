@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Test)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus Network Test)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb xcb-composite xcb-damage)
 qt_standard_project_setup()
@@ -13,6 +13,7 @@ qt_standard_project_setup()
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(shelfcore STATIC
+    src/media/player.cpp
     src/paint/bevel.cpp
     src/paint/sheet.cpp
     src/panel/config.cpp
@@ -38,7 +39,7 @@ add_library(shelfcore STATIC
     src/x11/trace.cpp
     src/x11/windowmodel.cpp)
 target_include_directories(shelfcore PUBLIC src)
-target_link_libraries(shelfcore PUBLIC Qt6::Widgets PkgConfig::XCB)
+target_link_libraries(shelfcore PUBLIC Qt6::Widgets Qt6::DBus Qt6::Network PkgConfig::XCB)
 
 add_executable(shelf src/main.cpp)
 target_link_libraries(shelf PRIVATE shelfcore)

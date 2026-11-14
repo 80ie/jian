@@ -2,6 +2,7 @@
 
 #include "widgets/shelfwidget.h"
 
+#include <QColor>
 #include <QProcess>
 #include <QRect>
 #include <QStringList>
@@ -54,5 +55,8 @@ private:
     bool m_restarting = false;
     int m_columns = 0;
     int m_icons = 0;
+    // The background the running stalonetray was given.
+    QColor m_background;
     QTimer m_measure;
+    QTimer m_recolor;
 };

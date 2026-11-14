@@ -592,8 +592,11 @@ has a command-line form. Those it sets to stalonetray's defaults
 arguments, so `--config /dev/null` keeps such a file out. No rc file is
 generated.
 
-The panel restarts stalonetray when N changes and when the palette changes,
-starting the new one once the old has exited and given up the selection.
+The panel restarts stalonetray when N changes and when the palette changes
+its background, once the palette has held still for 300 ms, so that dragging
+the contrast slider in the editor does not dock every icon again at each
+step. It starts the new one once the old has exited and given up the
+selection.
 stalonetray asks for SIGTERM when the panel dies (`PR_SET_PDEATHSIG`): a
 signal or a broken X connection ends the panel without its destructors, and
 in `fvwm-rig` a stalonetray whose panel was killed otherwise lived on and

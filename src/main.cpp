@@ -7,6 +7,7 @@
 #include "widgets/catalog.h"
 #include "widgets/shelfwidget.h"
 #include "x11/connection.h"
+#include "x11/thumbnails.h"
 #include "x11/trace.h"
 #include "x11/windowmodel.h"
 
@@ -158,6 +159,7 @@ int main(int argc, char* argv[])
     const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
     const std::unique_ptr<XConnection> x = XConnection::open();
     const std::unique_ptr<WindowModel> windows = x ? std::make_unique<WindowModel>(*x) : nullptr;
+    const std::unique_ptr<Thumbnails> thumbnails = x ? Thumbnails::open(*x, *windows) : nullptr;
     if (parser.isSet(onlyOption))
         return runWidget(parser.value(onlyOption),
             readPalette(dir.filePath(u"palette.ini"_s)).value_or(Palette()),

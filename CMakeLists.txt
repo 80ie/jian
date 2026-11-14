@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Test)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
+pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb xcb-composite xcb-damage)
 qt_standard_project_setup()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
@@ -31,6 +31,7 @@ add_library(shelfcore STATIC
     src/x11/client.cpp
     src/x11/connection.cpp
     src/x11/reply.cpp
+    src/x11/thumbnails.cpp
     src/x11/trace.cpp
     src/x11/windowmodel.cpp)
 target_include_directories(shelfcore PUBLIC src)

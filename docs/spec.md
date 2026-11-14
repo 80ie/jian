@@ -279,11 +279,31 @@ purposes.
   as a pinned tile, on Damage events throttled to about one capture a
   second.
 - An unmapped window has no pixmap, so a minimized window shows its last
-  capture from before it was minimized.
-- `xcompmgr` already redirects windows on this machine. Without a
-  compositor the panel asks for automatic redirection itself. **VERIFY**
-  that this works with no compositor running and costs nothing visible.
+  capture from before it was minimized. A window is unmapped before the
+  focus leaves it, so the panel names the focused window's storage while it
+  has the focus and reads it when the focus moves; named storage outlives
+  the unmap.
+- The panel redirects each listed client itself, automatically, whether or
+  not a compositor runs, rather than the root's subwindows. A capture then
+  shows the client without its frame, and the panel's own windows and every
+  popup stay unredirected. Under `xcompmgr` the client's storage nests in
+  its frame's at the cost of one more copy per redraw; not yet tried there.
 - No Composite extension: icons only.
+
+Verified in `fvwm-rig` (Xvfb, no compositor): automatic redirection of each
+client gives storage that `NameWindowPixmap` and `GetImage` read correctly,
+and costs nothing visible. A screenshot of four windows before and after
+they were redirected differed in no pixel, and page switches with two pinned
+windows redrawing all the time still painted the list 5.8 to 7.1 ms after
+the last `ConfigureNotify`.
+
+A capture is a `GetGeometry` and a `GetImage` round trip and a scale to at
+most 400x400, taken one per turn of the event loop. A 1250x868 window took
+1.4 to 4.6 ms in a release build (4.7 to 7.2 ms under ASan), a 300x200 one
+about 0.3 ms. Pinned windows that redraw constantly were captured once a
+second each. Not measured: a 4K window, with seven times those pixels. If
+that blocks visibly, the next step is to scale on the server with RENDER
+and read only the small image.
 
 Overflow, in order, as the list outgrows its height:
 
@@ -292,7 +312,10 @@ Overflow, in order, as the list outgrows its height:
 3. the pinned grid drops from thumbnails to icon tiles;
 4. the row list scrolls.
 
-Rows never go below `ROW_H`. The floor and the pinned tile size are settings.
+Rows never go below `ROW_H`. The floor and the pinned tile size are settings:
+`config.ini` `[tasks]` `floor` (default 64) and `tile` (default 48), both in
+pixels; the tile is the height, as there are always two columns. "Oldest" is
+the window minimized longest ago. Icon tiles are 32 pixels tall.
 
 ### 7.4 Media
 

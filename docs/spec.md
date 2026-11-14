@@ -415,8 +415,20 @@ Added:
   signal position, so the bar advances from a local timer between `Seeked`
   signals and playback-state changes, and only while playing and visible.
   Hidden for players that report `CanSeek` false.
-- **Source selector.** "Automatic" follows the most recently playing player,
-  as now; otherwise pin to one player by its bus name.
+- **Source selector.** "Automatic" follows the most recently playing player:
+  of those playing, the one that started last; with none playing, the one
+  that started last; else the first the bus lists. The Python widget kept a
+  playing player until it stopped instead. Pinned, the controls keep to one
+  player by its well-known name less any `.instance…` suffix, `vlc` for
+  `org.mpris.MediaPlayer2.vlc.instance4242`, kept in `config.ini` `[media]
+  source`. A unique bus name lasts one run of the player, and the suffix of
+  a player that can run twice carries its pid.
+
+Top to bottom: the source, the cover in a well shaped to it, the title, the
+trackbar, transport, volume, the output. The Python widget had the output at
+the top and no source. Both are drop-downs drawn with the painters that open
+a menu. The speaker is drawn rather than taken from the Haiku icon theme, so
+that a render depends on nothing installed.
 
 Output selection currently goes through `FvwmCommand`. Replace with a direct
 `pactl` call so the widget has no fvwm dependency.

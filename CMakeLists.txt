@@ -29,6 +29,9 @@ add_library(shelfcore STATIC
     src/widgets/catalog.cpp
     src/widgets/clock.cpp
     src/widgets/foreignslot.cpp
+    src/widgets/media.cpp
+    src/widgets/medialayout.cpp
+    src/widgets/mediapaint.cpp
     src/widgets/shelfwidget.h
     src/widgets/tasklayout.cpp
     src/widgets/tasks.cpp

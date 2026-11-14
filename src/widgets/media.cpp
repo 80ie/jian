@@ -1,0 +1,303 @@
+#include "widgets/media.h"
+#include "media/coverart.h"
+#include "media/mpris.h"
+#include "paint/bevel.h"
+#include "palette/palette.h"
+
+#include <QDBusConnection>
+#include <QMenu>
+#include <QMouseEvent>
+#include <QPainter>
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
+using namespace Qt::StringLiterals;
+
+namespace {
+
+constexpr int marqueeMs = 60;
+constexpr double wheelStep = 0.05;
+// A drag finer than this is not worth a write.
+constexpr double volumeGrain = 0.005;
+
+QString labelOf(const Player& player)
+{
+    return player.identity.isEmpty() ? playerKey(player.service) : player.identity;
+}
+
+} // namespace
+
+Media::Media(const Palette& palette, const QString& source, WindowModel* windows, QWidget* parent)
+    : ShelfWidget(parent)
+    , m_palette(palette)
+    , m_source(source)
+{
+    m_marquee.setInterval(marqueeMs);
+    connect(&m_marquee, &QTimer::timeout, this, [this] {
+        m_scroll = marqueeStep(m_scroll, m_span);
+        update(layout().title);
+    });
+    m_title = titleText();
+    if (!windows)
+        return;
+
+    if (const QDBusConnection bus = QDBusConnection::sessionBus(); bus.isConnected()) {
+        m_mpris = new Mpris(bus, this);
+        connect(m_mpris, &Mpris::changed, this, [this] { setPlayers(m_mpris->players()); });
+    } else {
+        qWarning("media: no session bus");
+    }
+    m_pulse = new Pulse(this);
+    connect(m_pulse, &Pulse::changed, this, [this] { setSinks(m_pulse->sinks()); });
+    m_cover = new CoverArt(this);
+    connect(m_cover, &CoverArt::changed, this, [this] { setArt(m_cover->image()); });
+}
+
+QString Media::id() const { return u"media"_s; }
+
+int Media::heightForWidth(int width) const { return mediaLayout(width, m_art.size()).height; }
+
+void Media::setPlayers(const std::vector<Player>& players)
+{
+    const int before = heightForWidth(width());
+    m_players = players;
+    refresh(before);
+}
+
+void Media::setSinks(const Sinks& sinks)
+{
+    m_sinks = sinks;
+    update();
+}
+
+void Media::setArt(const QImage& art)
+{
+    const int before = heightForWidth(width());
+    m_art = art;
+    refresh(before);
+}
+
+void Media::paintEvent(QPaintEvent* event)
+{
+    const MediaLayout l = layout();
+    const Player* current = player();
+    QPainter p(this);
+    p.fillRect(rect(), m_palette.tone(0));
+
+    const QString source = current ? labelOf(*current) : m_source;
+    drawSelector(
+        p, l.source, m_palette, source.isEmpty() ? u"No player"_s : source, current != nullptr);
+    if (!l.art.isNull()) {
+        // The marquee repaints its field many times a second, and scaling the art is not free.
+        if (event->rect().intersects(l.art))
+            drawArt(p, l.art, m_palette, m_art);
+        paint::divider(p, QRect(0, l.artRule, width(), 2), m_palette);
+    }
+    drawTitle(
+        p, l.title, m_palette, m_title, current && !current->title.isEmpty(), m_scroll, m_span);
+    const bool live = current && current->canControl;
+    drawTransport(p, l.buttons, m_palette,
+        { live && current->canGoPrevious, live, live, live && current->canGoNext }, m_pressed,
+        current && current->playback == Playback::Playing);
+    paint::divider(p, QRect(0, l.rule, width(), 2), m_palette);
+
+    const Output* output = m_sinks.current();
+    drawVolume(p, l, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),
+        !output || output->muted);
+    drawSelector(p, l.output, m_palette, output ? output->description : u"No output device"_s,
+        !m_sinks.outputs.empty());
+}
+
+void Media::resizeEvent(QResizeEvent*) { restartTimers(); }
+
+void Media::showEvent(QShowEvent*) { restartTimers(); }
+
+void Media::hideEvent(QHideEvent*) { restartTimers(); }
+
+void Media::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+    const QPoint pos = event->position().toPoint();
+    const MediaLayout l = layout();
+    for (int i = 0; i < 4; ++i) {
+        if (l.buttons[i].contains(pos)) {
+            m_pressed = Transport(i);
+            update(l.buttons[i]);
+            return;
+        }
+    }
+    const QRect volumeBand(
+        l.groove.left() - 6, l.thumbTop - 2, l.groove.width() + 12, thumbSize.height() + 4);
+    if (l.source.contains(pos)) {
+        chooseSource(l.source);
+    } else if (l.output.contains(pos)) {
+        chooseOutput(l.output);
+    } else if (l.speaker.contains(pos) && m_pulse) {
+        m_pulse->toggleMute();
+    } else if (volumeBand.contains(pos) && m_sinks.current()) {
+        m_volume = m_sinks.current()->volume;
+        dragVolume(pos.x());
+    }
+}
+
+void Media::mouseMoveEvent(QMouseEvent* event)
+{
+    const QPoint pos = event->position().toPoint();
+    const MediaLayout l = layout();
+    if (m_volume) {
+        dragVolume(pos.x());
+    } else if (m_pressed && !l.buttons[int(*m_pressed)].contains(pos)) {
+        update(l.buttons[int(*m_pressed)]);
+        m_pressed.reset();
+    }
+}
+
+void Media::mouseReleaseEvent(QMouseEvent* event)
+{
+    const MediaLayout l = layout();
+    if (m_volume) {
+        m_volume.reset();
+        update();
+    } else if (m_pressed) {
+        const Transport which = *std::exchange(m_pressed, std::nullopt);
+        update(l.buttons[int(which)]);
+        if (l.buttons[int(which)].contains(event->position().toPoint()))
+            act(which);
+    }
+}
+
+void Media::wheelEvent(QWheelEvent* event)
+{
+    const Output* output = m_sinks.current();
+    if (!m_pulse || !output || event->angleDelta().y() == 0)
+        return;
+    m_pulse->setVolume(output->volume + (event->angleDelta().y() > 0 ? wheelStep : -wheelStep));
+}
+
+const Player* Media::player() const { return choosePlayer(m_players, m_source); }
+
+MediaLayout Media::layout() const { return mediaLayout(width(), m_art.size()); }
+
+QString Media::titleText() const
+{
+    const Player* current = player();
+    return current && !current->title.isEmpty() ? current->title : u"—"_s;
+}
+
+void Media::refresh(int heightBefore)
+{
+    const Player* current = player();
+    if (m_cover && current)
+        m_cover->setTrack(current->owner, current->trackId, current->artUrl);
+    else if (m_cover)
+        m_cover->setTrack(QString(), QString(), QString());
+    if (const QString title = titleText(); title != m_title) {
+        m_title = title;
+        m_scroll = 0;
+    }
+    if (heightForWidth(width()) != heightBefore)
+        emit heightChanged();
+    restartTimers();
+    update();
+}
+
+// The marquee runs while the title overflows and the widget is visible.
+void Media::restartTimers()
+{
+    const MediaLayout l = layout();
+    const QFontMetrics metrics = fontMetrics();
+    m_span = metrics.horizontalAdvance(m_title) > titleRoom(l.title)
+        ? metrics.horizontalAdvance(m_title + marqueeGap)
+        : 0;
+    m_scroll = m_span > 0 ? m_scroll % m_span : 0;
+    if (m_span == 0 || !isVisible())
+        m_marquee.stop();
+    else if (!m_marquee.isActive())
+        m_marquee.start();
+}
+
+void Media::setSource(const QString& source)
+{
+    const int before = heightForWidth(width());
+    m_source = source;
+    emit sourceChosen(source);
+    refresh(before);
+}
+
+void Media::chooseSource(const QRect& field)
+{
+    auto* menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    const auto add = [this, menu](const QString& label, const QString& key) {
+        QAction* action = menu->addAction(label, this, [this, key] { setSource(key); });
+        action->setCheckable(true);
+        action->setChecked(key == m_source);
+    };
+    add(u"Automatic"_s, QString());
+    menu->addSeparator();
+    QStringList keys;
+    for (const Player& player : m_players) {
+        const QString key = playerKey(player.service);
+        if (!keys.contains(key)) {
+            keys << key;
+            add(labelOf(player), key);
+        }
+    }
+    if (!m_source.isEmpty() && !keys.contains(m_source))
+        add(m_source, m_source);
+    menu->popup(mapToGlobal(field.bottomLeft()));
+}
+
+void Media::chooseOutput(const QRect& field)
+{
+    if (m_sinks.outputs.empty())
+        return;
+    auto* menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    for (const Output& output : m_sinks.outputs) {
+        QAction* action = menu->addAction(output.description, this, [this, name = output.name] {
+            if (m_pulse)
+                m_pulse->setDefault(name);
+        });
+        action->setCheckable(true);
+        action->setChecked(output.name == m_sinks.defaultName);
+    }
+    menu->popup(mapToGlobal(field.bottomLeft()));
+}
+
+void Media::dragVolume(int x)
+{
+    const double volume = volumeAt(layout().groove, x);
+    if (std::abs(volume - *m_volume) < volumeGrain)
+        return;
+    m_volume = volume;
+    if (m_pulse)
+        m_pulse->setVolume(volume);
+    update();
+}
+
+void Media::act(Transport which)
+{
+    const Player* current = player();
+    if (!m_mpris || !current || !current->canControl)
+        return;
+    switch (which) {
+    case Transport::Previous:
+        if (current->canGoPrevious)
+            m_mpris->previous(current->owner);
+        break;
+    case Transport::Stop:
+        m_mpris->stop(current->owner);
+        break;
+    case Transport::PlayPause:
+        m_mpris->playPause(current->owner);
+        break;
+    case Transport::Next:
+        if (current->canGoNext)
+            m_mpris->next(current->owner);
+        break;
+    }
+}

@@ -1,4 +1,4 @@
-foreach(name palette sheet layout config dock clock client tasklayout thumbnails tray worldview panel player pulse coverart)
+foreach(name palette sheet layout config dock clock client tasklayout thumbnails tray worldview panel player pulse coverart medialayout)
     add_executable(${name}_test ${name}_test.cpp)
     target_link_libraries(${name}_test PRIVATE shelfcore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)

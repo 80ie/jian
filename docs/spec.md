@@ -271,18 +271,74 @@ and `date`.
 
 ### 7.2 World View
 
-The `ShelfPager` FvwmPager instance in a `ForeignSlot`. Present only when an
-fvwm socket is reachable; otherwise the widget is not offered.
+FvwmPager in a `ForeignSlot`, under the module alias `ShelfWorldView`,
+showing desks 0 and 1 stacked. The alias is not the Python shelf's
+`ShelfPager`, so that both can run. The widget is offered only when fvwm can
+be reached: `FVWMMFL_SOCKET` names a file that exists and `FvwmCommand` is
+on the path.
 
-The widget owns everything fvwm needs for it and sends it over `FvwmCommand`:
-the `*ShelfPager:` module configuration, the four pager colorsets, and the
-launch and kill at each width step. `config` then keeps only the `Style
-ShelfPager` line. **VERIFY** that module configuration lines sent at runtime
-behave the same as ones read from `config`.
+The widget owns everything fvwm needs for it and sends it over `FvwmCommand
+-c`, a batch to a process and one process at a time, so that fvwm runs the
+commands in order; in `fvwm-rig` FvwmMFL ran every line of a single write,
+forty lines included. A launch is `KillModule`, `DestroyModuleConfig
+ShelfWorldView:*`, the module configuration, the four colorsets, then
+`Module FvwmPager ShelfWorldView 0 1`. The configuration is the old
+`*ShelfPager:` block less the lines that set defaults: the colorsets,
+`Font`, `Rows 2`, `MiniIcons`, `SolidSeparators`, `HideSmallWindows`,
+`UseSkipList` and `Geometry`.
 
-Pager colors come from the palette like any other, pushed to fvwm when the
-palette changes. This is the only place palette data crosses to fvwm without
-the user asking for an export.
+FvwmPager lays out its grid when it starts, so each new size of the slot,
+once it has held for 50 ms, starts a new pager. One launch is in flight at
+a time, and a size that changed meanwhile is taken up when the window
+arrives. A pager lost any other way means fvwm restarted or the module
+died, and the widget starts it again after half a second. While fvwm
+restarts, `FvwmCommand` fails or its commands go nowhere, so a launch whose
+`FvwmCommand` failed, or whose window has not come within five seconds, is
+tried again every half second, twenty times. Three `Restart`s in `fvwm-rig`
+each brought the pager back at the first try. The widget kills the pager
+when it goes; when the panel is killed instead, the pager's window dies with
+the panel's and FvwmPager exits.
+
+The pager colorsets are fixed at 300 to 303, far above the numbers configs
+give their own. They carry the colors colorsets 21, 20, 36 and 37 had,
+through the table in 8.1:
+
+| colorset | pager option | fg | bg |
+|---|---|---|---|
+| 300 | `Colorset` | tone -6 | tone -2 |
+| 301 | `HilightColorset` | ink | tone 0 |
+| 302 | `WindowColorset` | tone -6 | tone -1 |
+| 303 | `FocusColorset` | tone -6 | tone +2 |
+
+`pager_desk` is not among them, as it was not among the old ones. A palette
+change re-sends the four `Colorset` lines, and a running FvwmPager redraws
+from them. This is the only place palette data crosses to fvwm without the
+user asking for an export.
+
+The labels are in the widget's font, sent as an Xft name at its whole pixel
+size (`xft:Family:pixelsize=N:weight=W`), so that the widget knows their
+height: FvwmPager's label bar is the font's height plus 2. In `fvwm-rig` a
+169x228 pager drew 19-pixel labels over 95-pixel desks for a 17-pixel font,
+as computed. The natural height is two labels and two pages in the
+proportions of the screen's virtual geometry, inside the well.
+
+Verified in `fvwm-rig` (fvwm3 1.1.5): module configuration sent at runtime
+behaves as configuration read from `config` does. A pager started after
+`*Alias:` lines sent with `FvwmCommand` used them. `$[...]` in such a line
+is expanded when the line runs, alike for a line sent at runtime and one in
+a file read with `Read`: a `Font $[infostore.bigfont]` line stored while
+`bigfont` named a 24-point font, followed by a change to 8 points, gave
+24-point labels both ways. So the note in `~/.fvwm/AGENTS.md` that such
+lines do not expand `$[...]` does not hold for `$[infostore.*]`. The widget
+sends no `$[...]`.
+
+`config` keeps one line, so that the pager's window does not show as an
+ordinary one for the moment before the slot takes it:
+
+    Style ShelfWorldView !Title, !Handles, BorderWidth 0, HandleWidth 0, \
+        Sticky, WindowListSkip, CirculateSkip, NeverFocus, !Iconifiable
+
+Without it the window gets the styles that match its class, `FvwmPager`.
 
 ### 7.3 Tasks
 

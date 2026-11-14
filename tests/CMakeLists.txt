@@ -1,6 +1,6 @@
-foreach(name palette sheet layout config dock clock client tasklayout thumbnails tray panel)
+foreach(name palette sheet layout config dock clock client tasklayout thumbnails tray worldview panel)
     add_executable(${name}_test ${name}_test.cpp)
     target_link_libraries(${name}_test PRIVATE shelfcore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)
 endforeach()
-set_tests_properties(sheet panel PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+set_tests_properties(sheet worldview panel PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)

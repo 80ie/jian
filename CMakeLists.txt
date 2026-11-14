@@ -29,6 +29,7 @@ add_library(shelfcore STATIC
     src/widgets/tasklayout.cpp
     src/widgets/tasks.cpp
     src/widgets/tray.cpp
+    src/widgets/worldview.cpp
     src/x11/atoms.cpp
     src/x11/client.cpp
     src/x11/connection.cpp

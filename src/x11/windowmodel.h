@@ -22,6 +22,7 @@ class WindowModel : public QObject {
 public:
     explicit WindowModel(XConnection& x);
 
+    XConnection& connection() const { return m_x; }
     // The clients a task list shows, in _NET_CLIENT_LIST order.
     const std::vector<Client>& shown() const { return m_shown; }
     void setThumbnail(quint32 window, const QImage& thumbnail);
@@ -38,6 +39,8 @@ public:
 signals:
     // Once for a burst of events that changed shown().
     void changed();
+    // Once for each window that joins the client list, shown or not, with its fields read.
+    void appeared(const Client& client);
 
 private:
     enum class Field { Title, Icon, State, Desktop };

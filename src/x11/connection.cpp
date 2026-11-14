@@ -64,6 +64,12 @@ XConnection::XConnection(
     QCoreApplication::instance()->installNativeEventFilter(this);
 }
 
+bool XConnection::owns(quint32 window) const
+{
+    const xcb_setup_t* setup = xcb_get_setup(m_connection);
+    return (window & ~setup->resource_id_mask) == setup->resource_id_base;
+}
+
 bool XConnection::nativeEventFilter(const QByteArray& type, void* message, qintptr*)
 {
     if (type == "xcb_generic_event_t")

@@ -64,13 +64,6 @@ void selectEvents(xcb_connection_t* c, quint32 window, quint32 events)
     discard(c, xcb_change_window_attributes_checked(c, window, XCB_CW_EVENT_MASK, &events));
 }
 
-// Selecting events on one of the panel's own windows would replace the mask Qt has there.
-bool ours(xcb_connection_t* c, quint32 window)
-{
-    const xcb_setup_t* setup = xcb_get_setup(c);
-    return (window & ~setup->resource_id_mask) == setup->resource_id_base;
-}
-
 } // namespace
 
 WindowModel::WindowModel(XConnection& x)
@@ -242,6 +235,9 @@ void WindowModel::update()
         m_shown = std::move(shown);
         emit changed();
     }
+    for (quint32 window : added)
+        if (const Client* client = find(window))
+            emit appeared(*client);
 }
 
 std::vector<WindowModel::RootRequest> WindowModel::requestRoot()
@@ -272,7 +268,8 @@ std::vector<quint32> WindowModel::applyRoot(const std::vector<RootRequest>& requ
             for (quint32 window : values(reply)) {
                 if (Client* client = find(window)) {
                     clients.push_back(std::move(*client));
-                } else if (!ours(m_x.xcb(), window)) {
+                } else if (!m_x.owns(window)) {
+                    // Selecting events on one of the panel's windows would replace Qt's mask.
                     clients.emplace_back().window = window;
                     added.push_back(window);
                 }

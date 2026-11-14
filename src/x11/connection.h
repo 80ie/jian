@@ -20,6 +20,8 @@ public:
     xcb_connection_t* xcb() const { return m_connection; }
     const xcb_screen_t& screen() const { return m_screen; }
     const Atoms& atoms() const { return m_atoms; }
+    // Whether `window` was created on this connection, which is to say by Qt for the panel.
+    bool owns(quint32 window) const;
 
 signals:
     // Every event, Qt's included, before Qt handles it.

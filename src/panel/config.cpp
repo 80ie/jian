@@ -31,6 +31,12 @@ std::optional<Config> loadConfig(const QString& path)
     config.widgets.removeAll(QString());
     config.clockTime = ini.value("clock/time", config.clockTime).toString();
     config.clockDate = ini.value("clock/date", config.clockDate).toString();
+    config.tasksTile = ini.value("tasks/tile", config.tasksTile).toInt(&ok);
+    if (!ok || config.tasksTile < 1)
+        return bad("tasks/tile");
+    config.tasksFloor = ini.value("tasks/floor", config.tasksFloor).toInt(&ok);
+    if (!ok || config.tasksFloor < 1)
+        return bad("tasks/floor");
     return config;
 }
 
@@ -44,6 +50,8 @@ bool saveConfig(const Config& config, const QString& path)
         "panel/widgets", config.widgets.isEmpty() ? QVariant(QString()) : QVariant(config.widgets));
     ini.setValue("clock/time", config.clockTime);
     ini.setValue("clock/date", config.clockDate);
+    ini.setValue("tasks/tile", config.tasksTile);
+    ini.setValue("tasks/floor", config.tasksFloor);
     ini.sync();
     if (ini.status() == QSettings::NoError)
         return true;

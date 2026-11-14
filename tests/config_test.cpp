@@ -33,6 +33,8 @@ private slots:
         changed.widgets = QStringList { "tasks", "clock", "media" };
         changed.clockTime = "HH:mm:ss";
         changed.clockDate = "dddd d MMMM";
+        changed.tasksTile = 60;
+        changed.tasksFloor = 40;
         QTest::newRow("changed") << changed;
         Config empty;
         empty.widgets.clear();
@@ -64,12 +66,14 @@ private slots:
         QTest::addColumn<QByteArray>("text");
         QTest::newRow("side") << QByteArray("[panel]\nside=top\n");
         QTest::newRow("width") << QByteArray("[panel]\nwidth=wide\n");
+        QTest::newRow("tile") << QByteArray("[tasks]\ntile=big\n");
+        QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");
     }
 
     void badValuesAreRejected()
     {
         QFETCH(QByteArray, text);
-        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad panel/"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks)/"));
         QVERIFY(!loadText(text));
     }
 };

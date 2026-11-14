@@ -6,6 +6,8 @@
 #include "panel/render.h"
 #include "widgets/catalog.h"
 #include "widgets/shelfwidget.h"
+#include "x11/connection.h"
+#include "x11/windowmodel.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -43,9 +45,9 @@ int saveImage(const QImage& image, const QString& path)
     return 1;
 }
 
-int runWidget(QStringView id, const Palette& palette, const Config& config)
+int runWidget(QStringView id, const Palette& palette, const Config& config, WindowModel* windows)
 {
-    const std::unique_ptr<ShelfWidget> widget(createWidget(id, palette, config, nullptr));
+    const std::unique_ptr<ShelfWidget> widget(createWidget(id, palette, config, windows, nullptr));
     if (!widget)
         return 1;
     const int width = config.width - paint::frameWidth;
@@ -54,7 +56,7 @@ int runWidget(QStringView id, const Palette& palette, const Config& config)
     return QApplication::exec();
 }
 
-int runPanel(const QDir& dir)
+int runPanel(const QDir& dir, WindowModel* windows)
 {
     const QString configPath = dir.filePath(u"config.ini"_s);
     const QString palettePath = dir.filePath(u"palette.ini"_s);
@@ -65,7 +67,7 @@ int runPanel(const QDir& dir)
     const auto apply = [&] {
         panel.setSide(config.side);
         panel.setWidth(config.width);
-        panel.setWidgets(createWidgets(palette, config, &panel));
+        panel.setWidgets(createWidgets(palette, config, windows, &panel));
     };
     apply();
     QObject::connect(&panel, &Panel::widthDragged, &panel, [&](int width) {
@@ -148,10 +150,12 @@ int main(int argc, char* argv[])
     }
 
     const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    const std::unique_ptr<XConnection> x = XConnection::open();
+    const std::unique_ptr<WindowModel> windows = x ? std::make_unique<WindowModel>(*x) : nullptr;
     if (parser.isSet(onlyOption))
         return runWidget(parser.value(onlyOption),
             readPalette(dir.filePath(u"palette.ini"_s)).value_or(Palette()),
-            readConfig(dir.filePath(u"config.ini"_s)).value_or(Config()));
+            readConfig(dir.filePath(u"config.ini"_s)).value_or(Config()), windows.get());
 
     QLockFile lock(QDir(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
             .filePath(u"shelf.lock"_s));
@@ -163,5 +167,5 @@ int main(int argc, char* argv[])
         qWarning("%s: cannot create", qUtf8Printable(dir.path()));
         return 1;
     }
-    return runPanel(dir);
+    return runPanel(dir, windows.get());
 }

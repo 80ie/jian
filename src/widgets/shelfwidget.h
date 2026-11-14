@@ -20,6 +20,9 @@ public:
     // The palette it draws from has changed. A widget that hands colors to another program
     // hands them over again.
     virtual void paletteChanged() { update(); }
+    // A page for the settings window that changes this widget's settings, or null if it has none.
+    // The caller owns it.
+    virtual QWidget* settingsPage() { return nullptr; }
 
 signals:
     void heightChanged();

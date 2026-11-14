@@ -22,8 +22,6 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
-constexpr int narrowest = 110;
-constexpr int widest = 420;
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
 
@@ -66,6 +64,7 @@ void Panel::arrange(const QStringList& order, const QStringList& poppedOut)
             lift(slot);
     if (m_overlay)
         m_overlay->raise();
+    emit widgetsChanged();
 }
 
 void Panel::setWindowPositions(const std::map<QString, QPoint>& positions)
@@ -110,6 +109,12 @@ QStringList Panel::order() const
     return ids;
 }
 
+ShelfWidget* Panel::widget(const QString& id) const
+{
+    const auto slot = std::ranges::find(m_slots, id, &Slot::id);
+    return slot == m_slots.end() ? nullptr : slot->widget;
+}
+
 QStringList Panel::poppedOut() const
 {
     QStringList ids;
@@ -144,6 +149,7 @@ void Panel::setEditing(bool editing)
         if (slot.docked())
             freeze(*slot.widget, editing);
     relayout();
+    emit editingChanged(editing);
     if (!editing)
         emit arranged();
 }
@@ -211,6 +217,8 @@ void Panel::contextMenuEvent(QContextMenuEvent* event)
         setSide(other);
         emit sideSwitched(other);
     });
+    menu->addSeparator();
+    menu->addAction(u"Settings…"_s, this, &Panel::settingsRequested);
     menu->popup(event->globalPos());
 }
 
@@ -230,7 +238,7 @@ void Panel::place(int width)
 {
     const QScreen* screen = QGuiApplication::primaryScreen();
     const QRect bounds = screen->geometry();
-    width = std::clamp(width, narrowest, widest);
+    width = std::clamp(width, narrowestPanel, widestPanel);
     const int x = m_side == Qt::LeftEdge ? bounds.left() : bounds.right() + 1 - width;
     const QRect docked(x, bounds.top(), width, bounds.height());
     setGeometry(docked);
@@ -347,16 +355,20 @@ void Panel::dock(Slot& slot)
 
 void Panel::put(const QString& id, const QString& before)
 {
-    if (!find(id)) {
+    const bool made = !find(id);
+    if (made) {
         Slot slot = make(id);
         if (!slot.widget)
             return;
         m_slots.push_back(std::move(slot));
-        m_overlay->raise();
+        if (m_overlay)
+            m_overlay->raise();
     }
     const QStringList order = placed(this->order(), id, before);
     std::ranges::sort(m_slots, { }, [&order](const Slot& slot) { return order.indexOf(slot.id); });
     relayout();
+    if (made)
+        emit widgetsChanged();
 }
 
 void Panel::remove(const QString& id)
@@ -368,4 +380,5 @@ void Panel::remove(const QString& id)
         delete slot->widget;
     m_slots.erase(slot);
     relayout();
+    emit widgetsChanged();
 }

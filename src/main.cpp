@@ -5,6 +5,8 @@
 #include "panel/config.h"
 #include "panel/panel.h"
 #include "panel/render.h"
+#include "settings/paletteeditor.h"
+#include "settings/settingswindow.h"
 #include "widgets/catalog.h"
 #include "widgets/media.h"
 #include "widgets/shelfwidget.h"
@@ -18,6 +20,8 @@
 #include <QDir>
 #include <QFile>
 #include <QFileSystemWatcher>
+#include <QLocalServer>
+#include <QLocalSocket>
 #include <QLockFile>
 #include <QStandardPaths>
 #include <QTimer>
@@ -62,7 +66,35 @@ int runWidget(QStringView id, const Palette& palette, const Config& config, Wind
     return QApplication::exec();
 }
 
-int runPanel(const QDir& dir, WindowModel* windows)
+// What a widget's own controls change goes into config.ini.
+void keepSettings(ShelfWidget* widget, Config& config, const QString& path)
+{
+    if (auto* media = qobject_cast<Media*>(widget))
+        QObject::connect(
+            media, &Media::sourceChosen, media, [&config, path](const QString& source) {
+                config.mediaSource = source;
+                saveConfig(config, path);
+            });
+}
+
+// A running panel takes a connection to its socket as a request to open its settings window.
+bool askRunningPanel(const QString& socket)
+{
+    QLocalSocket client;
+    client.connectToServer(socket);
+    return client.waitForConnected(1000);
+}
+
+void listen(QLocalServer& server, const QString& socket)
+{
+    server.setSocketOptions(QLocalServer::UserAccessOption);
+    // Left by a panel that died, since the lock says none is running.
+    QLocalServer::removeServer(socket);
+    if (!server.listen(socket))
+        qWarning("%s: %s", qUtf8Printable(socket), qUtf8Printable(server.errorString()));
+}
+
+int runPanel(const QDir& dir, WindowModel* windows, const QString& socket, bool openSettings)
 {
     const QString configPath = dir.filePath(u"config.ini"_s);
     const QString palettePath = dir.filePath(u"palette.ini"_s);
@@ -71,11 +103,7 @@ int runPanel(const QDir& dir, WindowModel* windows)
 
     const auto create = [&](const QString& id, QWidget* parent) {
         ShelfWidget* widget = createWidget(id, palette, config, windows, parent);
-        if (auto* media = qobject_cast<Media*>(widget))
-            QObject::connect(media, &Media::sourceChosen, media, [&](const QString& source) {
-                config.mediaSource = source;
-                saveConfig(config, configPath);
-            });
+        keepSettings(widget, config, configPath);
         return widget;
     };
     Panel panel(palette, offeredWidgets(windows), create);
@@ -102,6 +130,25 @@ int runPanel(const QDir& dir, WindowModel* windows)
         saveConfig(config, configPath);
     });
 
+    PaletteEditor editor(palette, dir);
+    QObject::connect(&editor, &PaletteEditor::liveChanged, &panel, &Panel::paletteChanged);
+    std::unique_ptr<SettingsWindow> settings;
+    const auto showSettings = [&] {
+        if (!settings)
+            settings = std::make_unique<SettingsWindow>(panel, config, editor);
+        settings->show();
+        settings->raise();
+        settings->activateWindow();
+    };
+    QObject::connect(&panel, &Panel::settingsRequested, &panel, showSettings);
+    QLocalServer server;
+    listen(server, socket);
+    QObject::connect(&server, &QLocalServer::newConnection, &panel, [&] {
+        while (QLocalSocket* client = server.nextPendingConnection())
+            client->deleteLater();
+        showSettings();
+    });
+
     QFileSystemWatcher watcher({ dir.path() });
     const auto rewatch = [&] {
         // A file replaced by a rename keeps its path in the list but loses its watch.
@@ -122,11 +169,8 @@ int runPanel(const QDir& dir, WindowModel* windows)
         &watcher, &QFileSystemWatcher::fileChanged, &settle, qOverload<>(&QTimer::start));
     QObject::connect(&settle, &QTimer::timeout, &panel, [&] {
         rewatch();
-        if (const std::optional<Palette> next = readPalette(palettePath);
-            next && *next != palette) {
-            palette = *next;
-            panel.paletteChanged();
-        }
+        if (const std::optional<Palette> next = readPalette(palettePath))
+            editor.load(*next);
         if (const std::optional<Config> next = readConfig(configPath); next && *next != config) {
             config = *next;
             apply();
@@ -134,6 +178,8 @@ int runPanel(const QDir& dir, WindowModel* windows)
     });
 
     panel.show();
+    if (openSettings)
+        showSettings();
     return QApplication::exec();
 }
 
@@ -156,8 +202,10 @@ int main(int argc, char* argv[])
         u"trace-x"_s, u"Log X events and task repaints with their times to stderr."_s);
     const QCommandLineOption importOption(u"import-scheme"_s,
         u"Convert the wallust scheme <json> to the palette file named after it."_s, u"json"_s);
-    parser.addOptions(
-        { renderOption, sheetOption, paletteOption, onlyOption, traceOption, importOption });
+    const QCommandLineOption settingsOption(u"settings"_s,
+        u"Open the settings window: the running panel's, or a new panel's if none runs."_s);
+    parser.addOptions({ renderOption, sheetOption, paletteOption, onlyOption, traceOption,
+        importOption, settingsOption });
     const bool parsed = parser.parse(app.arguments());
     if (parsed && parser.isSet(importOption) && parser.optionNames().size() == 1
         && parser.positionalArguments().size() == 1) {
@@ -167,8 +215,8 @@ int main(int argc, char* argv[])
     const bool rendering = parser.isSet(renderOption) || parser.isSet(sheetOption);
     if (!parsed || !parser.positionalArguments().isEmpty() || parser.isSet(importOption)
         || parser.isSet(renderOption) + parser.isSet(sheetOption) + parser.isSet(onlyOption) > 1
-        || (parser.isSet(paletteOption) && !rendering)
-        || (parser.isSet(traceOption) && rendering)) {
+        || (parser.isSet(paletteOption) && !rendering) || (parser.isSet(traceOption) && rendering)
+        || (parser.isSet(settingsOption) && (rendering || parser.isSet(onlyOption)))) {
         std::fputs(qPrintable(parser.helpText()), stderr);
         return 2;
     }
@@ -183,6 +231,10 @@ int main(int argc, char* argv[])
         return saveImage(paint::sheet(*palette), parser.value(sheetOption));
     }
 
+    const QDir runtime(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation));
+    const QString socket = runtime.filePath(u"shelf.socket"_s);
+    if (parser.isSet(settingsOption) && askRunningPanel(socket))
+        return 0;
     if (parser.isSet(traceOption))
         QLoggingCategory::setFilterRules(u"shelf.trace-x.info=true"_s);
     const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
@@ -194,8 +246,7 @@ int main(int argc, char* argv[])
             readPalette(dir.filePath(u"palette.ini"_s)).value_or(Palette()),
             readConfig(dir.filePath(u"config.ini"_s)).value_or(Config()), windows.get());
 
-    QLockFile lock(QDir(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation))
-            .filePath(u"shelf.lock"_s));
+    QLockFile lock(runtime.filePath(u"shelf.lock"_s));
     if (!lock.tryLock()) {
         qWarning("shelf is already running");
         return 1;
@@ -204,5 +255,5 @@ int main(int argc, char* argv[])
         qWarning("%s: cannot create", qUtf8Printable(dir.path()));
         return 1;
     }
-    return runPanel(dir, windows.get());
+    return runPanel(dir, windows.get(), socket, parser.isSet(settingsOption));
 }

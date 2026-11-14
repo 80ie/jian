@@ -115,6 +115,7 @@ public:
     virtual int minimumHeightForWidth(int w) const;
     virtual bool wantsSpare() const;               // takes leftover height
     virtual void paletteChanged();                 // repaints, passes colors on
+    virtual QWidget* settingsPage();               // nullptr if none; caller owns it
 signals:
     void heightChanged();
 };
@@ -123,8 +124,9 @@ signals:
 `paletteChanged()` is how the pager and the tray hand new colors to the
 programs that draw them (7.2, 7.5).
 
-`settingsPage()` joins the contract with the settings window (milestone 7);
-until there is a window to put a page in, nothing would call it.
+A settings page changes its widget through the widget's own setters, so a
+change shows at once, and the widget signals it so that `config.ini` is
+written, as the media widget's source selector already did.
 
 A widget owns nothing outside its own rectangle, and does not know whether it
 is docked or popped out. The existing rule carries over: a widget does not
@@ -692,12 +694,26 @@ rendering the panel both ways and comparing.
 In the settings window, in the manner of qt6ct:
 
 - the ramp as one strip of twelve swatches with the face marked, a contrast
-  slider under it, and the named colors beside it;
-- clicking a swatch opens a color dialog; an overridden tone carries a
-  marker and right-click resets it;
-- hovering a swatch outlines where it is used on the live panel;
-- changes apply to the panel immediately; Save writes `palette.ini` and a
-  history copy; Revert restores the last saved state.
+  slider under it, and the named colors under that, each with what it
+  colors on the panel;
+- clicking a swatch opens a color dialog; the face's changes the face, any
+  other's overrides that tone. The panel follows the dialog as it moves and
+  goes back if it is cancelled. An overridden tone carries a dot; its
+  context menu, or the button that names the last tone clicked, puts it
+  back on the ramp. Each swatch's tooltip says where its color comes from:
+  the face, an offset times the contrast, or set by hand;
+- with "Show the tone under the pointer on the panel" ticked, the tone
+  under the pointer is replaced on the live panel by a loud color, the
+  face's complement at full chroma (magenta for a grey face), until the
+  pointer leaves it. Outlining each place a tone is drawn would need every
+  painter to report what it paints; swapping the color shows the same thing
+  for nothing. The replacement never counts as an edit;
+- changes apply to the panel immediately and stay unsaved until Save, which
+  writes `palette.ini` and a history copy; Revert restores the last saved
+  state. The window's title carries a `*` and its footer says so while there
+  are unsaved changes, and closing it then asks whether to save. A
+  `palette.ini` changed on disk meanwhile becomes the saved state without
+  taking the edit away.
 
 ### 8.3 Generation
 
@@ -788,11 +804,21 @@ copying the previous file into `history/`.
 
 ## 10. Settings window
 
-One window, opened from the panel's context menu or `<name> --settings`.
-Pages: Layout (side, width, widget order, edit mode toggle), Palette (8.2 to
-8.4), Exports (9), then one page per widget that returns a `settingsPage()`.
-It is part of the same process and edits the same objects the panel draws
-from.
+One window, opened from the panel's context menu ("Settings…") or `<name>
+--settings`. Pages: Layout (side, width, widget order, edit mode toggle),
+Palette (8.2), From image (8.3), Presets and History (8.4), then one page
+per widget that returns a `settingsPage()`. Exports (9) come with milestone
+8. It is part of the same process and edits the same objects the panel
+draws from: the Layout page calls the panel's setters and writes
+`config.ini`, as dragging the width does.
+
+`--settings` reaches a running panel through a local socket,
+`$XDG_RUNTIME_DIR/<name>.socket`, next to the lock file that already keeps a
+second panel from starting: a connection is the whole request, and nothing
+is read from it. With no panel listening, `--settings` starts one with the
+window open, so the window always has a live panel to show changes on. The
+window's `WM_CLASS` is `<name>-settings`, `Shelf`, like a popped-out
+widget's.
 
 ## 11. Build and test
 

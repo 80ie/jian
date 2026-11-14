@@ -16,6 +16,9 @@ class PopOut;
 class ShelfWidget;
 struct Palette;
 
+constexpr int narrowestPanel = 110;
+constexpr int widestPanel = 420;
+
 // The top-level window down one side of the primary screen, holding a column of widgets. A
 // widget can leave the column for a window of its own and come back to its place. In edit mode
 // the widgets are moved, added and removed rather than used.
@@ -36,15 +39,24 @@ public:
     // Where each widget's window was last, by id. A widget that pops out goes back there.
     void setWindowPositions(const std::map<QString, QPoint>& positions);
     void setSide(Qt::Edge side);
+    // Clamped between narrowestPanel and widestPanel.
     void setWidth(int width);
     void setSeparation(Separation separation);
     // Redraws, and tells each widget.
     void paletteChanged();
 
+    Qt::Edge side() const { return m_side; }
+    const QStringList& offered() const { return m_offered; }
     QStringList order() const;
     QStringList poppedOut() const;
     const std::map<QString, QPoint>& windowPositions() const { return m_windowPositions; }
+    // The widget `id` docked or in a window, or null if it is not placed or cannot run here.
+    ShelfWidget* widget(const QString& id) const;
 
+    // Puts the widget `id` in front of `before`, or last when `before` is empty, making it if it
+    // is not placed.
+    void put(const QString& id, const QString& before);
+    void remove(const QString& id);
     // Moves the widget `id` into a window of its own.
     void popOut(const QString& id);
     bool editing() const { return m_overlay; }
@@ -57,6 +69,10 @@ signals:
     // Edit mode ended, a widget popped out or came back, or a window holding one settled
     // somewhere new.
     void arranged();
+    // A widget was made or deleted.
+    void widgetsChanged();
+    void editingChanged(bool editing);
+    void settingsRequested();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -90,8 +106,6 @@ private:
     Slot* find(const QString& id);
     void lift(Slot& slot);
     void dock(Slot& slot);
-    void put(const QString& id, const QString& before);
-    void remove(const QString& id);
 
     const Palette& m_palette;
     QStringList m_offered;

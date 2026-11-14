@@ -13,6 +13,7 @@ qt_standard_project_setup()
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(shelfcore STATIC
+    src/media/coverart.cpp
     src/media/mpris.cpp
     src/media/player.cpp
     src/media/pulse.cpp

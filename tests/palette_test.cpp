@@ -95,6 +95,29 @@ private slots:
             QCOMPARE(palette.tone(tone), tone == -2 ? QColor(0x12, 0x34, 0x56) : plain.tone(tone));
     }
 
+    void shownToneStandsOut_data()
+    {
+        QTest::addColumn<QColor>("face");
+        QTest::newRow("stock") << QColor(0xa2, 0x94, 0x8a);
+        QTest::newRow("grey") << QColor(0x99, 0x99, 0x99);
+        QTest::newRow("slate") << QColor(0x6a, 0x7a, 0x99);
+    }
+
+    void shownToneStandsOut()
+    {
+        QFETCH(QColor, face);
+        const Palette palette = withFace(face);
+        const Palette shown = withToneShown(palette, -2);
+        const Oklab loud = toOklab(shown.tone(-2));
+        for (int tone = darkestTone; tone <= lightestTone; ++tone) {
+            if (tone == -2)
+                continue;
+            QCOMPARE(shown.tone(tone), palette.tone(tone));
+            const Oklab other = toOklab(palette.tone(tone));
+            QVERIFY(std::hypot(loud.a - other.a, loud.b - other.b) > 0.1);
+        }
+    }
+
     void zeroContrastIsFlat()
     {
         Palette palette;

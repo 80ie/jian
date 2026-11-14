@@ -27,5 +27,9 @@ struct Palette {
     bool operator==(const Palette&) const = default;
 };
 
+// `palette` with `tone` overridden by the face's complement at full chroma, to show on the panel
+// where the tone is used.
+Palette withToneShown(Palette palette, int tone);
+
 std::optional<Palette> loadPalette(const QString& path);
 bool savePalette(const Palette& palette, const QString& path);

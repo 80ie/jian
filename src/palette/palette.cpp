@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <utility>
 
 using namespace Qt::StringLiterals;
@@ -48,6 +49,18 @@ QColor Palette::tone(int number) const
     const double lightness = std::clamp(base.lightness + offset, 0.0, 1.0);
     const double scale = chromaScale(lightness, base.lightness);
     return fromOklab({ lightness, base.a * scale, base.b * scale });
+}
+
+Palette withToneShown(Palette palette, int tone)
+{
+    const Oklab face = toOklab(palette.face);
+    const double chroma = std::hypot(face.a, face.b);
+    // A grey face has no hue to turn from, and magenta is as far from grey as any.
+    const Oklab loud = chroma < 0.01
+        ? Oklab { 0.65, 0.25, -0.15 }
+        : Oklab { 0.65, -face.a / chroma * 0.3, -face.b / chroma * 0.3 };
+    palette.overrides[tone] = fromOklab(loud);
+    return palette;
 }
 
 std::optional<Palette> loadPalette(const QString& path)

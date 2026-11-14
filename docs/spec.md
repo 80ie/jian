@@ -236,6 +236,12 @@ Requirement: the list is correct within one frame (16 ms) of the last
 `ConfigureNotify` of a page switch. A `--trace-x` flag logs event arrival and
 repaint times so the intermittent case can be caught when it happens.
 
+Measured with `--trace-x` in `fvwm-rig`: twelve windows over five pages, ten
+switches, the first five each a first visit to its page. Each switch moved
+eleven windows within 0.5 ms, and the corrected list was painted 5.5 to 6.5
+ms after the last `ConfigureNotify`, after one round trip, for
+`_NET_ACTIVE_WINDOW`. First and later visits did not differ.
+
 ## 7. Widgets
 
 ### 7.1 Clock

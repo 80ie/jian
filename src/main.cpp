@@ -7,6 +7,7 @@
 #include "widgets/catalog.h"
 #include "widgets/shelfwidget.h"
 #include "x11/connection.h"
+#include "x11/trace.h"
 #include "x11/windowmodel.h"
 
 #include <QApplication>
@@ -129,12 +130,15 @@ int main(int argc, char* argv[])
         u"palette"_s, u"Draw either with the palette in <ini>."_s, u"ini"_s);
     const QCommandLineOption onlyOption(
         u"only"_s, u"Run one widget as a plain window."_s, u"widget"_s);
-    parser.addOptions({ renderOption, sheetOption, paletteOption, onlyOption });
+    const QCommandLineOption traceOption(
+        u"trace-x"_s, u"Log X events and task repaints with their times to stderr."_s);
+    parser.addOptions({ renderOption, sheetOption, paletteOption, onlyOption, traceOption });
     const bool parsed = parser.parse(app.arguments());
     const bool rendering = parser.isSet(renderOption) || parser.isSet(sheetOption);
     if (!parsed || !parser.positionalArguments().isEmpty()
         || parser.isSet(renderOption) + parser.isSet(sheetOption) + parser.isSet(onlyOption) > 1
-        || (parser.isSet(paletteOption) && !rendering)) {
+        || (parser.isSet(paletteOption) && !rendering)
+        || (parser.isSet(traceOption) && rendering)) {
         std::fputs(qPrintable(parser.helpText()), stderr);
         return 2;
     }
@@ -149,6 +153,8 @@ int main(int argc, char* argv[])
         return saveImage(paint::sheet(*palette), parser.value(sheetOption));
     }
 
+    if (parser.isSet(traceOption))
+        QLoggingCategory::setFilterRules(u"shelf.trace-x.info=true"_s);
     const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
     const std::unique_ptr<XConnection> x = XConnection::open();
     const std::unique_ptr<WindowModel> windows = x ? std::make_unique<WindowModel>(*x) : nullptr;

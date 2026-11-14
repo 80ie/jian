@@ -1,6 +1,7 @@
 #include "widgets/tasks.h"
 #include "paint/bevel.h"
 #include "palette/palette.h"
+#include "x11/trace.h"
 #include "x11/windowmodel.h"
 
 #include <QContextMenuEvent>
@@ -127,6 +128,7 @@ void Tasks::paintEvent(QPaintEvent*)
         else
             paintRow(p, l, i, i == hovered);
     }
+    qCInfo(traceX, "%.3f tasks painted %zu", traceClock(), m_tasks.size());
 }
 
 void Tasks::mouseMoveEvent(QMouseEvent* event)

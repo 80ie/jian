@@ -1,6 +1,7 @@
 #include "x11/windowmodel.h"
 #include "x11/connection.h"
 #include "x11/reply.h"
+#include "x11/trace.h"
 
 #include <QIcon>
 
@@ -159,9 +160,12 @@ void WindowModel::handle(const xcb_generic_event_t* event)
         Client* client = find(configure->window);
         if (!client)
             break;
+        const bool synthetic = event->response_type & 0x80;
+        qCInfo(traceX, "%.3f configure 0x%x %d,%d %s", traceClock(), configure->window,
+            configure->x, configure->y, synthetic ? "synthetic" : "real");
         // ICCCM 4.1.5: a window manager that moves a client tells it where in root coordinates
         // with a synthetic event. A real one has coordinates within the frame.
-        if (event->response_type & 0x80) {
+        if (synthetic) {
             const int border = 2 * configure->border_width;
             client->geometry = QRect(
                 configure->x, configure->y, configure->width + border, configure->height + border);
@@ -185,6 +189,7 @@ void WindowModel::handle(const xcb_generic_event_t* event)
             const std::array watched { atoms.clientList, atoms.clientListStacking,
                 atoms.activeWindow, atoms.currentDesktop };
             if (contains(watched, change->atom)) {
+                qCInfo(traceX, "%.3f root property %u", traceClock(), change->atom);
                 m_staleRoot.insert(change->atom);
                 schedule();
             }
@@ -194,6 +199,7 @@ void WindowModel::handle(const xcb_generic_event_t* event)
             break;
         for (Field field : { Field::Title, Field::Icon, Field::State, Field::Desktop }) {
             if (contains(atomsOf(field), change->atom)) {
+                qCInfo(traceX, "%.3f property 0x%x %u", traceClock(), change->window, change->atom);
                 m_stale.emplace(change->window, field);
                 schedule();
             }
@@ -213,6 +219,7 @@ void WindowModel::schedule()
 // one more if windows were added.
 void WindowModel::update()
 {
+    const double started = traceClock();
     const std::vector<RootRequest> root = requestRoot();
     const std::vector<FieldRequest> fields = requestFields(m_stale);
     const std::vector<PlaceRequest> places = requestPlaces(m_unplaced);
@@ -222,6 +229,7 @@ void WindowModel::update()
     applyFields(fields);
     applyPlaces(places);
     add(added);
+    const int roundTrips = !(root.empty() && fields.empty() && places.empty()) + !added.empty();
 
     std::vector<Client> shown;
     for (Client& client : m_clients) {
@@ -229,7 +237,10 @@ void WindowModel::update()
         if (isShown(client, m_screen, m_desktop))
             shown.push_back(client);
     }
-    if (shown != m_shown) {
+    const bool differs = shown != m_shown;
+    qCInfo(traceX, "%.3f update in %.3f ms, %d round trips, %zu shown%s", traceClock(),
+        traceClock() - started, roundTrips, shown.size(), differs ? ", changed" : "");
+    if (differs) {
         m_shown = std::move(shown);
         emit changed();
     }

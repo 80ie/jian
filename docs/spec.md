@@ -414,7 +414,12 @@ Added:
 - **Trackbar.** Position, length, click and drag to seek. MPRIS does not
   signal position, so the bar advances from a local timer between `Seeked`
   signals and playback-state changes, and only while playing and visible.
-  Hidden for players that report `CanSeek` false.
+  Hidden for players that report `CanSeek` false or no length. The position
+  is read again when the state, the rate or the track changes, any of which
+  can move it without a `Seeked`, and the timer fires as often as the fill
+  can gain a pixel, at most every 40 ms. A drag shows where it will land and
+  seeks on release, by `SetPosition` with the track's id, or by `Seek` over
+  the distance for a player that gives no id.
 - **Source selector.** "Automatic" follows the most recently playing player:
   of those playing, the one that started last; with none playing, the one
   that started last; else the first the bus lists. The Python widget kept a

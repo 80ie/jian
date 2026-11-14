@@ -116,6 +116,14 @@ void drawTitle(QPainter& p, const QRect& field, const Palette& palette, const QS
     p.restore();
 }
 
+void drawTrack(QPainter& p, const QRect& track, const Palette& palette, int fill)
+{
+    paint::trough(p, track, palette);
+    QRect filled = trackInside(track);
+    filled.setWidth(fill);
+    p.fillRect(filled, palette.fill);
+}
+
 void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palette& palette,
     const std::array<bool, 4>& enabled, std::optional<Transport> down, bool playing)
 {

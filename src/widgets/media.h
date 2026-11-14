@@ -18,7 +18,7 @@ class WindowModel;
 struct Palette;
 
 // A media player's controls and the default sink's volume: the player, its cover, a scrolling
-// title, transport, volume and the output. Without a window model it shows what its
+// title, a trackbar, transport, volume and the output. Without a window model it shows what its
 // setters give it and talks to nothing.
 class Media : public ShelfWidget {
     Q_OBJECT
@@ -50,6 +50,7 @@ protected:
 
 private:
     const Player* player() const;
+    bool showsTrack() const;
     MediaLayout layout() const;
     QString titleText() const;
     void refresh(int heightBefore);
@@ -68,11 +69,13 @@ private:
     Mpris* m_mpris = nullptr;
     Pulse* m_pulse = nullptr;
     CoverArt* m_cover = nullptr;
-    // What the mouse holds: a transport button or the volume thumb.
+    // What the mouse holds: a transport button, the volume thumb, or a place on the trackbar.
     std::optional<Transport> m_pressed;
     std::optional<double> m_volume;
+    std::optional<std::chrono::microseconds> m_seek;
     QString m_title;
     int m_scroll = 0;
     int m_span = 0;
     QTimer m_marquee;
+    QTimer m_progress;
 };

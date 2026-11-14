@@ -14,6 +14,7 @@
 #include <utility>
 
 using namespace Qt::StringLiterals;
+using namespace std::chrono;
 
 namespace {
 
@@ -39,6 +40,7 @@ Media::Media(const Palette& palette, const QString& source, WindowModel* windows
         m_scroll = marqueeStep(m_scroll, m_span);
         update(layout().title);
     });
+    connect(&m_progress, &QTimer::timeout, this, [this] { update(layout().track); });
     m_title = titleText();
     if (!windows)
         return;
@@ -57,7 +59,10 @@ Media::Media(const Palette& palette, const QString& source, WindowModel* windows
 
 QString Media::id() const { return u"media"_s; }
 
-int Media::heightForWidth(int width) const { return mediaLayout(width, m_art.size()).height; }
+int Media::heightForWidth(int width) const
+{
+    return mediaLayout(width, m_art.size(), showsTrack()).height;
+}
 
 void Media::setPlayers(const std::vector<Player>& players)
 {
@@ -97,6 +102,10 @@ void Media::paintEvent(QPaintEvent* event)
     }
     drawTitle(
         p, l.title, m_palette, m_title, current && !current->title.isEmpty(), m_scroll, m_span);
+    if (!l.track.isNull())
+        drawTrack(p, l.track, m_palette,
+            trackFill(l.track, m_seek.value_or(positionAt(*current, steady_clock::now())),
+                *current->length));
     const bool live = current && current->canControl;
     drawTransport(p, l.buttons, m_palette,
         { live && current->canGoPrevious, live, live, live && current->canGoNext }, m_pressed,
@@ -140,6 +149,10 @@ void Media::mousePressEvent(QMouseEvent* event)
     } else if (volumeBand.contains(pos) && m_sinks.current()) {
         m_volume = m_sinks.current()->volume;
         dragVolume(pos.x());
+    } else if (l.track.contains(pos)) {
+        m_seek = trackPosition(l.track, pos.x(), *player()->length);
+        restartTimers();
+        update(l.track);
     }
 }
 
@@ -149,6 +162,9 @@ void Media::mouseMoveEvent(QMouseEvent* event)
     const MediaLayout l = layout();
     if (m_volume) {
         dragVolume(pos.x());
+    } else if (m_seek && showsTrack()) {
+        m_seek = trackPosition(l.track, pos.x(), *player()->length);
+        update(l.track);
     } else if (m_pressed && !l.buttons[int(*m_pressed)].contains(pos)) {
         update(l.buttons[int(*m_pressed)]);
         m_pressed.reset();
@@ -161,6 +177,12 @@ void Media::mouseReleaseEvent(QMouseEvent* event)
     if (m_volume) {
         m_volume.reset();
         update();
+    } else if (m_seek) {
+        if (const Player* current = player(); m_mpris && current && showsTrack())
+            m_mpris->setPosition(current->owner, *m_seek);
+        m_seek.reset();
+        restartTimers();
+        update(l.track);
     } else if (m_pressed) {
         const Transport which = *std::exchange(m_pressed, std::nullopt);
         update(l.buttons[int(which)]);
@@ -179,7 +201,13 @@ void Media::wheelEvent(QWheelEvent* event)
 
 const Player* Media::player() const { return choosePlayer(m_players, m_source); }
 
-MediaLayout Media::layout() const { return mediaLayout(width(), m_art.size()); }
+bool Media::showsTrack() const
+{
+    const Player* current = player();
+    return current && current->canSeek && current->length;
+}
+
+MediaLayout Media::layout() const { return mediaLayout(width(), m_art.size(), showsTrack()); }
 
 QString Media::titleText() const
 {
@@ -204,7 +232,7 @@ void Media::refresh(int heightBefore)
     update();
 }
 
-// The marquee runs while the title overflows and the widget is visible.
+// The marquee runs while the title overflows, the trackbar while it moves; neither while hidden.
 void Media::restartTimers()
 {
     const MediaLayout l = layout();
@@ -217,6 +245,16 @@ void Media::restartTimers()
         m_marquee.stop();
     else if (!m_marquee.isActive())
         m_marquee.start();
+
+    const Player* current = player();
+    if (isVisible() && showsTrack() && current->playback == Playback::Playing && current->rate > 0
+        && !m_seek) {
+        const milliseconds step = trackStep(l.track, *current->length, current->rate);
+        if (!m_progress.isActive() || m_progress.intervalAsDuration() != step)
+            m_progress.start(step);
+    } else {
+        m_progress.stop();
+    }
 }
 
 void Media::setSource(const QString& source)

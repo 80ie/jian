@@ -5,6 +5,7 @@
 #include "widgets/catalog.h"
 #include "widgets/clock.h"
 #include "widgets/tasks.h"
+#include "widgets/worldview.h"
 
 #include <QPainter>
 
@@ -12,7 +13,8 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
-constexpr int height = 360;
+constexpr int height = 640;
+constexpr QSize screen(1600, 900);
 
 // An icon or a capture: a body with a bar across its top, in palette colors so that the render
 // follows the palette.
@@ -72,6 +74,8 @@ QImage renderPanel(const Palette& palette, const Config& config)
             clock->setTime(time);
         if (auto* tasks = qobject_cast<Tasks*>(widget))
             tasks->setClients(cannedTasks(palette));
+        if (auto* worldView = qobject_cast<WorldView*>(widget))
+            worldView->setScreen(screen);
     }
     panel.setWidgets(std::move(widgets));
     panel.resize(panel.width(), height);

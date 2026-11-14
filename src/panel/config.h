@@ -8,7 +8,8 @@
 struct Config {
     Qt::Edge side = Qt::RightEdge;
     int width = 160;
-    QStringList widgets { QStringLiteral("clock"), QStringLiteral("tasks") };
+    QStringList widgets { QStringLiteral("clock"), QStringLiteral("worldview"),
+        QStringLiteral("tasks"), QStringLiteral("tray") };
     // QDateTime formats, drawn at the left and right ends of the clock.
     QString clockTime = QStringLiteral("hh:mmAP");
     QString clockDate = QStringLiteral("ddd MM.dd");

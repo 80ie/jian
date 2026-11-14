@@ -152,8 +152,9 @@ assumes INI.
 
 ## 4. Layout
 
-The panel is an ordered list of slots, one widget per slot. For a given
-width:
+The panel is an ordered list of slots, one widget per slot. Unless
+`config.ini` says otherwise the order is clock, World View, tasks, tray; a
+widget that is not offered (7.2, 7.5) is left out. For a given width:
 
 1. Every widget gets its natural height.
 2. Spare height goes to widgets with `wantsSpare()`, split evenly. Today that
@@ -610,7 +611,8 @@ from.
   the widget asks to be.
 - `<name> --render out.png --fixture <dir>` draws the panel offscreen with
   canned data. Until there are fixtures, `--render out.png [--palette
-  file.ini]` draws the default layout with a fixed time and font, and
+  file.ini]` draws the default layout with a fixed time, font and screen
+  size, foreign slots as empty wells, and
   `--render-sheet out.png [--palette file.ini]` draws a sheet of the painters
   and the ramp for the tone comparison.
 - Qt Test for the pure parts: layout solver, palette derivation and file

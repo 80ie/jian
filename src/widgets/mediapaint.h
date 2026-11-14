@@ -21,6 +21,9 @@ inline constexpr QLatin1StringView marqueeGap("   ...   ");
 // A drop-down: `text` in a sunken field with a button at its right end bearing a wedge.
 void drawSelector(
     QPainter& p, const QRect& r, const Palette& palette, const QString& text, bool enabled);
+// Where in the well the art goes, or a picture-in-picture window.
+QRect artBox(const QRect& well);
+// The well alone for a null `art`, as under a picture-in-picture window.
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art);
 // How wide a title can be before it has to scroll.
 int titleRoom(const QRect& field);

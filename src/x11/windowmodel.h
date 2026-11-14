@@ -35,6 +35,9 @@ public:
     void close(quint32 window) const;
     void setMaximized(quint32 window, bool maximized) const;
     void setPinned(quint32 window, bool pinned) const;
+    // Has the window manager move `window` with the pointer, which is at `pointer`, as a drag
+    // on its title would.
+    void startMove(quint32 window, QPoint pointer) const;
 
 signals:
     // Once for a burst of events that changed shown().

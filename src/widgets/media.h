@@ -13,13 +13,15 @@
 #include <vector>
 
 class CoverArt;
+class ForeignSlot;
 class Mpris;
+class PictureInPicture;
 class WindowModel;
 struct Palette;
 
-// A media player's controls and the default sink's volume: the player, its cover, a scrolling
-// title, a trackbar, transport, volume and the output. Without a window model it shows what its
-// setters give it and talks to nothing.
+// A media player's controls and the default sink's volume: the player, its cover or a browser's
+// picture-in-picture window, a scrolling title, a trackbar, transport, volume and the output.
+// Without a window model it shows what its setters give it and talks to nothing.
 class Media : public ShelfWidget {
     Q_OBJECT
 
@@ -27,6 +29,7 @@ public:
     // `source` is the key of the player the controls keep to, or empty to follow whichever
     // started playing last.
     Media(const Palette& palette, const QString& source, WindowModel* windows, QWidget* parent);
+    ~Media() override;
 
     QString id() const override;
     int heightForWidth(int width) const override;
@@ -51,6 +54,7 @@ protected:
 private:
     const Player* player() const;
     bool showsTrack() const;
+    QSize wellSize() const;
     MediaLayout layout() const;
     QString titleText() const;
     void refresh(int heightBefore);
@@ -69,6 +73,10 @@ private:
     Mpris* m_mpris = nullptr;
     Pulse* m_pulse = nullptr;
     CoverArt* m_cover = nullptr;
+    ForeignSlot* m_slot = nullptr;
+    PictureInPicture* m_pip = nullptr;
+    // The picture-in-picture window's size while one is held.
+    QSize m_pipSize;
     // What the mouse holds: a transport button, the volume thumb, or a place on the trackbar.
     std::optional<Transport> m_pressed;
     std::optional<double> m_volume;

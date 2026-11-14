@@ -5,6 +5,8 @@
 
 #include <QWindow>
 
+#include <utility>
+
 ForeignSlot::ForeignSlot(WindowModel& windows, QWidget* parent)
     : QWidget(parent)
     , m_windows(windows)
@@ -27,6 +29,16 @@ void ForeignSlot::embed(quint32 window)
     m_container->setGeometry(rect());
     m_container->show();
     emit embedded();
+}
+
+// Deleted at once rather than later, so that Qt has moved the window before the caller acts
+// on it.
+quint32 ForeignSlot::letGo()
+{
+    delete m_container;
+    m_container = nullptr;
+    m_foreign = nullptr;
+    return std::exchange(m_window, 0);
 }
 
 void ForeignSlot::resizeEvent(QResizeEvent*)

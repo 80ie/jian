@@ -15,6 +15,10 @@ struct Atoms {
     xcb_atom_t wmIcon = XCB_ATOM_NONE;
     xcb_atom_t wmDesktop = XCB_ATOM_NONE;
     xcb_atom_t wmState = XCB_ATOM_NONE;
+    xcb_atom_t wmWindowType = XCB_ATOM_NONE;
+    xcb_atom_t windowTypeNormal = XCB_ATOM_NONE;
+    xcb_atom_t wmPid = XCB_ATOM_NONE;
+    xcb_atom_t moveResize = XCB_ATOM_NONE;
     xcb_atom_t stateHidden = XCB_ATOM_NONE;
     xcb_atom_t stateSticky = XCB_ATOM_NONE;
     xcb_atom_t stateSkipTaskbar = XCB_ATOM_NONE;

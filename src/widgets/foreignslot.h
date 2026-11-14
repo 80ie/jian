@@ -23,6 +23,9 @@ public:
     void embed(quint32 window);
     // The window held, or 0.
     quint32 window() const { return m_window; }
+    // Hands the window held back to the root window, where Qt leaves it unmapped, and returns
+    // it.
+    quint32 letGo();
 
 signals:
     void embedded();

@@ -59,11 +59,9 @@ QImage themeIcon(const Client& client)
     return QImage();
 }
 
-// The window may have gone, and its error is dropped here rather than reported by Qt.
 void selectEvents(xcb_connection_t* c, quint32 window, quint32 events)
 {
-    xcb_discard_reply(
-        c, xcb_change_window_attributes_checked(c, window, XCB_CW_EVENT_MASK, &events).sequence);
+    discard(c, xcb_change_window_attributes_checked(c, window, XCB_CW_EVENT_MASK, &events));
 }
 
 // Selecting events on one of the panel's own windows would replace the mask Qt has there.

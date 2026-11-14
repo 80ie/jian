@@ -16,12 +16,6 @@ namespace {
 const QSize largest(400, 400);
 constexpr int paceMs = 1000;
 
-// The window may have gone, and its error is dropped here rather than reported by Qt.
-void discard(xcb_connection_t* c, xcb_void_cookie_t cookie)
-{
-    xcb_discard_reply(c, cookie.sequence);
-}
-
 } // namespace
 
 QImage thumbnailFrom(xcb_get_image_reply_t& reply, int width, int height)

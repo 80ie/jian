@@ -28,6 +28,13 @@ Reply<T> take(xcb_connection_t* c, T* (*reply)(xcb_connection_t*, Cookie, xcb_ge
     return result;
 }
 
+// Drops the error, if any, of a request on another client's window, which may have gone, so
+// that Qt does not report it.
+inline void discard(xcb_connection_t* c, xcb_void_cookie_t cookie)
+{
+    xcb_discard_reply(c, cookie.sequence);
+}
+
 // A property's items, or nothing if it is missing or has the other format.
 std::span<const quint32> values(const PropertyReply& reply);
 QByteArrayView bytes(const PropertyReply& reply);

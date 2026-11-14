@@ -13,6 +13,7 @@ qt_standard_project_setup()
 add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(shelfcore STATIC
+    src/media/mpris.cpp
     src/media/player.cpp
     src/paint/bevel.cpp
     src/paint/sheet.cpp

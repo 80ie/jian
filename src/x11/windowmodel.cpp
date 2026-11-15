@@ -22,9 +22,6 @@ constexpr quint32 iconicState = 3;
 constexpr quint32 fromPager = 2;
 constexpr quint32 removeState = 0;
 constexpr quint32 addState = 1;
-// _NET_WM_MOVERESIZE_MOVE, by the first button.
-constexpr quint32 moveDirection = 8;
-constexpr quint32 firstButton = 1;
 
 xcb_get_property_cookie_t requestProperty(xcb_connection_t* c, quint32 window, xcb_atom_t atom)
 {
@@ -137,12 +134,6 @@ void WindowModel::setPinned(quint32 window, bool pinned) const
     const Atoms& atoms = m_x.atoms();
     send(window, atoms.wmState,
         { pinned ? addState : removeState, atoms.stateSticky, 0, fromPager, 0 });
-}
-
-void WindowModel::startMove(quint32 window, QPoint pointer) const
-{
-    send(window, m_x.atoms().moveResize,
-        { quint32(pointer.x()), quint32(pointer.y()), moveDirection, firstButton, fromPager });
 }
 
 void WindowModel::handle(const xcb_generic_event_t* event)

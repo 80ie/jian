@@ -86,14 +86,10 @@ void drawSelector(
         metrics.elidedText(text, Qt::ElideRight, room));
 }
 
-QRect artBox(const QRect& well) { return well.adjusted(artInset, artInset, -artInset, -artInset); }
-
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art)
 {
     paint::trough(p, well, palette);
-    if (art.isNull())
-        return;
-    const QRect box = artBox(well);
+    const QRect box = well.adjusted(artInset, artInset, -artInset, -artInset);
     const QImage scaled = art.scaled(box.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     p.drawImage(box.left() + (box.width() - scaled.width()) / 2,
         box.top() + (box.height() - scaled.height()) / 2, scaled);

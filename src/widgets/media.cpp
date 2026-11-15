@@ -3,8 +3,6 @@
 #include "media/mpris.h"
 #include "paint/bevel.h"
 #include "palette/palette.h"
-#include "widgets/foreignslot.h"
-#include "widgets/pip.h"
 
 #include <QComboBox>
 #include <QDBusConnection>
@@ -59,28 +57,13 @@ Media::Media(const Palette& palette, const QString& source, WindowModel* windows
     connect(m_pulse, &Pulse::changed, this, [this] { setSinks(m_pulse->sinks()); });
     m_cover = new CoverArt(this);
     connect(m_cover, &CoverArt::changed, this, [this] { setArt(m_cover->image()); });
-    m_slot = new ForeignSlot(*windows, this);
-    m_slot->hide();
-    m_pip = new PictureInPicture(*windows, *this, *m_slot, this);
-    connect(m_pip, &PictureInPicture::sizeChanged, this, [this] {
-        const int before = heightForWidth(width());
-        m_pipSize = m_pip->size();
-        refresh(before);
-    });
-}
-
-// The held window would otherwise go down with the slot's X window.
-Media::~Media()
-{
-    if (m_pip)
-        m_pip->letGo();
 }
 
 QString Media::id() const { return u"media"_s; }
 
 int Media::heightForWidth(int width) const
 {
-    return mediaLayout(width, wellSize(), showsTrack()).height;
+    return mediaLayout(width, m_art.size(), showsTrack()).height;
 }
 
 void Media::setPlayers(const std::vector<Player>& players)
@@ -116,7 +99,7 @@ void Media::paintEvent(QPaintEvent* event)
     if (!l.art.isNull()) {
         // The marquee repaints its field many times a second, and scaling the art is not free.
         if (event->rect().intersects(l.art))
-            drawArt(p, l.art, m_palette, m_pipSize.isValid() ? QImage() : m_art);
+            drawArt(p, l.art, m_palette, m_art);
         paint::divider(p, QRect(0, l.artRule, width(), 2), m_palette);
     }
     drawTitle(
@@ -138,12 +121,7 @@ void Media::paintEvent(QPaintEvent* event)
         !m_sinks.outputs.empty());
 }
 
-void Media::resizeEvent(QResizeEvent*)
-{
-    if (m_slot)
-        m_slot->setGeometry(artBox(layout().art));
-    restartTimers();
-}
+void Media::resizeEvent(QResizeEvent*) { restartTimers(); }
 
 void Media::showEvent(QShowEvent*) { restartTimers(); }
 
@@ -231,9 +209,7 @@ bool Media::showsTrack() const
     return current && current->canSeek && current->length;
 }
 
-QSize Media::wellSize() const { return m_pipSize.isValid() ? m_pipSize : m_art.size(); }
-
-MediaLayout Media::layout() const { return mediaLayout(width(), wellSize(), showsTrack()); }
+MediaLayout Media::layout() const { return mediaLayout(width(), m_art.size(), showsTrack()); }
 
 QString Media::titleText() const
 {
@@ -254,10 +230,6 @@ void Media::refresh(int heightBefore)
     }
     if (heightForWidth(width()) != heightBefore)
         emit heightChanged();
-    if (m_slot) {
-        m_slot->setGeometry(artBox(layout().art));
-        m_slot->setVisible(m_pipSize.isValid());
-    }
     restartTimers();
     update();
 }

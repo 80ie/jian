@@ -24,9 +24,6 @@ public:
     void embed(quint32 window);
     // The window held, or 0.
     quint32 window() const { return m_window; }
-    // Hands the window held back to the root window, where Qt leaves it unmapped, and returns
-    // it.
-    quint32 letGo();
     // While frozen the window is hidden, so that it takes no input, and a picture of it taken
     // as it froze is drawn in its place.
     void setFrozen(bool frozen);

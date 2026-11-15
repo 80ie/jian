@@ -491,30 +491,9 @@ the window minimized longest ago. Icon tiles are 32 pixels tall.
 ### 7.4 Media
 
 Ported: MPRIS transport, marquee title, cover art, sink volume, output
-selection, the picture-in-picture monitor. `pactl subscribe` stays as a
-subprocess.
-
-Picture-in-picture: a window the window model announces joining the client
-list is the candidate if it is shaped like a video (160x90 to 1000x700, 1.2
-to 2.6 times as wide as tall), is not `_NET_WM_WINDOW_TYPE_NORMAL`, and
-belongs to a process named firefox, chromium or chrome. The Python widget
-polled the client list every 1.5 seconds instead, which also caught a window
-that took that shape later; this one does not. The candidate is dropped
-when a synthetic `ConfigureNotify` puts its centre over the widget with no
-button down, and a `ForeignSlot` holds it in the well, shaped to it. A
-second one is not taken while one is held. Two timers remain, each running
-only while there is something to watch. While the candidate's centre is
-over the widget and a button is down, the pointer is read every 120 ms,
-since the button's release reaches only the window manager carrying the
-window. While a window is held, the pointer is read every 50 ms, since
-fvwm's Win+drag grabs the pointer on the panel and a drag out of the well
-reaches neither the window nor the panel. A drag of four pixels puts the
-window back on the root under the pointer and, once the window manager has
-it again, asks for the move with `_NET_WM_MOVERESIZE`, where the Python
-widget sent fvwm a `Move`. A held window goes back on the root with the
-widget. The drag out relies on the panel's style having `FixedPosition`, as
-`ShelfPanel`'s does: in `fvwm-rig` without it, the same Win+drag let the
-window go and moved the whole panel as well.
+selection. `pactl subscribe` stays as a subprocess. The Python widget's
+picture-in-picture monitor, which held a browser's floating video in the
+well, is dropped: at the panel's width the video was too small to be of use.
 
 Added:
 

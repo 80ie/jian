@@ -30,11 +30,6 @@ public:
     // What a click on its task does: minimizes the window if it is focused and on top, and
     // otherwise brings it forward.
     void toggle(quint32 window) const;
-    void activate(quint32 window) const;
-    void minimize(quint32 window) const;
-    void close(quint32 window) const;
-    void setMaximized(quint32 window, bool maximized) const;
-    void setPinned(quint32 window, bool pinned) const;
 
 signals:
     // Once for a burst of events that changed shown().
@@ -70,7 +65,6 @@ private:
     void applyPlaces(const std::vector<PlaceRequest>& requests);
     void add(const std::vector<quint32>& windows);
     std::array<xcb_atom_t, 2> atomsOf(Field field) const;
-    void send(quint32 window, xcb_atom_t type, std::array<quint32, 5> data) const;
     Client* find(quint32 window);
 
     XConnection& m_x;

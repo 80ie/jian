@@ -58,6 +58,7 @@ add_library(shelfcore STATIC
     src/x11/client.cpp
     src/x11/connection.cpp
     src/x11/reply.cpp
+    src/x11/requests.cpp
     src/x11/thumbnails.cpp
     src/x11/trace.cpp
     src/x11/windowmodel.cpp)

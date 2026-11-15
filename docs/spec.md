@@ -77,7 +77,8 @@ src/
   panel/              Panel window, slot layout, edit mode, pop-out, struts
   palette/            Palette model, ramp, file I/O, extraction, export
   paint/              the bevel painters from photon.py, themed icons
-  x11/                xcb connection, atoms, event filter, WindowModel
+  x11/                xcb connection, atoms, event filter, WindowModel,
+                      requests to the window manager
   media/              MPRIS, sink and cover art sources, free of widgets (section 12)
   widgets/            clock, tasks, media, pager, tray, ForeignSlot
   settings/           the settings window and palette editor

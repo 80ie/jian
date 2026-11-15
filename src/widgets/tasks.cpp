@@ -1,6 +1,7 @@
 #include "widgets/tasks.h"
 #include "paint/bevel.h"
 #include "palette/palette.h"
+#include "x11/requests.h"
 #include "x11/trace.h"
 #include "x11/windowmodel.h"
 
@@ -185,7 +186,7 @@ void Tasks::mouseReleaseEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton)
         m_model->toggle(m_tasks[*task].window);
     else if (event->button() == Qt::MiddleButton)
-        m_model->close(m_tasks[*task].window);
+        closeClient(m_model->connection(), m_tasks[*task].window);
 }
 
 // Away from a task the event goes on to the panel and its own menu.
@@ -198,20 +199,20 @@ void Tasks::contextMenuEvent(QContextMenuEvent* event)
     }
     const Client& client = m_tasks[*task];
     const quint32 window = client.window;
-    WindowModel* model = m_model;
+    const XConnection* x = &m_model->connection();
     auto* menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
     menu->addAction(client.pinned ? u"Unpin"_s : u"Pin"_s, this,
-        [model, window, pin = !client.pinned] { model->setPinned(window, pin); });
+        [x, window, pin = !client.pinned] { setClientPinned(*x, window, pin); });
     menu->addSeparator();
     if (client.minimized)
-        menu->addAction(u"Restore"_s, this, [model, window] { model->activate(window); });
+        menu->addAction(u"Restore"_s, this, [x, window] { activateClient(*x, window); });
     else
-        menu->addAction(u"Minimize"_s, this, [model, window] { model->minimize(window); });
+        menu->addAction(u"Minimize"_s, this, [x, window] { minimizeClient(*x, window); });
     menu->addAction(client.maximized ? u"Unmaximize"_s : u"Maximize"_s, this,
-        [model, window, maximize = !client.maximized] { model->setMaximized(window, maximize); });
+        [x, window, maximize = !client.maximized] { setClientMaximized(*x, window, maximize); });
     menu->addSeparator();
-    menu->addAction(u"Close"_s, this, [model, window] { model->close(window); });
+    menu->addAction(u"Close"_s, this, [x, window] { closeClient(*x, window); });
     menu->popup(event->globalPos());
 }
 

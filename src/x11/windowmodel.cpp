@@ -1,6 +1,7 @@
 #include "x11/windowmodel.h"
 #include "x11/connection.h"
 #include "x11/reply.h"
+#include "x11/requests.h"
 #include "x11/trace.h"
 
 #include <QIcon>
@@ -17,11 +18,6 @@ constexpr int gatherMs = 5;
 constexpr quint32 clientEvents = XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE;
 // In 32-bit units: as much as any property holds.
 constexpr quint32 wholeProperty = 1 << 24;
-// ICCCM 4.1.4, and the EWMH source indication of a pager.
-constexpr quint32 iconicState = 3;
-constexpr quint32 fromPager = 2;
-constexpr quint32 removeState = 0;
-constexpr quint32 addState = 1;
 
 xcb_get_property_cookie_t requestProperty(xcb_connection_t* c, quint32 window, xcb_atom_t atom)
 {
@@ -101,39 +97,9 @@ void WindowModel::toggle(quint32 window) const
     const auto stacked = m_stacking | std::views::reverse;
     const auto top = std::ranges::find_if(stacked, shown);
     if (client->focused && !client->minimized && top != stacked.end() && *top == window)
-        minimize(window);
+        minimizeClient(m_x, window);
     else
-        activate(window);
-}
-
-void WindowModel::activate(quint32 window) const
-{
-    send(window, m_x.atoms().activeWindow, { fromPager, XCB_CURRENT_TIME, 0, 0, 0 });
-}
-
-void WindowModel::minimize(quint32 window) const
-{
-    send(window, m_x.atoms().wmChangeState, { iconicState, 0, 0, 0, 0 });
-}
-
-void WindowModel::close(quint32 window) const
-{
-    send(window, m_x.atoms().closeWindow, { XCB_CURRENT_TIME, fromPager, 0, 0, 0 });
-}
-
-void WindowModel::setMaximized(quint32 window, bool maximized) const
-{
-    const Atoms& atoms = m_x.atoms();
-    send(window, atoms.wmState,
-        { maximized ? addState : removeState, atoms.stateMaximizedVert, atoms.stateMaximizedHorz,
-            fromPager, 0 });
-}
-
-void WindowModel::setPinned(quint32 window, bool pinned) const
-{
-    const Atoms& atoms = m_x.atoms();
-    send(window, atoms.wmState,
-        { pinned ? addState : removeState, atoms.stateSticky, 0, fromPager, 0 });
+        activateClient(m_x, window);
 }
 
 void WindowModel::handle(const xcb_generic_event_t* event)
@@ -394,20 +360,6 @@ std::array<xcb_atom_t, 2> WindowModel::atomsOf(Field field) const
         return { atoms.wmDesktop, XCB_ATOM_NONE };
     }
     return { };
-}
-
-void WindowModel::send(quint32 window, xcb_atom_t type, std::array<quint32, 5> data) const
-{
-    xcb_client_message_event_t message { };
-    message.response_type = XCB_CLIENT_MESSAGE;
-    message.format = 32;
-    message.window = window;
-    message.type = type;
-    std::ranges::copy(data, message.data.data32);
-    xcb_send_event(m_x.xcb(), false, m_x.screen().root,
-        XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
-        reinterpret_cast<const char*>(&message));
-    xcb_flush(m_x.xcb());
 }
 
 Client* WindowModel::find(quint32 window)

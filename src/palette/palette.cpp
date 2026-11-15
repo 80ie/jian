@@ -18,6 +18,16 @@ constexpr std::array lightnessOffsets { -0.376, -0.276, -0.176, -0.106, -0.066, 
     0.094, 0.144, 0.200, 0.234 };
 static_assert(lightnessOffsets.size() == lightestTone - darkestTone + 1);
 
+struct ChromeStep {
+    double lightness;
+    double chroma;
+};
+// Each chrome tone's OKLab lightness offset and chroma factor against the chrome, darkest first,
+// measured off the window decor colors roles.j2 made from the stock scheme.
+constexpr std::array<ChromeStep, 4> chromeSteps { { { -0.180, 0.48 }, { -0.118, 0.67 }, { 0, 1 },
+    { 0.266, 1.46 } } };
+static_assert(chromeSteps.size() == lightestChrome - darkestChrome + 1);
+
 // Chroma tapers linearly to zero at black and at white, as mixing in black or white does.
 double chromaScale(double lightness, double faceLightness)
 {
@@ -34,6 +44,7 @@ constexpr std::pair<QLatin1StringView, QColor Palette::*> colorKeys[] {
     { "palette/fill"_L1, &Palette::fill },
     { "palette/selection"_L1, &Palette::selection },
     { "palette/pager_desk"_L1, &Palette::pagerDesk },
+    { "palette/chrome"_L1, &Palette::chrome },
 };
 
 } // namespace
@@ -49,6 +60,16 @@ QColor Palette::tone(int number) const
     const double lightness = std::clamp(base.lightness + offset, 0.0, 1.0);
     const double scale = chromaScale(lightness, base.lightness);
     return fromOklab({ lightness, base.a * scale, base.b * scale });
+}
+
+QColor Palette::chromeTone(int number) const
+{
+    if (number == 0)
+        return chrome;
+    const Oklab base = toOklab(chrome);
+    const ChromeStep step = chromeSteps[number - darkestChrome];
+    return fromOklab({ std::clamp(base.lightness + step.lightness, 0.0, 1.0), base.a * step.chroma,
+        base.b * step.chroma });
 }
 
 Palette withToneShown(Palette palette, int tone)

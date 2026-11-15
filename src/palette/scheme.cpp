@@ -34,9 +34,10 @@ std::optional<Palette> importScheme(const QString& path)
     }
     const QJsonObject colors = document.object().value("colors"_L1).toObject();
     Palette palette;
-    for (const auto& [key, member] : { std::pair { "color7", &Palette::face },
-             { "color0", &Palette::ink }, { "color10", &Palette::fill },
-             { "color4", &Palette::selection }, { "color14", &Palette::pagerDesk } }) {
+    for (const auto& [key, member] :
+        { std::pair { "color7", &Palette::face }, { "color0", &Palette::ink },
+            { "color10", &Palette::fill }, { "color4", &Palette::selection },
+            { "color14", &Palette::pagerDesk }, { "color1", &Palette::chrome } }) {
         palette.*member = QColor::fromString(colors.value(QLatin1StringView(key)).toString());
         if (!(palette.*member).isValid()) {
             qWarning("%s: bad or missing colors/%s", qUtf8Printable(path), key);

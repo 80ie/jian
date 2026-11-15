@@ -19,6 +19,7 @@ private slots:
         expected.fill = QColor(0x4a, 0x6a, 0x2a);
         expected.selection = QColor(0x33, 0x66, 0x99);
         expected.pagerDesk = QColor(0x60, 0x38, 0x20);
+        expected.chrome = QColor(0x8a, 0x30, 0x20);
         QVERIFY(*palette == expected);
     }
 

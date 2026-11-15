@@ -606,8 +606,8 @@ So the palette is not a list of roles. It is:
   near the face, where bevels need subtle differences, and coarse far from
   it.
 - **A handful of named colors** that are not shades of the face: ink, fill
-  (meter and trackbar), selection, pager desk, and the window-manager chrome
-  pair that exports use.
+  (meter and trackbar), selection, pager desk, and chrome, the window
+  manager's color, which only exports use (9).
 
 Approximate ramp, from today's palette (OKLab lightness):
 
@@ -649,6 +649,7 @@ ink=#020200
 fill=#584a0c
 selection=#...
 pager_desk=#5c300e
+chrome=#78340a
 
 [override]
 tone-2=#8c8078
@@ -726,14 +727,17 @@ photograph of a red gate under a blue sky.
 
 Each candidate is shown as its ramp strip plus named colors, the face
 standing taller than the other swatches, as in the editor. Picking one
-loads it into the editor as unsaved changes. Nothing is written until Save.
+loads it into the editor as unsaved changes, keeping the chrome being
+edited: the chrome is the window manager's, and an image chosen for the
+panel says nothing about it. Nothing is written until Save.
 This replaces `palette sweep`.
 
 Existing `palette/schemes/*.json` are imported once at switch-over, one at
 a time, with `<name> --import-scheme scheme.json out.ini`, as `roles.j2`
 maps them today: face from color7, ink from color0 with each sRGB channel
 scaled by 0.1 (wallust's `darken(0.9)`), fill from color10 (`fill_mem`),
-selection from color4, pager desk from color14; contrast 1, no overrides.
+selection from color4, pager desk from color14, chrome from color1;
+contrast 1, no overrides.
 `tang-beige.json`, the scheme the live palette came from, imports as the
 stock palette exactly.
 
@@ -767,7 +771,12 @@ Placeholders are tones and named colors: `{tone-2}`, `{face}`, `{ink}`.
 Shipped targets, converted from the current templates: fvwm colorsets,
 qt6ct, qt5ct, KDE, GTK 3, GTK 4. The fvwm chrome shades (`chrome_bg_deep`
 and the rest of the second half of `roles.j2`) become a second, shorter ramp
-generated from the chrome color, so the export has them.
+generated from the chrome color, so the export has them: four tones,
+`chrome-2` to `chrome+1`, the chrome at 0. Each holds the chrome's hue and
+moves its lightness and chroma by the amounts that separate `chrome_bg`,
+`chrome_bg_lift` and `chrome_glow` from `color1` in the stock scheme, the
+only chrome shades the shipped templates use. `chrome_fg` and
+`chrome_rust`, which mixed in `color3`, become tones of the chrome.
 
 Xresources is deferred: with wallust gone the palette holds no sixteen
 terminal colors. **OPEN** whether to derive a terminal set later.

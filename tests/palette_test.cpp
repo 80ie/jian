@@ -118,6 +118,28 @@ private slots:
         }
     }
 
+    // The window decor roles.j2 made from the stock scheme: title bars, inactive and active, and
+    // the active title's text.
+    void chromeFollowsRoles_data()
+    {
+        QTest::addColumn<int>("tone");
+        QTest::addColumn<QColor>("role");
+        QTest::newRow("chrome_bg") << -2 << QColor(0x30, 0x15, 0x04);
+        QTest::newRow("chrome_bg_lift") << -1 << QColor(0x48, 0x1f, 0x06);
+        QTest::newRow("chrome_alert") << 0 << QColor(0x78, 0x34, 0x0a);
+        QTest::newRow("chrome_glow") << 1 << QColor(0xe4, 0x74, 0x34);
+    }
+
+    void chromeFollowsRoles()
+    {
+        QFETCH(int, tone);
+        QFETCH(QColor, role);
+        const QColor chrome = Palette().chromeTone(tone);
+        for (const auto channel : { &QColor::red, &QColor::green, &QColor::blue })
+            QVERIFY2(
+                std::abs((chrome.*channel)() - (role.*channel)()) <= 6, qPrintable(chrome.name()));
+    }
+
     void zeroContrastIsFlat()
     {
         Palette palette;
@@ -135,6 +157,7 @@ private slots:
         palette.fill = QColor(0x20, 0x40, 0x60);
         palette.selection = QColor(0xc0, 0x30, 0x30);
         palette.pagerDesk = QColor(0x40, 0x20, 0x10);
+        palette.chrome = QColor(0x50, 0x30, 0x60);
         palette.overrides = { { -2, QColor(0x8c, 0x80, 0x78) }, { 3, QColor(0xfe, 0xfe, 0xfe) } };
 
         const QTemporaryDir dir;

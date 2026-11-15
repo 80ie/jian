@@ -67,6 +67,7 @@ PalettePage::PalettePage(PaletteEditor& editor, QWidget* parent)
         { u"Fill"_s, &Palette::fill },
         { u"Selection"_s, &Palette::selection },
         { u"Pager desk"_s, &Palette::pagerDesk },
+        { u"Chrome"_s, &Palette::chrome },
     };
     for (const Named& color : colors) {
         auto* button = new QPushButton(named);

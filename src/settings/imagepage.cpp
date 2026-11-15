@@ -73,8 +73,11 @@ ImagePage::ImagePage(PaletteEditor& editor, QWidget* parent)
     layout->addWidget(m_candidates, 1);
 
     connect(openButton, &QPushButton::clicked, this, &ImagePage::choose);
+    // The chrome is the window manager's, which an image for the panel says nothing about.
     connect(m_candidates, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        m_editor.edit(m_palettes[std::size_t(m_candidates->row(item))]);
+        Palette palette = m_palettes[std::size_t(m_candidates->row(item))];
+        palette.chrome = m_editor.edited().chrome;
+        m_editor.edit(palette);
     });
 }
 

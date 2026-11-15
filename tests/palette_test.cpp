@@ -118,8 +118,6 @@ private slots:
         }
     }
 
-    // The window decor roles.j2 made from the stock scheme: title bars, inactive and active, and
-    // the active title's text.
     void chromeFollowsRoles_data()
     {
         QTest::addColumn<int>("tone");

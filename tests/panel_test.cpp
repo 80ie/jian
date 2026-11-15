@@ -43,7 +43,6 @@ private slots:
         QVERIFY2(panel == golden, "differs from golden/panel.png, see actual-panel.png");
     }
 
-    // Dragging a color in the editor changes the palette many times a second.
     void paletteSettlesOnce()
     {
         const Palette palette;

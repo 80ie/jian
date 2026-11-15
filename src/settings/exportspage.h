@@ -11,8 +11,6 @@ class QTreeWidgetItem;
 struct Config;
 struct Palette;
 
-// The export targets of spec 9, each enabled or not and where it writes, with Export and
-// Export on save.
 class ExportsPage : public QWidget {
     Q_OBJECT
 
@@ -26,7 +24,6 @@ private:
     void refresh();
     void saveEnabled(QTreeWidgetItem* item);
     void updateExport();
-    // Writes `palette` to every enabled target and runs each one's command.
     void exportTo(const Palette& palette);
 
     PaletteEditor& m_editor;

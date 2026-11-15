@@ -21,13 +21,11 @@ struct Palette {
     QColor fill { 0x58, 0x4a, 0x0c };
     QColor selection { 0x7a, 0x11, 0x0f };
     QColor pagerDesk { 0x5c, 0x30, 0x0e };
-    // The window manager's, which only exports use.
     QColor chrome { 0x78, 0x34, 0x0a };
     std::map<int, QColor> overrides;
 
     // Tones run from darkestTone to lightestTone, the face at 0.
     QColor tone(int number) const;
-    // A shorter ramp of the chrome, from darkestChrome to lightestChrome, the chrome at 0.
     QColor chromeTone(int number) const;
 
     bool operator==(const Palette&) const = default;

@@ -42,7 +42,6 @@ public:
     void setSide(Qt::Edge side);
     // Clamped between narrowestPanel and widestPanel.
     void setWidth(int width);
-    // Redraws, and tells each widget at once and again when the palette has held still.
     void paletteChanged();
 
     Qt::Edge side() const { return m_side; }

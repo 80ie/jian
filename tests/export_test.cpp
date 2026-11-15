@@ -25,7 +25,6 @@ QByteArray readFile(const QString& path)
     return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
 }
 
-// A target `name` in `dir` that writes `text` into out/<name>.
 bool makeTarget(const QDir& dir, const QString& name, const QByteArray& text)
 {
     const ExportTarget target { dir.filePath(u"out/"_s + name), QString(), true };
@@ -119,7 +118,6 @@ private slots:
         const QString backup = dir.filePath(u"history/qt6ct/20261115-090000-qt6ct"_s);
         QCOMPARE(readFile(backup), "mine\n");
 
-        // The same contents again replace nothing, so they keep nothing.
         QVERIFY(exportTarget(Palette(), dir, u"qt6ct"_s, first.addSecs(1)));
         QCOMPARE(QDir(dir.filePath(u"history/qt6ct"_s)).entryList(QDir::Files).size(), 1);
     }
@@ -134,7 +132,6 @@ private slots:
         QVERIFY(!dir.exists(u"history"_s));
     }
 
-    // The panel themes only itself until the user asks for more.
     void shippedTargetsAreDisabledAndComplete()
     {
         const QTemporaryDir temporary;

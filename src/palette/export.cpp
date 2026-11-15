@@ -21,8 +21,8 @@ constexpr std::pair<QLatin1StringView, QColor Palette::*> namedColors[] {
     { "chrome"_L1, &Palette::chrome },
 };
 
-// The signed, nonzero number after `prefix` in `name`, if it lies within the range.
-std::optional<int> step(QStringView name, QLatin1StringView prefix, int darkest, int lightest)
+std::optional<int> numberAfter(
+    QStringView name, QLatin1StringView prefix, int darkest, int lightest)
 {
     if (!name.startsWith(prefix))
         return std::nullopt;
@@ -41,23 +41,24 @@ std::optional<QColor> colorNamed(QStringView name, const Palette& palette)
     for (const auto& [key, member] : namedColors)
         if (name == key)
             return palette.*member;
-    if (const std::optional<int> tone = step(name, "tone"_L1, darkestTone, lightestTone))
+    if (const std::optional<int> tone = numberAfter(name, "tone"_L1, darkestTone, lightestTone))
         return palette.tone(*tone);
-    if (const std::optional<int> tone = step(name, "chrome"_L1, darkestChrome, lightestChrome))
+    if (const std::optional<int> tone
+        = numberAfter(name, "chrome"_L1, darkestChrome, lightestChrome))
         return palette.chromeTone(*tone);
     return std::nullopt;
 }
 
-// What the placeholder `inner`, without its braces, stands for.
-std::optional<QString> fill(QStringView inner, const Palette& palette)
+std::optional<QString> valueOf(QStringView placeholder, const Palette& palette)
 {
-    const qsizetype colon = inner.indexOf(u':');
-    const std::optional<QColor> color = colorNamed(colon < 0 ? inner : inner.first(colon), palette);
+    const qsizetype colon = placeholder.indexOf(u':');
+    const std::optional<QColor> color
+        = colorNamed(colon < 0 ? placeholder : placeholder.first(colon), palette);
     if (!color)
         return std::nullopt;
     if (colon < 0)
         return color->name();
-    const QStringView format = inner.sliced(colon + 1);
+    const QStringView format = placeholder.sliced(colon + 1);
     if (format == u"rgb")
         return u"%1,%2,%3"_s.arg(color->red()).arg(color->green()).arg(color->blue());
     if (format == u"noHash")
@@ -121,7 +122,8 @@ Rendering render(QStringView text, const Palette& palette)
             rendering.unknown = text.sliced(open, (end < 0 ? text.size() : end) - open).toString();
             return rendering;
         }
-        const std::optional<QString> value = fill(text.sliced(open + 1, close - open - 1), palette);
+        const std::optional<QString> value
+            = valueOf(text.sliced(open + 1, close - open - 1), palette);
         if (!value) {
             rendering.unknown = text.sliced(open, close + 1 - open).toString();
             return rendering;

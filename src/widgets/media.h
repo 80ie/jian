@@ -17,9 +17,7 @@ class Mpris;
 class WindowModel;
 struct Palette;
 
-// A media player's controls and the default sink's volume: the player, its cover, a scrolling
-// title, a trackbar, transport, volume and the output. Without a window model it shows what its
-// setters give it and talks to nothing.
+// Without a window model it shows what its setters give it and talks to nothing.
 class Media : public ShelfWidget {
     Q_OBJECT
 

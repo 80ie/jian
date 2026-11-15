@@ -61,6 +61,13 @@ add_library(shelfcore STATIC
     src/x11/trace.cpp
     src/x11/windowmodel.cpp)
 target_include_directories(shelfcore PUBLIC src)
+qt_add_resources(shelfcore exports PREFIX / FILES
+    exports/fvwm/target.ini exports/fvwm/template
+    exports/gtk3/target.ini exports/gtk3/template
+    exports/gtk4/target.ini exports/gtk4/template
+    exports/kde/target.ini exports/kde/template
+    exports/qt5ct/target.ini exports/qt5ct/template
+    exports/qt6ct/target.ini exports/qt6ct/template)
 target_link_libraries(shelfcore PUBLIC Qt6::Widgets Qt6::DBus Qt6::Network PkgConfig::XCB)
 
 add_executable(shelf src/main.cpp)

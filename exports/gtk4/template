@@ -1,0 +1,20 @@
+/* Written by shelf from ~/.config/shelf/exports/gtk4/template; edit that instead. */
+@define-color accent_color {selection};
+@define-color accent_bg_color {selection};
+@define-color accent_fg_color {tone+3};
+@define-color destructive_color {chrome};
+@define-color window_bg_color {face};
+@define-color window_fg_color {ink};
+@define-color view_bg_color {tone+5};
+@define-color view_fg_color {ink};
+@define-color headerbar_bg_color {face};
+@define-color headerbar_fg_color {ink};
+@define-color headerbar_backdrop_color {face};
+@define-color card_bg_color {tone+1};
+@define-color card_fg_color {ink};
+@define-color popover_bg_color {face};
+@define-color popover_fg_color {ink};
+@define-color dialog_bg_color {face};
+@define-color dialog_fg_color {ink};
+@define-color sidebar_bg_color {face};
+@define-color sidebar_fg_color {ink};

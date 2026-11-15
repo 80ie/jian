@@ -81,6 +81,7 @@ src/
   media/              MPRIS, sink and cover art sources, free of widgets (section 12)
   widgets/            clock, tasks, media, pager, tray, ForeignSlot
   settings/           the settings window and palette editor
+exports/              the export targets that come with the program (section 9)
 tests/                Qt Test, golden images
 ```
 
@@ -787,6 +788,29 @@ moves its lightness and chroma by the amounts that separate `chrome_bg`,
 `chrome_bg_lift` and `chrome_glow` from `color1` in the stock scheme, the
 only chrome shades the shipped templates use. `chrome_fg` and
 `chrome_rust`, which mixed in `color3`, become tones of the chrome.
+
+The program carries them as resources and copies them into `exports/` when
+that directory does not exist, so that a user's edits and deletions there
+stand. Each comes disabled. Where they write, and what runs after:
+
+| target | destination | command |
+|---|---|---|
+| fvwm | `~/.fvwm/colorsets` | `FvwmCommand 'Read colorsets'` |
+| qt6ct, qt5ct | `~/.config/qt6ct/colors/shelf.conf`, likewise qt5ct | none |
+| kde | `~/.local/share/color-schemes/Shelf.colors` | none |
+| gtk3 | `~/.themes/Redmond97 Deer/gtk-3.0/gtk.css` | none |
+| gtk4 | `~/.config/gtk-4.0/gtk.css` | none |
+
+qt6ct and qt5ct are pointed at their file once, in their own settings. The
+old tool merged the KDE scheme into `kdeglobals` with `kwriteconfig6`;
+`plasma-apply-colorscheme Shelf` applies it once, but refuses a scheme
+already in use, so it is not the KDE target's command. The fvwm target keeps
+the `FVWM_PHOTON_*` variables, by the table in 8.1, since menus and modules
+read them and the Python shelf does until switch-over; it drops colorsets
+16 to 19, which nothing used. The roles the palette has no color for take
+the nearest that it has, as they came out of the stock scheme: the CPU
+meter's fill is `fill`, the tooltip is tone +5, a visited link is the pager
+desk, KDE's negative, positive and neutral text are chrome, fill and ink.
 
 Xresources is deferred: with wallust gone the palette holds no sixteen
 terminal colors. **OPEN** whether to derive a terminal set later.

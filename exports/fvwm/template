@@ -1,0 +1,90 @@
+## vim: sts=0:noet:syntax=fvwm
+## Written by shelf from ~/.config/shelf/exports/fvwm/template; edit that instead.
+
+InfoStoreAdd cs_shelf        30
+InfoStoreAdd cs_shelf_hi     31
+InfoStoreAdd cs_shelf_header 32
+InfoStoreAdd cs_shelf_well   33
+
+SetEnv FVWM_PHOTON_FACE         "{face}"
+SetEnv FVWM_PHOTON_FACE_HI      "{tone+2}"
+SetEnv FVWM_PHOTON_HEADER       "{face}"
+SetEnv FVWM_PHOTON_GUTTER       "{tone-1}"
+SetEnv FVWM_PHOTON_FRAME_MID    "{tone-3}"
+SetEnv FVWM_PHOTON_WELL         "{tone-1}"
+SetEnv FVWM_PHOTON_FACE_ALT     "{face}"
+SetEnv FVWM_PHOTON_BTN_HI       "{tone+3}"
+SetEnv FVWM_PHOTON_BTN_LO       "{tone-3}"
+SetEnv FVWM_PHOTON_WELL_SH      "{tone-2}"
+SetEnv FVWM_PHOTON_WELL_LIP     "{tone+1}"
+SetEnv FVWM_PHOTON_HI           "{tone+3}"
+SetEnv FVWM_PHOTON_SH           "{tone-4}"
+SetEnv FVWM_PHOTON_DARK         "{tone-6}"
+SetEnv FVWM_PHOTON_HEADER_CELL  "{tone-1}"
+SetEnv FVWM_PHOTON_HEADER_GLYPH "{tone-5}"
+SetEnv FVWM_PHOTON_FIELD        "{tone+5}"
+SetEnv FVWM_PHOTON_TROUGH       "{tone-2}"
+SetEnv FVWM_PHOTON_TROUGH_SH    "{tone-4}"
+SetEnv FVWM_PHOTON_GROOVE       "{tone-4}"
+SetEnv FVWM_PHOTON_GROOVE_MID   "{tone-3}"
+SetEnv FVWM_PHOTON_GROOVE_HI    "$[FVWM_PHOTON_GUTTER]"
+SetEnv FVWM_PHOTON_GROOVE_LIP   "$[FVWM_PHOTON_BTN_HI]"
+SetEnv FVWM_PHOTON_THUMB_HI     "{tone+4}"
+SetEnv FVWM_PHOTON_THUMB_LO     "$[FVWM_PHOTON_HEADER_CELL]"
+SetEnv FVWM_PHOTON_TICK_HI      "$[FVWM_PHOTON_BTN_LO]"
+SetEnv FVWM_PHOTON_TICK_LO      "{tone-5}"
+SetEnv FVWM_PHOTON_FILL_CPU     "{fill}"
+SetEnv FVWM_PHOTON_FILL_MEM     "{fill}"
+SetEnv FVWM_PHOTON_INK          "{ink}"
+SetEnv FVWM_PHOTON_INK_OFF      "$[FVWM_PHOTON_GROOVE]"
+SetEnv FVWM_PHOTON_PAGER_SECTION    "$[FVWM_PHOTON_WELL_SH]"
+SetEnv FVWM_PHOTON_PAGER_DESK       "{pager_desk}"
+SetEnv FVWM_PHOTON_PAGER_DESK_HI    "{tone+1}"
+SetEnv FVWM_PHOTON_FILL_DISK        "$[FVWM_PHOTON_PAGER_DESK]"
+SetEnv FVWM_PHOTON_PAGER_PAGE       "$[FVWM_PHOTON_TROUGH]"
+SetEnv FVWM_PHOTON_PAGER_PAGE_HI    "$[FVWM_PHOTON_HEADER]"
+SetEnv FVWM_PHOTON_PAGER_GRID       "$[FVWM_PHOTON_DARK]"
+SetEnv FVWM_PHOTON_PAGER_WIN        "$[FVWM_PHOTON_WELL]"
+SetEnv FVWM_PHOTON_PAGER_WIN_EDGE   "$[FVWM_PHOTON_DARK]"
+SetEnv FVWM_PHOTON_PAGER_FOCUS      "$[FVWM_PHOTON_FACE_HI]"
+SetEnv FVWM_PHOTON_PAGER_FOCUS_EDGE "$[FVWM_PHOTON_DARK]"
+
+# Window decor: 40 inactive, 41 active, 15 close button.
+Colorset 40 fg {face}, bg {tone-6}, hi, sh, Plain, NoShape
+Colorset 41 fg {chrome+1}, bg {chrome-1}, hi, sh, Plain, NoShape
+Colorset 15 fg {tone+5}, bg {chrome+1}, hi, sh, Plain, NoShape
+
+#~~~~~~~ 5 - Menu - Inactive Item
+Colorset 5 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FACE], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 6 - Menu - Active Item
+Colorset 6 fg $[FVWM_PHOTON_FIELD], bg $[FVWM_PHOTON_GROOVE], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 7 - Menu - Grayed Item
+Colorset 7 fg $[FVWM_PHOTON_GROOVE_MID], bg $[FVWM_PHOTON_FACE], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 8 - Menu - Title
+Colorset 8 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_HEADER_CELL], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+
+#~~~~~~~ 10 - Module Default [PlainColorset]
+Colorset 10 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FACE], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 11 - Module Hilight
+Colorset 11 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FACE_HI], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 12 - Module ActiveButton (Mouse Hover)
+Colorset 12 fg $[FVWM_PHOTON_FIELD], bg $[FVWM_PHOTON_GROOVE], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 13 - FvwmFormDefault ItemColorset
+Colorset 13 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FIELD], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+#~~~~~~~ 14 - FvwmIconMan Iconified Button
+Colorset 14 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_WELL], hi $[FVWM_PHOTON_BTN_HI], sh $[FVWM_PHOTON_BTN_LO], Plain, NoShape
+
+#~~~~~~~ 20 - ShelfPager HilightColorset: active/current page
+Colorset 20 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_PAGER_PAGE_HI], hi, sh, Plain, NoShape
+#~~~~~~~ 21 - ShelfPager Colorset: default page
+Colorset 21 fg $[FVWM_PHOTON_PAGER_GRID], bg $[FVWM_PHOTON_PAGER_PAGE], hi, sh, Plain, NoShape
+
+# 30-33: QNX Photon shelf chrome; 36-37: ShelfPager Window/FocusColorset (window swatches)
+Colorset 30 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FACE], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_SH], Plain, NoShape
+Colorset 31 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_FACE_HI], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_SH], Plain, NoShape
+Colorset 32 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_HEADER], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_SH], Plain, NoShape
+Colorset 33 fg $[FVWM_PHOTON_INK], bg $[FVWM_PHOTON_WELL], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_SH], Plain, NoShape
+#~~~~~~~ 36 - ShelfPager WindowColorset: normal window swatch
+Colorset 36 fg $[FVWM_PHOTON_PAGER_GRID], bg $[FVWM_PHOTON_PAGER_WIN], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_PAGER_WIN_EDGE], Plain, NoShape
+#~~~~~~~ 37 - ShelfPager FocusColorset: focused/active window swatch
+Colorset 37 fg $[FVWM_PHOTON_PAGER_GRID], bg $[FVWM_PHOTON_PAGER_FOCUS], hi $[FVWM_PHOTON_HI], sh $[FVWM_PHOTON_PAGER_FOCUS_EDGE], Plain, NoShape

@@ -134,6 +134,35 @@ private slots:
         QVERIFY(!dir.exists(u"history"_s));
     }
 
+    // The panel themes only itself until the user asks for more.
+    void shippedTargetsAreDisabledAndComplete()
+    {
+        const QTemporaryDir temporary;
+        const QDir dir(temporary.path());
+        QVERIFY(installTargets(dir));
+        const QStringList names = targetNames(dir);
+        QCOMPARE(names,
+            QStringList({ u"fvwm"_s, u"gtk3"_s, u"gtk4"_s, u"kde"_s, u"qt5ct"_s, u"qt6ct"_s }));
+        for (const QString& name : names) {
+            const std::optional<ExportTarget> target = loadTarget(dir, name);
+            QVERIFY(target);
+            QVERIFY(!target->enabled);
+            const QString text
+                = QString::fromUtf8(readFile(dir.filePath(u"exports/%1/template"_s.arg(name))));
+            QVERIFY(!text.isEmpty());
+            QCOMPARE(render(text, Palette()).unknown, QString());
+        }
+    }
+
+    void installingKeepsWhatIsThere()
+    {
+        const QTemporaryDir temporary;
+        const QDir dir(temporary.path());
+        QVERIFY(makeTarget(dir, u"mine"_s, "{face}"));
+        QVERIFY(installTargets(dir));
+        QCOMPARE(targetNames(dir), QStringList { u"mine"_s });
+    }
+
     void unknownPlaceholderWritesNothing()
     {
         const QTemporaryDir temporary;

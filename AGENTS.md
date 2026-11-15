@@ -51,6 +51,15 @@ this way and not the obvious way, or a fact about X or Qt that bit us. Three
 lines at most. No comment that restates the line below it, no banners, no
 history ("now uses", "previously"), no notes addressed to a reviewer.
 
+## Words on screen
+
+A label is a noun or two: `Widgets`, `Candidates`, `Contrast`. A button is
+a verb or two: `Reset`, `Open…`. No sentences, no explanatory paragraphs,
+no hint text telling the user how the program works. If a control needs a
+paragraph to be understood, the control is wrong; fix it or leave a tooltip
+of one short line. Do not show raw values (hex codes, ids) where a swatch,
+a mark or a name says it better.
+
 ## Tests
 
 Pure logic (ramp, layout, file round trips, ordering) gets a Qt Test.

@@ -71,26 +71,23 @@ QWidget* Clock::settingsPage()
     auto* date = new QLineEdit(m_dateFormat, page);
     auto* timePreview = new QLabel(page);
     auto* datePreview = new QLabel(page);
-    auto* hint = new QLabel(u"QDateTime formats, such as hh:mm, h:mm AP, HH:mm:ss, ddd MM.dd or "
-                            "d MMMM yyyy. Text in single quotes is shown as it is."_s,
-        page);
-    hint->setWordWrap(true);
     auto* form = new QFormLayout(page);
-    form->addRow(u"Time, at the left"_s, time);
+    form->addRow(u"Time"_s, time);
     form->addRow(QString(), timePreview);
-    form->addRow(u"Date, at the right"_s, date);
+    form->addRow(u"Date"_s, date);
     form->addRow(QString(), datePreview);
-    form->addRow(hint);
     const auto preview = [time, date, timePreview, datePreview] {
         const QDateTime now = QDateTime::currentDateTime();
         timePreview->setText(now.toString(time->text()));
         datePreview->setText(now.toString(date->text()));
     };
-    for (QLineEdit* edit : { time, date })
+    for (QLineEdit* edit : { time, date }) {
+        edit->setToolTip(u"QDateTime format"_s);
         connect(edit, &QLineEdit::textEdited, this, [this, time, date, preview] {
             preview();
             setFormats(time->text(), date->text());
         });
+    }
     preview();
     return page;
 }

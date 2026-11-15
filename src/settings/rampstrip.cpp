@@ -117,8 +117,7 @@ void RampStrip::contextMenuEvent(QContextMenuEvent* event)
         return;
     auto* menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
-    menu->addAction(u"Put tone %1 back on the ramp"_s.arg(toneName(*tone)), this,
-        [this, tone] { emit resetRequested(*tone); });
+    menu->addAction(u"Reset"_s, this, [this, tone] { emit resetRequested(*tone); });
     menu->popup(event->globalPos());
 }
 
@@ -149,15 +148,10 @@ void RampStrip::hover(std::optional<int> tone)
         setToolTip(QString());
         return;
     }
-    const QString color = m_palette.tone(*tone).name();
-    if (m_palette.overrides.contains(*tone))
-        setToolTip(u"Tone %1, %2: set by hand. Right-click puts it back on the ramp."_s.arg(
-            toneName(*tone), color));
-    else if (*tone == 0)
-        setToolTip(u"The face, %1. Every other tone is made from it."_s.arg(color));
+    if (*tone == 0)
+        setToolTip(u"Face"_s);
+    else if (m_palette.overrides.contains(*tone))
+        setToolTip(u"Set by hand"_s);
     else
-        setToolTip(u"Tone %1, %2: the face with its lightness moved %3 × contrast %4."_s
-                .arg(toneName(*tone), color)
-                .arg(lightnessOffset(*tone), 0, 'f', 3)
-                .arg(m_palette.contrast, 0, 'f', 2));
+        setToolTip(u"From the face"_s);
 }

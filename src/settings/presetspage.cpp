@@ -95,7 +95,7 @@ void PresetsPage::saveAs()
         if (!isPresetName(name))
             return;
         if (presetNames(m_editor.dir()).contains(name))
-            confirm(this, u"Replace the preset “%1”?"_s.arg(name), [this, name] { save(name); });
+            confirm(this, u"Replace “%1”?"_s.arg(name), [this, name] { save(name); });
         else
             save(name);
     });
@@ -113,7 +113,7 @@ void PresetsPage::save(const QString& name)
 void PresetsPage::remove()
 {
     const QString name = selected();
-    confirm(this, u"Delete the preset “%1”? It cannot be brought back."_s.arg(name), [this, name] {
+    confirm(this, u"Delete “%1”?"_s.arg(name), [this, name] {
         deletePreset(m_editor.dir(), name);
         refresh();
     });

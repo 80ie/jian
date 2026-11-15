@@ -7,7 +7,6 @@
 #include <QContextMenuEvent>
 #include <QFormLayout>
 #include <QHelpEvent>
-#include <QLabel>
 #include <QMenu>
 #include <QPainter>
 #include <QSpinBox>
@@ -95,12 +94,10 @@ QWidget* Tasks::settingsPage()
     };
     auto* tile = spinBox(m_sizes.tile, iconTileHeight);
     auto* floor = spinBox(m_sizes.floor, rowHeight);
-    hint->setWordWrap(true);
     auto* form = new QFormLayout(page);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-    form->addRow(u"Pinned tile height"_s, tile);
-    form->addRow(u"Smallest minimized picture"_s, floor);
-    form->addRow(hint);
+    form->addRow(u"Tile height"_s, tile);
+    form->addRow(u"Smallest thumbnail"_s, floor);
     for (QSpinBox* box : { tile, floor })
         connect(box, &QSpinBox::valueChanged, this,
             [this, tile, floor] { setSizes({ tile->value(), floor->value() }); });

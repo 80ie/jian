@@ -20,17 +20,16 @@ namespace {
 // Slider steps per unit of contrast, and the most contrast it reaches.
 constexpr int contrastSteps = 100;
 constexpr int mostContrast = 2;
-constexpr int iconSize = 16;
+constexpr QSize swatchSize(32, 16);
 
 struct Named {
     QString label;
-    QString use;
     QColor Palette::* member;
 };
 
 QIcon swatchIcon(const QColor& color)
 {
-    QPixmap picture(iconSize, iconSize);
+    QPixmap picture(swatchSize);
     picture.fill(color);
     return picture;
 }
@@ -41,8 +40,8 @@ PalettePage::PalettePage(PaletteEditor& editor, QWidget* parent)
     : QWidget(parent)
     , m_editor(editor)
     , m_strip(new RampStrip(this))
-    , m_show(new QCheckBox(u"Show the tone under the pointer on the panel"_s, this))
-    , m_reset(new QPushButton(this))
+    , m_show(new QCheckBox(u"Show on panel"_s, this))
+    , m_reset(new QPushButton(u"Reset"_s, this))
     , m_contrast(new QSlider(Qt::Horizontal, this))
     , m_contrastValue(new QLabel(this))
 {
@@ -59,13 +58,19 @@ PalettePage::PalettePage(PaletteEditor& editor, QWidget* parent)
     contrast->addWidget(m_contrast, 1);
     contrast->addWidget(m_contrastValue);
     rampLayout->addLayout(contrast);
-    hint->setWordWrap(true);
-    rampLayout->addWidget(hint);
 
     auto* named = new QGroupBox(u"Named colors"_s, this);
     auto* form = new QFormLayout(named);
+    form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    const Named colors[] {
+        { u"Ink"_s, &Palette::ink },
+        { u"Fill"_s, &Palette::fill },
+        { u"Selection"_s, &Palette::selection },
+        { u"Pager desk"_s, &Palette::pagerDesk },
+    };
     for (const Named& color : colors) {
         auto* button = new QPushButton(named);
+        button->setIconSize(swatchSize);
         const auto member = color.member;
         connect(button, &QPushButton::clicked, this, [this, label = color.label, member] {
             pick(label, m_editor.edited().*member, [member](Palette palette, const QColor& chosen) {
@@ -73,10 +78,7 @@ PalettePage::PalettePage(PaletteEditor& editor, QWidget* parent)
                 return palette;
             });
         });
-        auto* row = new QHBoxLayout;
-        row->addWidget(button);
-        row->addWidget(new QLabel(color.use, named), 1);
-        form->addRow(color.label, row);
+        form->addRow(color.label, button);
         m_named.push_back({ member, button });
     }
 
@@ -120,13 +122,9 @@ void PalettePage::refresh()
         m_contrast->setValue(qRound(palette.contrast * contrastSteps));
     }
     m_contrastValue->setText(QString::number(palette.contrast, 'f', 2));
-    for (const auto& [member, button] : m_named) {
+    for (const auto& [member, button] : m_named)
         button->setIcon(swatchIcon(palette.*member));
-        button->setText((palette.*member).name());
-    }
     const bool overridden = m_current && palette.overrides.contains(*m_current);
-    // Buttons cannot have sentences like this.
-    m_reset->setText(u"Reset"_s);
     m_reset->setEnabled(overridden);
 }
 

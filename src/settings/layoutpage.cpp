@@ -33,7 +33,7 @@ LayoutPage::LayoutPage(Panel& panel, Config& config, QString configPath, QWidget
     , m_down(new QPushButton(u"Down"_s, this))
     , m_remove(new QPushButton(u"Remove"_s, this))
     , m_add(new QToolButton(this))
-    , m_edit(new QPushButton(u"Edit widgets on the panel"_s, this))
+    , m_edit(new QPushButton(u"Edit widgets"_s, this))
 {
     auto* sides = new QHBoxLayout;
     sides->addWidget(m_left);
@@ -115,7 +115,7 @@ void LayoutPage::refresh()
     for (const QString& id : order) {
         QString text = widgetName(id);
         if (!m_panel.widget(id))
-            text += u" (cannot run here)"_s;
+            text += u" (unavailable)"_s;
         else if (popped.contains(id))
             text += u" (in a window)"_s;
         auto* item = new QListWidgetItem(text, m_widgets);

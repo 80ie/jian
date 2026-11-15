@@ -38,27 +38,12 @@ QPixmap colorsStrip(std::span<const ImageColor> colors, QSize size)
     return picture;
 }
 
-QString colorsList(std::span<const ImageColor> colors)
-{
-    QStringList lines;
-    for (const ImageColor& color : colors)
-        lines.append(u"%1  %2%"_s.arg(color.color.name()).arg(color.share * 100, 0, 'f', 1));
-    return lines.join(u'\n');
-}
-
 QString imageFilter()
 {
     QStringList patterns;
     for (const QByteArray& format : QImageReader::supportedImageFormats())
         patterns.append(u"*."_s + QString::fromLatin1(format));
     return u"Images (%1)"_s.arg(patterns.join(u' '));
-}
-
-QLabel* wrapped(const QString& text, QWidget* parent)
-{
-    auto* label = new QLabel(text, parent);
-    label->setWordWrap(true);
-    return label;
 }
 
 } // namespace
@@ -81,9 +66,9 @@ ImagePage::ImagePage(PaletteEditor& editor, QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(top);
     layout->addWidget(m_picture);
-    layout->addWidget(wrapped(u"Distribution:"_s, this));
+    layout->addWidget(new QLabel(u"Distribution:"_s, this));
     layout->addWidget(m_colors);
-    layout->addWidget(wrapped(u"Candidates:", this));
+    layout->addWidget(new QLabel(u"Candidates:"_s, this));
     layout->addWidget(m_candidates, 1);
 
     connect(openButton, &QPushButton::clicked, this, &ImagePage::choose);
@@ -106,7 +91,6 @@ void ImagePage::open(const QString& path)
         image.scaled(pictureSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
     const std::vector<ImageColor> colors = imageColors(image);
     m_colors->setPixmap(colorsStrip(colors, stripSize));
-    m_colors->setToolTip(colorsList(colors));
     m_palettes = candidates(colors);
     m_candidates->clear();
     for (const Palette& palette : m_palettes)

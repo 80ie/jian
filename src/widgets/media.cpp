@@ -9,7 +9,6 @@
 #include <QComboBox>
 #include <QDBusConnection>
 #include <QFormLayout>
-#include <QLabel>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
@@ -333,13 +332,8 @@ QWidget* Media::settingsPage()
         if (key == m_source)
             source->setCurrentIndex(source->count() - 1);
     }
-    auto* hint = new QLabel(u"Automatic follows whichever player started playing last. A player "
-                            "chosen by name keeps the controls while it is not running."_s,
-        page);
-    hint->setWordWrap(true);
     auto* form = new QFormLayout(page);
     form->addRow(u"Player"_s, source);
-    form->addRow(hint);
     connect(source, &QComboBox::activated, this,
         [this, source] { setSource(source->currentData().toString()); });
     return page;

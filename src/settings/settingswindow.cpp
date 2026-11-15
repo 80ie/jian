@@ -63,7 +63,7 @@ SettingsWindow::SettingsWindow(Panel& panel, Config& config, PaletteEditor& pale
     connect(m_revert, &QPushButton::clicked, &m_palette, &PaletteEditor::revert);
     connect(m_save, &QPushButton::clicked, this, [this] {
         if (!m_palette.save())
-            m_state->setText(u"palette.ini could not be written."_s);
+            m_state->setText(u"Save failed"_s);
     });
     connect(&m_palette, &PaletteEditor::changed, this, &SettingsWindow::refreshState);
     connect(&m_panel, &Panel::widgetsChanged, this, &SettingsWindow::makeWidgetPages);
@@ -83,8 +83,7 @@ void SettingsWindow::closeEvent(QCloseEvent* event)
     if (!m_palette.unsaved())
         return;
     event->ignore();
-    auto* box = new QMessageBox(QMessageBox::Question, u"Shelf settings"_s,
-        u"The palette on the panel has changes that are not saved."_s,
+    auto* box = new QMessageBox(QMessageBox::Question, u"Shelf settings"_s, u"Unsaved changes"_s,
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
     box->setAttribute(Qt::WA_DeleteOnClose);
     connect(box, &QMessageBox::buttonClicked, this, [this, box](QAbstractButton* button) {
@@ -123,8 +122,7 @@ void SettingsWindow::makeWidgetPages()
 void SettingsWindow::refreshState()
 {
     const bool unsaved = m_palette.unsaved();
-    m_state->setText(unsaved ? u"The palette on the panel has unsaved changes."_s
-                             : u"The palette is as saved in palette.ini."_s);
+    m_state->setText(unsaved ? u"Unsaved changes"_s : QString());
     m_revert->setEnabled(unsaved);
     m_save->setEnabled(unsaved);
     setWindowModified(unsaved);

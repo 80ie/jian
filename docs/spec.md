@@ -685,20 +685,20 @@ rendering the panel both ways and comparing.
 In the settings window, in the manner of qt6ct:
 
 - the ramp as one strip of twelve swatches with the face marked, a contrast
-  slider under it, and the named colors under that, each with what it
-  colors on the panel;
+  slider under it, and the named colors under that, each a swatch with its
+  name;
 - clicking a swatch opens a color dialog; the face's changes the face, any
   other's overrides that tone. The panel follows the dialog as it moves and
-  goes back if it is cancelled. An overridden tone carries a dot; its
-  context menu, or the button that names the last tone clicked, puts it
+  goes back if it is cancelled. An overridden tone carries a dot; Reset in
+  its context menu, or the Reset button for the last tone clicked, puts it
   back on the ramp. Each swatch's tooltip says where its color comes from:
-  the face, an offset times the contrast, or set by hand;
-- with "Show the tone under the pointer on the panel" ticked, the tone
-  under the pointer is replaced on the live panel by a loud color, the
-  face's complement at full chroma (magenta for a grey face), until the
-  pointer leaves it. Outlining each place a tone is drawn would need every
-  painter to report what it paints; swapping the color shows the same thing
-  for nothing. The replacement never counts as an edit;
+  the face, or set by hand;
+- with "Show on panel" ticked, the tone under the pointer is replaced on
+  the live panel by a loud color, the face's complement at full chroma
+  (magenta for a grey face), until the pointer leaves it. Outlining each
+  place a tone is drawn would need every painter to report what it paints;
+  swapping the color shows the same thing for nothing. The replacement
+  never counts as an edit;
 - changes apply to the panel immediately and stay unsaved until Save, which
   writes `palette.ini` and a history copy; Revert restores the last saved
   state. The window's title carries a `*` and its footer says so while there

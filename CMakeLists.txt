@@ -28,6 +28,7 @@ add_library(shelfcore STATIC
     src/panel/popout.cpp
     src/panel/render.cpp
     src/panel/windowclass.cpp
+    src/settings/exportspage.cpp
     src/settings/historypage.cpp
     src/settings/imagepage.cpp
     src/settings/layoutpage.cpp

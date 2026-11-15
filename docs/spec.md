@@ -815,8 +815,11 @@ desk, KDE's negative, positive and neutral text are chrome, fill and ink.
 Xresources is deferred: with wallust gone the palette holds no sixteen
 terminal colors. **OPEN** whether to derive a terminal set later.
 
-The settings window lists targets with a checkbox each and two buttons:
-Export now, and Export on save. A target overwrites its destination after
+The settings window's Exports page lists the targets, each with a checkbox
+for `enabled` and where it writes, over an Export button, which writes the
+palette as edited to the enabled targets and is disabled while none is, and
+an "Export on save" checkbox, kept in `config.ini` as `[exports] onsave`,
+which does the same with the palette each Save writes. A target overwrites its destination after
 copying the previous file into `history/<target>/`, named for the time, as
 palette history is. A destination that already holds what the export would
 write is left alone, so it is not copied either.
@@ -825,13 +828,13 @@ write is left alone, so it is not copied either.
 
 One window, opened from the panel's context menu ("Settings…") or `<name>
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
-Palette (8.2), From image (8.3), Presets and History (8.4), then one page
-per widget that returns a `settingsPage()`: Clock (its two formats, each
-with a preview of the time in it), Tasks (tile height and thumbnail floor)
-and Media (the source, as its drop-down chooses it). Exports (9) come with
-milestone 8. It is part of the same process and edits the same objects the
-panel draws from: the Layout page calls the panel's setters and writes
-`config.ini`, as dragging the width does.
+Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
+then one page per widget that returns a `settingsPage()`: Clock (its two
+formats, each with a preview of the time in it), Tasks (tile height and
+thumbnail floor) and Media (the source, as its drop-down chooses it). It is
+part of the same process and edits the same objects the panel draws from:
+the Layout page calls the panel's setters and writes `config.ini`, as
+dragging the width does.
 
 `--settings` reaches a running panel through a local socket,
 `$XDG_RUNTIME_DIR/<name>.socket`, next to the lock file that already keeps a

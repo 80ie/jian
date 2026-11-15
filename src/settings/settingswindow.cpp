@@ -1,6 +1,7 @@
 #include "settings/settingswindow.h"
 #include "panel/panel.h"
 #include "panel/windowclass.h"
+#include "settings/exportspage.h"
 #include "settings/historypage.h"
 #include "settings/imagepage.h"
 #include "settings/layoutpage.h"
@@ -44,6 +45,8 @@ SettingsWindow::SettingsWindow(Panel& panel, Config& config, PaletteEditor& pale
     addPage(u"From image"_s, new ImagePage(palette, m_stack));
     addPage(u"Presets"_s, new PresetsPage(palette, m_stack));
     addPage(u"History"_s, new HistoryPage(palette, m_stack));
+    addPage(u"Exports"_s,
+        new ExportsPage(palette, config, palette.dir().filePath(u"config.ini"_s), m_stack));
     m_ownPages = m_pages->count();
     makeWidgetPages();
     m_pages->setFixedWidth(pageListWidth);

@@ -27,6 +27,8 @@ struct Config {
     // The key of the player the media controls keep to; empty follows whichever started playing
     // last.
     QString mediaSource;
+    // Saving the palette exports it to the enabled targets.
+    bool exportOnSave = false;
 
     bool operator==(const Config&) const = default;
 };

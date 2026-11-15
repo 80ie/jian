@@ -61,6 +61,7 @@ std::optional<Config> loadConfig(const QString& path)
     if (!ok || config.tasksFloor < 1)
         return bad("tasks/floor");
     config.mediaSource = ini.value("media/source").toString();
+    config.exportOnSave = ini.value("exports/onsave").toBool();
     return config;
 }
 
@@ -80,6 +81,7 @@ bool saveConfig(const Config& config, const QString& path)
     ini.setValue("tasks/tile", config.tasksTile);
     ini.setValue("tasks/floor", config.tasksFloor);
     ini.setValue("media/source", config.mediaSource);
+    ini.setValue("exports/onsave", config.exportOnSave);
     ini.sync();
     if (ini.status() == QSettings::NoError)
         return true;

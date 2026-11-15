@@ -14,6 +14,7 @@ QString toneName(int tone);
 constexpr QSize stripSize(320, 24);
 
 // A picture of `palette` `size` big: its tones darkest first and, after a gap, its named colors.
+// The face stands taller than the rest, as in the strip.
 QPixmap paletteStrip(const Palette& palette, QSize size);
 
 // The ramp as one row of swatches, darkest first, each numbered under it. The face is tone 0 and

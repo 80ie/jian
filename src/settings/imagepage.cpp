@@ -62,6 +62,7 @@ ImagePage::ImagePage(PaletteEditor& editor, QWidget* parent)
     top->addWidget(openButton);
     top->addWidget(m_source, 1);
     m_candidates->setIconSize(stripSize);
+    m_candidates->setSpacing(2);
 
     auto* layout = new QVBoxLayout(this);
     layout->addLayout(top);
@@ -94,8 +95,7 @@ void ImagePage::open(const QString& path)
     m_palettes = candidates(colors);
     m_candidates->clear();
     for (const Palette& palette : m_palettes)
-        m_candidates->addItem(new QListWidgetItem(
-            paletteStrip(palette, stripSize), u"face %1"_s.arg(palette.face.name())));
+        m_candidates->addItem(new QListWidgetItem(paletteStrip(palette, stripSize), QString()));
 }
 
 void ImagePage::dragEnterEvent(QDragEnterEvent* event)

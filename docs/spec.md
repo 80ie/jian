@@ -745,7 +745,8 @@ runs on the GUI thread. They gave two to six candidates: two for a painting
 in shades of one ochre, three for a brown cloth with red and grey, six for a
 photograph of a red gate under a blue sky.
 
-Each candidate is shown as its ramp strip plus named colors. Picking one
+Each candidate is shown as its ramp strip plus named colors, the face
+standing taller than the other swatches, as in the editor. Picking one
 loads it into the editor as unsaved changes. Nothing is written until Save.
 This replaces `palette sweep`.
 

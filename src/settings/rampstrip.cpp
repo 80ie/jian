@@ -34,17 +34,19 @@ QPixmap paletteStrip(const Palette& palette, QSize size)
 {
     const std::array named { palette.ink, palette.fill, palette.selection, palette.pagerDesk };
     const int units = toneCount + 1 + int(named.size());
-    const auto column = [&size, units](int unit, const QColor& color, QPainter& p) {
+    const int inset = size.height() / 5;
+    const auto column = [&size, units](int unit, const QColor& color, int inset, QPainter& p) {
         const int left = unit * size.width() / units;
-        p.fillRect(left, 0, (unit + 1) * size.width() / units - left, size.height(), color);
+        p.fillRect(left, inset, (unit + 1) * size.width() / units - left, size.height() - 2 * inset,
+            color);
     };
     QPixmap picture(size);
     picture.fill(Qt::transparent);
     QPainter p(&picture);
     for (int tone = darkestTone; tone <= lightestTone; ++tone)
-        column(tone - darkestTone, palette.tone(tone), p);
+        column(tone - darkestTone, palette.tone(tone), tone == 0 ? 0 : inset, p);
     for (std::size_t i = 0; i < named.size(); ++i)
-        column(toneCount + 1 + int(i), named[i], p);
+        column(toneCount + 1 + int(i), named[i], inset, p);
     return picture;
 }
 

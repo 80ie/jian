@@ -30,7 +30,7 @@ QString toneName(int tone)
     return tone > 0 ? u"+%1"_s.arg(tone) : u"−%1"_s.arg(-tone);
 }
 
-QPixmap paletteStrip(const Palette& palette, QSize size)
+QIcon paletteStrip(const Palette& palette, QSize size)
 {
     const std::array named { palette.ink, palette.fill, palette.selection, palette.pagerDesk };
     const int units = toneCount + 1 + int(named.size());
@@ -47,7 +47,11 @@ QPixmap paletteStrip(const Palette& palette, QSize size)
         column(tone - darkestTone, palette.tone(tone), tone == 0 ? 0 : inset, p);
     for (std::size_t i = 0; i < named.size(); ++i)
         column(toneCount + 1 + int(i), named[i], inset, p);
-    return picture;
+    p.end();
+    // Left to the style, a selected row's picture is tinted, which changes the very colors shown.
+    QIcon icon(picture);
+    icon.addPixmap(picture, QIcon::Selected);
+    return icon;
 }
 
 RampStrip::RampStrip(QWidget* parent)

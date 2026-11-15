@@ -1,4 +1,4 @@
-foreach(name palette extract library scheme paletteeditor sheet layout order config dock clock client tasklayout thumbnails tray worldview panel player pulse coverart medialayout)
+foreach(name palette export extract library scheme paletteeditor sheet layout order config dock clock client tasklayout thumbnails tray worldview panel player pulse coverart medialayout)
     add_executable(${name}_test ${name}_test.cpp)
     target_link_libraries(${name}_test PRIVATE shelfcore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)

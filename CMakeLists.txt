@@ -36,6 +36,7 @@ add_library(shelfcore STATIC
     src/settings/presetspage.cpp
     src/settings/rampstrip.cpp
     src/settings/settingswindow.cpp
+    src/palette/export.cpp
     src/palette/extract.cpp
     src/palette/library.cpp
     src/palette/oklab.cpp

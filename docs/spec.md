@@ -761,12 +761,22 @@ exports/fvwm/
   template          the output file, with {name} placeholders
 ```
 
-Substitution is plain replacement with a few format suffixes (`{face}`,
-`{face:rgb}`, `{face:noHash}`). No conditionals, no arithmetic: all
-derivation already happened in the palette model. Anything that needs a
-color the model lacks means adding a named color, where it is visible in the editor.
+`target.ini` holds `destination`, where `~/` stands for the home directory,
+`command`, run with `sh -c` after the file is written, and `enabled`, all
+under `[target]`.
 
-Placeholders are tones and named colors: `{tone-2}`, `{face}`, `{ink}`.
+Substitution is plain replacement with a few format suffixes (`{face}`,
+`{face:rgb}`, `{face:noHash}`, giving `#a2948a`, `162,148,138` and
+`a2948a`). No conditionals, no arithmetic: all derivation already happened
+in the palette model. Anything that needs a color the model lacks means
+adding a named color, where it is visible in the editor.
+
+Placeholders are tones and named colors: `{tone-6}` to `{tone+5}` with the
+sign written, `{face}`, `{ink}`, `{fill}`, `{selection}`, `{pager_desk}`,
+`{chrome}`, and `{chrome-2}` to `{chrome+1}`. A brace that does not open
+one of these is an error that stops the export before anything is written;
+there is no escape, so a template cannot hold a literal brace, and none of
+the shipped ones needs to.
 
 Shipped targets, converted from the current templates: fvwm colorsets,
 qt6ct, qt5ct, KDE, GTK 3, GTK 4. The fvwm chrome shades (`chrome_bg_deep`
@@ -783,7 +793,9 @@ terminal colors. **OPEN** whether to derive a terminal set later.
 
 The settings window lists targets with a checkbox each and two buttons:
 Export now, and Export on save. A target overwrites its destination after
-copying the previous file into `history/`.
+copying the previous file into `history/<target>/`, named for the time, as
+palette history is. A destination that already holds what the export would
+write is left alone, so it is not copied either.
 
 ## 10. Settings window
 

@@ -21,7 +21,6 @@ namespace {
 
 constexpr int iconSize = 22;
 constexpr int slotSize = 26;
-constexpr int recolorMs = 300;
 
 QRect inside(const QRect& well)
 {
@@ -63,13 +62,6 @@ Tray::Tray(const Palette& palette, WindowModel* windows, QWidget* parent)
     m_slot = new ForeignSlot(*m_windows, this);
     m_measure.setSingleShot(true);
     connect(&m_measure, &QTimer::timeout, this, &Tray::measure);
-    // An edited palette changes many times a second, and each restart docks every icon again.
-    m_recolor.setSingleShot(true);
-    m_recolor.setInterval(recolorMs);
-    connect(&m_recolor, &QTimer::timeout, this, [this] {
-        if (m_palette.tone(-1) != m_background)
-            restart();
-    });
     connect(m_slot, &ForeignSlot::embedded, &m_measure, qOverload<>(&QTimer::start));
     connect(m_slot, &ForeignSlot::configured, &m_measure, qOverload<>(&QTimer::start));
     connect(m_slot, &ForeignSlot::lost, this, [this] { setIcons(0); });
@@ -103,11 +95,10 @@ QString Tray::id() const { return u"tray"_s; }
 
 int Tray::heightForWidth(int width) const { return trayHeight(width, m_icons); }
 
-void Tray::paletteChanged()
+void Tray::paletteSettled()
 {
-    update();
     if (m_slot && m_palette.tone(-1) != m_background)
-        m_recolor.start();
+        restart();
 }
 
 void Tray::paintEvent(QPaintEvent*)

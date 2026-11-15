@@ -17,9 +17,11 @@ public:
     virtual int minimumHeightForWidth(int width) const { return heightForWidth(width); }
     // Takes a share of the height the panel has left over.
     virtual bool wantsSpare() const { return false; }
-    // The palette it draws from has changed. A widget that hands colors to another program
-    // hands them over again.
+    // The palette it draws from has changed.
     virtual void paletteChanged() { update(); }
+    // The palette has stopped changing. A widget that hands colors to another program hands
+    // them over again.
+    virtual void paletteSettled() { }
     // A page for the settings window that changes this widget's settings, or null if it has none.
     // The caller owns it.
     virtual QWidget* settingsPage() { return nullptr; }

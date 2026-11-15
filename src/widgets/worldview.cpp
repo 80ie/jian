@@ -166,9 +166,8 @@ void WorldView::setScreen(QSize size)
     emit heightChanged();
 }
 
-void WorldView::paletteChanged()
+void WorldView::paletteSettled()
 {
-    update();
     if (m_slot)
         send(pagerColorsets(m_palette));
 }

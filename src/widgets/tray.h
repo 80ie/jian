@@ -36,7 +36,7 @@ public:
 
     QString id() const override;
     int heightForWidth(int width) const override;
-    void paletteChanged() override;
+    void paletteSettled() override;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -58,5 +58,4 @@ private:
     // The background the running stalonetray was given.
     QColor m_background;
     QTimer m_measure;
-    QTimer m_recolor;
 };

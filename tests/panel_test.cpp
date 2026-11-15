@@ -1,10 +1,31 @@
 #include "palette/palette.h"
 #include "panel/config.h"
+#include "panel/panel.h"
 #include "panel/render.h"
+#include "widgets/shelfwidget.h"
 
 #include <QTest>
 
 #include <optional>
+
+using namespace Qt::StringLiterals;
+
+namespace {
+
+class Counting : public ShelfWidget {
+public:
+    using ShelfWidget::ShelfWidget;
+
+    QString id() const override { return u"counting"_s; }
+    int heightForWidth(int) const override { return 10; }
+    void paletteChanged() override { ++changed; }
+    void paletteSettled() override { ++settled; }
+
+    int changed = 0;
+    int settled = 0;
+};
+
+} // namespace
 
 class PanelTest : public QObject {
     Q_OBJECT
@@ -20,6 +41,26 @@ private slots:
         if (panel != golden)
             panel.save("actual-panel.png");
         QVERIFY2(panel == golden, "differs from golden/panel.png, see actual-panel.png");
+    }
+
+    // Dragging a color in the editor changes the palette many times a second.
+    void paletteSettlesOnce()
+    {
+        const Palette palette;
+        Counting* counting = nullptr;
+        Panel panel(palette, { }, [&counting](const QString&, QWidget* parent) {
+            counting = new Counting(parent);
+            return counting;
+        });
+        panel.arrange({ u"counting"_s }, { });
+        QVERIFY(counting);
+        for (int i = 0; i < 10; ++i)
+            panel.paletteChanged();
+        QCOMPARE(counting->changed, 10);
+        QCOMPARE(counting->settled, 0);
+        QTRY_COMPARE(counting->settled, 1);
+        QTest::qWait(500);
+        QCOMPARE(counting->settled, 1);
     }
 };
 

@@ -3,6 +3,7 @@
 #include "panel/config.h"
 #include "panel/dock.h"
 
+#include <QTimer>
 #include <QWidget>
 
 #include <functional>
@@ -41,7 +42,7 @@ public:
     void setSide(Qt::Edge side);
     // Clamped between narrowestPanel and widestPanel.
     void setWidth(int width);
-    // Redraws, and tells each widget.
+    // Redraws, and tells each widget at once and again when the palette has held still.
     void paletteChanged();
 
     Qt::Edge side() const { return m_side; }
@@ -118,4 +119,5 @@ private:
     QWidget m_grip { this };
     std::optional<Drag> m_drag;
     DockHints m_dock;
+    QTimer m_settle;
 };

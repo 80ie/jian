@@ -114,15 +114,18 @@ public:
     int heightForWidth(int w) const override = 0;  // natural height
     virtual int minimumHeightForWidth(int w) const;
     virtual bool wantsSpare() const;               // takes leftover height
-    virtual void paletteChanged();                 // repaints, passes colors on
+    virtual void paletteChanged();                 // repaints
+    virtual void paletteSettled();                 // passes colors on
     virtual QWidget* settingsPage();               // nullptr if none; caller owns it
 signals:
     void heightChanged();
 };
 ```
 
-`paletteChanged()` is how the pager and the tray hand new colors to the
-programs that draw them (7.2, 7.5).
+`paletteSettled()` is how the pager and the tray hand new colors to the
+programs that draw them (7.2, 7.5). The panel calls it once the palette has
+held still for 300 ms, so that dragging a color in the editor repaints the
+panel at every step but sends another program only the color it stops on.
 
 A settings page changes its widget through the widget's own setters, so a
 change shows at once, and the widget signals it so that `config.ini` is
@@ -395,8 +398,8 @@ through the table in 8.1:
 | 303 | `FocusColorset` | tone -6 | tone +2 |
 
 `pager_desk` is not among them, as it was not among the old ones. A palette
-change re-sends the four `Colorset` lines, and a running FvwmPager redraws
-from them. This is the only place palette data crosses to fvwm without the
+change re-sends the four `Colorset` lines once the palette has held still
+(3.3), and a running FvwmPager redraws from them. This is the only place palette data crosses to fvwm without the
 user asking for an export.
 
 The labels are in the widget's font, sent as an Xft name at its whole pixel
@@ -586,7 +589,7 @@ arguments, so `--config /dev/null` keeps such a file out. No rc file is
 generated.
 
 The panel restarts stalonetray when N changes and when the palette changes
-its background, once the palette has held still for 300 ms, so that dragging
+its background, once the palette has held still (3.3), so that dragging
 the contrast slider in the editor does not dock every icon again at each
 step. It starts the new one once the old has exited and given up the
 selection.

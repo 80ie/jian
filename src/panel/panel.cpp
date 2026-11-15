@@ -28,6 +28,8 @@ constexpr int windowGap = 8;
 constexpr int bayMargin = 2;
 constexpr int bayGap = 5;
 constexpr int bayBevel = 1;
+// An edited palette changes many times a second, and another program takes each color slowly.
+constexpr int settleMs = 300;
 
 // `raised` turned half round: shaded at the top and left, lit at the bottom and right.
 void bay(QPainter& p, const QRect& r, const Palette& palette)
@@ -56,6 +58,13 @@ Panel::Panel(const Palette& palette, QStringList offered, Create create)
 {
     setWindowTitle(u"shelf"_s);
     m_grip.setCursor(Qt::SplitHCursor);
+    m_settle.setSingleShot(true);
+    m_settle.setInterval(settleMs);
+    connect(&m_settle, &QTimer::timeout, this, [this] {
+        for (const Slot& slot : m_slots)
+            if (slot.widget)
+                slot.widget->paletteSettled();
+    });
     connect(QGuiApplication::primaryScreen(), &QScreen::geometryChanged, this,
         [this] { place(width()); });
 }
@@ -105,6 +114,7 @@ void Panel::paletteChanged()
         if (slot.window)
             slot.window->update();
     }
+    m_settle.start();
 }
 
 QStringList Panel::order() const

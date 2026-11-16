@@ -24,6 +24,15 @@ struct ClockLayout {
     int height = 0;
 };
 
+// Each end's size, as a percentage of the size the width gives.
+struct ClockSizes {
+    int time = 100;
+    int date = 100;
+
+    bool operator==(const ClockSizes&) const = default;
+};
+
 // The clock `width` wide with `time` at the left end and `date` at the right, each broken into
-// lines at its newlines, in the family and weight of `family`.
-ClockLayout clockLayout(int width, const QFont& family, const QString& time, const QString& date);
+// lines at its newlines and sized by `sizes`, in the family and weight of `family`.
+ClockLayout clockLayout(int width, const QFont& family, const QString& time, const QString& date,
+    const ClockSizes& sizes);

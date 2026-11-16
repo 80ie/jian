@@ -97,7 +97,7 @@ QString Clock::id() const { return u"clock"_s; }
 
 int Clock::heightForWidth(int width) const
 {
-    return clockLayout(width, font(), m_time, m_date).height;
+    return clockLayout(width, font(), m_time, m_date, { }).height;
 }
 
 QWidget* Clock::settingsPage()
@@ -155,7 +155,7 @@ void Clock::setTime(const QDateTime& time)
 
 void Clock::paintEvent(QPaintEvent*)
 {
-    const ClockLayout l = clockLayout(width(), font(), m_time, m_date);
+    const ClockLayout l = clockLayout(width(), font(), m_time, m_date, { });
     QPainter p(this);
     p.fillRect(rect(), m_palette.tone(0));
     p.setPen(m_palette.ink);

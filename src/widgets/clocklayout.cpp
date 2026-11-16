@@ -35,38 +35,34 @@ int span(const QFontMetrics& metrics, qsizetype lines)
     return int(lines - 1) * metrics.lineSpacing() + metrics.capHeight();
 }
 
-// Scaling with the text as well would blow a short format up to fill the strip, so the width
-// sets the size and the text can only step it down.
-int basePoints(int width, const QFont& family, const QStringList& time, const QStringList& date)
+int sidePoints(int base, int percent)
 {
-    const auto fits = [&](int points) {
-        const QFont font = paint::font(family, points);
-        return widest(font, time) + widest(font, date) <= width - padLeft - padRight - gap;
-    };
-    int points = qRound(double(referencePoints) * width / referenceWidth);
-    while (points > minimumPoints && !fits(points))
-        --points;
-    return std::max(points, minimumPoints);
+    return std::max(minimumPoints, qRound(double(base) * percent / 100));
 }
 
-// The side with fewer lines grows until it would stand taller than the other or no longer fit
-// beside it.
-int grownPoints(
-    int width, const QFont& family, int base, const QStringList& lines, const QStringList& other)
+// Scaling with the text as well would blow a short format up to fill the strip, so the width
+// sets the size and the text can only step it down.
+int basePoints(int width, const QFont& family, const QStringList& time, const QStringList& date,
+    const ClockSizes& sizes)
 {
-    if (lines.size() >= other.size())
-        return base;
-    const QFont font = paint::font(family, base);
-    const int tallest = span(QFontMetrics(font), other.size());
-    const int room = width - padLeft - padRight - gap - widest(font, other);
-    const auto fits = [&](int points) {
-        const QFont grown = paint::font(family, points);
-        return span(QFontMetrics(grown), lines.size()) <= tallest && widest(grown, lines) <= room;
+    const auto fits = [&](int base) {
+        return widest(paint::font(family, sidePoints(base, sizes.time)), time)
+            + widest(paint::font(family, sidePoints(base, sizes.date)), date)
+            <= width - padLeft - padRight - gap;
     };
-    int points = base;
-    while (fits(points + 1))
-        ++points;
-    return points;
+    int base = qRound(double(referencePoints) * width / referenceWidth);
+    while (std::max(sidePoints(base, sizes.time), sidePoints(base, sizes.date)) > minimumPoints
+        && !fits(base))
+        --base;
+    return base;
+}
+
+// stripHeight tall at referencePoints and in proportion, and a line taller for each line past
+// the first.
+int sideHeight(const QFont& font, qsizetype lines)
+{
+    return qRound(double(stripHeight) * font.pointSize() / referencePoints)
+        + int(lines - 1) * QFontMetrics(font).lineSpacing();
 }
 
 QStringList elided(const QFontMetrics& metrics, QStringList lines, int room)
@@ -93,18 +89,16 @@ ClockSide stack(const QFont& font, const QStringList& lines, int height, const a
 
 } // namespace
 
-ClockLayout clockLayout(int width, const QFont& family, const QString& time, const QString& date)
+ClockLayout clockLayout(int width, const QFont& family, const QString& time, const QString& date,
+    const ClockSizes& sizes)
 {
     const QStringList timeLines = time.split(u'\n');
     const QStringList dateLines = date.split(u'\n');
-    const int base = basePoints(width, family, timeLines, dateLines);
-    const int height = qRound(double(stripHeight) * base / referencePoints)
-        + int(std::max(timeLines.size(), dateLines.size()) - 1)
-            * QFontMetrics(paint::font(family, base)).lineSpacing();
-    const QFont timeFont
-        = paint::font(family, grownPoints(width, family, base, timeLines, dateLines));
-    const QFont dateFont
-        = paint::font(family, grownPoints(width, family, base, dateLines, timeLines));
+    const int base = basePoints(width, family, timeLines, dateLines, sizes);
+    const QFont timeFont = paint::font(family, sidePoints(base, sizes.time));
+    const QFont dateFont = paint::font(family, sidePoints(base, sizes.date));
+    const int height
+        = std::max(sideHeight(timeFont, timeLines.size()), sideHeight(dateFont, dateLines.size()));
     const int room = width - padLeft - padRight;
     const QStringList shownTime = elided(QFontMetrics(timeFont), timeLines, room);
     const QStringList shownDate

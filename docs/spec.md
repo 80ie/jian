@@ -372,19 +372,17 @@ format that `config.ini` holds as `[clock] time` and `date`. A newline in a
 format starts another line on its side, written `\n` in the file, so a date
 can stand over its weekday. Time lines align left, date lines right.
 
-The width sets the size: 11 points at 200 pixels and in proportion, stepped
-down a point at a time until the widest time line and the widest date line
-fit side by side, but never below 8 points. Text too wide even then is cut
-short with an ellipsis. The strip is 30 pixels tall at 11 points and in
-proportion, and a line taller for each line past the first on the side with
-more.
+The width sets a size: 11 points at 200 pixels and in proportion. Each side
+is drawn at its own percentage of that size, rounded to a whole point. Where
+the widest time line and the widest date line do not fit side by side, the
+size steps down a point at a time, so that both sides shrink together and
+keep their proportion. Neither goes below 8 points: a side that reaches 8
+stays there while the other shrinks on. Text too wide even then is cut short
+with an ellipsis.
 
-The side with fewer lines then grows a point at a time while it stands no
-taller than the other, from the top of the first line's capitals to the
-last baseline, and the two still fit side by side. A date stacked over its
-weekday keeps the size it would have on one line and leaves the time room
-to grow. Sides with as many lines as each other do not grow. Each side is
-centred in the strip.
+A side stands 30 pixels tall at 11 points and in proportion, and a line of
+its own size taller for each line past its first. The strip is as tall as
+the taller side, and each side is centred in it.
 
 ### 7.2 World View
 

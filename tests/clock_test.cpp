@@ -5,7 +5,7 @@
 #include <QTest>
 
 #include <algorithm>
-#include <utility>
+#include <cstdlib>
 
 using namespace Qt::StringLiterals;
 
@@ -14,15 +14,7 @@ namespace {
 // The family the golden image draws the clock in.
 QFont mono() { return QFont(u"Linux Libertine Mono O"_s); }
 
-// From the top of the first line's capitals to the last baseline.
-std::pair<int, int> span(const ClockSide& side)
-{
-    return { side.lines.front().origin.y() - QFontMetrics(side.font).capHeight(),
-        side.lines.back().origin.y() };
-}
-
-// Every line on the strip, the time's lines clear of the date's, and the side with fewer lines
-// within the other's span.
+// Every line on the strip, the time's lines clear of the date's, and each side centred.
 bool staysInside(const ClockLayout& l, int width)
 {
     int timeRight = 0;
@@ -40,11 +32,11 @@ bool staysInside(const ClockLayout& l, int width)
             else if (!line.text.isEmpty())
                 dateLeft = std::min(dateLeft, left);
         }
+        const int top = side->lines.front().origin.y() - metrics.capHeight();
+        if (std::abs(top + side->lines.back().origin.y() - l.height) > 1)
+            return false;
     }
-    const bool timeShorter = l.time.lines.size() < l.date.lines.size();
-    const auto [top, bottom] = span(timeShorter ? l.time : l.date);
-    const auto [tallTop, tallBottom] = span(timeShorter ? l.date : l.time);
-    return timeRight < dateLeft && top >= tallTop && bottom <= tallBottom;
+    return timeRight < dateLeft;
 }
 
 } // namespace
@@ -105,7 +97,7 @@ private slots:
         QFETCH(int, width);
         QFETCH(int, points);
         QFETCH(int, height);
-        const ClockLayout l = clockLayout(width, mono(), u"09:41AM"_s, u"Fri 11.13"_s);
+        const ClockLayout l = clockLayout(width, mono(), u"09:41AM"_s, u"Fri 11.13"_s, { });
         QCOMPARE(l.time.font.pointSize(), points);
         QCOMPARE(l.date.font.pointSize(), points);
         QCOMPARE(l.height, height);
@@ -113,7 +105,7 @@ private slots:
 
     void longFormatStepsDown()
     {
-        const ClockLayout l = clockLayout(180, mono(), u"09:41:07 AM"_s, u"Fri 11.13"_s);
+        const ClockLayout l = clockLayout(180, mono(), u"09:41:07 AM"_s, u"Fri 11.13"_s, { });
         QVERIFY(l.time.font.pointSize() < 10);
         QCOMPARE(l.date.font.pointSize(), l.time.font.pointSize());
         QVERIFY(l.height < 27);
@@ -121,35 +113,50 @@ private slots:
         QCOMPARE(l.date.lines.front().text, u"Fri 11.13"_s);
     }
 
-    void stackedDateKeepsItsSize()
+    void timeAtOneAndAHalf()
     {
-        const ClockLayout one = clockLayout(180, mono(), u"09:41AM"_s, u"11.16.2026"_s);
-        const ClockLayout two = clockLayout(180, mono(), u"09:41AM"_s, u"11.16.2026\nMonday"_s);
-        QCOMPARE(two.date.lines.size(), 2);
-        QCOMPARE(two.date.font.pointSize(), one.date.font.pointSize());
-        QVERIFY(two.height > one.height);
-        QVERIFY(two.time.font.pointSize() > one.time.font.pointSize());
-        QVERIFY(two.date.lines[1].origin.y() > two.date.lines[0].origin.y());
+        const ClockLayout l = clockLayout(180, mono(), u"09:41AM"_s, u"11.16\nMon"_s, { 150, 100 });
+        QCOMPARE(l.time.font.pointSize(), 15);
+        QCOMPARE(l.date.font.pointSize(), 10);
     }
 
-    void widthCapsGrowth()
+    void stepDownKeepsTheRatio()
     {
-        const ClockLayout narrow = clockLayout(173, mono(), u"09:41AM"_s, u"11.16.2026\nMonday"_s);
-        const ClockLayout wide = clockLayout(190, mono(), u"09:41AM"_s, u"11.16.2026\nMonday"_s);
-        QCOMPARE(narrow.date.font.pointSize(), wide.date.font.pointSize());
-        QVERIFY(narrow.time.font.pointSize() < wide.time.font.pointSize());
+        const ClockLayout l
+            = clockLayout(260, mono(), u"Fri 09:41:07 AM"_s, u"11.16\nMon"_s, { 150, 100 });
+        QCOMPARE(l.time.font.pointSize(), 15);
+        QCOMPARE(l.date.font.pointSize(), 10);
+        QCOMPARE(l.time.lines.front().text, u"Fri 09:41:07 AM"_s);
     }
 
-    void equalLinesDoNotGrow()
+    void nothingBelowTheFloor()
     {
-        const ClockLayout l = clockLayout(180, mono(), u"09:41\nAM"_s, u"11.16\nMon"_s);
-        QCOMPARE(l.time.font.pointSize(), l.date.font.pointSize());
+        const ClockLayout l
+            = clockLayout(120, mono(), u"Friday 09:41:07 AM"_s, u"11.16\nMon"_s, { 150, 50 });
+        QCOMPARE(l.time.font.pointSize(), 8);
+        QCOMPARE(l.date.font.pointSize(), 8);
     }
 
-    void growthCutsNothing()
+    void largerSideSetsHeight_data()
+    {
+        QTest::addColumn<QString>("date");
+        QTest::addColumn<int>("height");
+        QTest::newRow("time taller") << u"Mon"_s << 41;
+        QTest::newRow("date taller") << u"11.16\nMon"_s << 42;
+    }
+
+    void largerSideSetsHeight()
+    {
+        QFETCH(QString, date);
+        QFETCH(int, height);
+        QCOMPARE(clockLayout(180, mono(), u"09:41AM"_s, date, { 150, 100 }).height, height);
+    }
+
+    void largerTimeCutsNothing()
     {
         for (int width = 140; width <= 260; ++width) {
-            const ClockLayout l = clockLayout(width, mono(), u"12:55PM"_s, u"11.16\nMon"_s);
+            const ClockLayout l
+                = clockLayout(width, mono(), u"12:55PM"_s, u"11.16\nMon"_s, { 150, 100 });
             QCOMPARE(l.time.lines.front().text, u"12:55PM"_s);
             QCOMPARE(l.date.lines.front().text, u"11.16"_s);
         }
@@ -160,15 +167,26 @@ private slots:
         QTest::addColumn<int>("width");
         QTest::addColumn<QString>("time");
         QTest::addColumn<QString>("date");
-        QTest::newRow("default") << 160 << u"09:41AM"_s << u"Fri 11.13"_s;
-        QTest::newRow("stepped down") << 180 << u"09:41:07 AM"_s << u"Fri 11.13"_s;
-        QTest::newRow("date elided") << 120 << u"09:41AM"_s << u"Wednesday 11.16.2026"_s;
-        QTest::newRow("time elided") << 120 << u"Friday 09:41:07 AM 2026"_s << u"Fri"_s;
-        QTest::newRow("empty") << 160 << QString() << QString();
-        QTest::newRow("stacked date") << 180 << u"09:41AM"_s << u"11.16.2026\nMonday"_s;
-        QTest::newRow("stacked time") << 180 << u"09:41\nAM"_s << u"Mon 11.16"_s;
-        QTest::newRow("short time") << 180 << u"9"_s << u"11.16.2026\nMonday"_s;
-        QTest::newRow("narrow") << 120 << u"09:41AM"_s << u"Monday 11.16.2026\nweek 47\nQ4"_s;
+        QTest::addColumn<ClockSizes>("sizes");
+        QTest::newRow("default") << 160 << u"09:41AM"_s << u"Fri 11.13"_s << ClockSizes();
+        QTest::newRow("stepped down") << 180 << u"09:41:07 AM"_s << u"Fri 11.13"_s << ClockSizes();
+        QTest::newRow("date elided")
+            << 120 << u"09:41AM"_s << u"Wednesday 11.16.2026"_s << ClockSizes();
+        QTest::newRow("time elided")
+            << 120 << u"Friday 09:41:07 AM 2026"_s << u"Fri"_s << ClockSizes();
+        QTest::newRow("empty") << 160 << QString() << QString() << ClockSizes();
+        QTest::newRow("stacked date")
+            << 180 << u"09:41AM"_s << u"11.16.2026\nMonday"_s << ClockSizes();
+        QTest::newRow("stacked time") << 180 << u"09:41\nAM"_s << u"Mon 11.16"_s << ClockSizes();
+        QTest::newRow("short time") << 180 << u"9"_s << u"11.16.2026\nMonday"_s << ClockSizes();
+        QTest::newRow("narrow") << 120 << u"09:41AM"_s << u"Monday 11.16.2026\nweek 47\nQ4"_s
+                                << ClockSizes();
+        QTest::newRow("larger time")
+            << 180 << u"09:41AM"_s << u"11.16\nMon"_s << ClockSizes { 150, 100 };
+        QTest::newRow("larger date")
+            << 180 << u"09:41\nAM"_s << u"Monday 11.16"_s << ClockSizes { 70, 200 };
+        QTest::newRow("both at the most")
+            << 220 << u"09:41AM"_s << u"Fri 11.13"_s << ClockSizes { 300, 300 };
     }
 
     void staysInside()
@@ -176,7 +194,8 @@ private slots:
         QFETCH(int, width);
         QFETCH(QString, time);
         QFETCH(QString, date);
-        QVERIFY(::staysInside(clockLayout(width, mono(), time, date), width));
+        QFETCH(ClockSizes, sizes);
+        QVERIFY(::staysInside(clockLayout(width, mono(), time, date, sizes), width));
     }
 };
 

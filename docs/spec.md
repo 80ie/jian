@@ -1,7 +1,8 @@
 # Shelf rewrite: spec
 
-Status: draft 2, 2026-11-13. Nothing here is built. Items marked **OPEN** need
-a decision; items marked **VERIFY** are claims to test before relying on them.
+Status: built through milestone 8; jian replaced the Python shelf on
+2026-11-16. Items marked **OPEN** need a decision; items marked **VERIFY** are
+claims to test before relying on them.
 
 ## 1. Goals
 
@@ -26,6 +27,7 @@ records them so the architecture leaves room, and nothing more.
 | current piece | fate |
 |---|---|
 | `shelf-panel` frame, layout, resize, side switch | ported, layout model replaced (section 4) |
+| keys for side, width and hiding (`--toggle-side`, `--adjust-width`, `--toggle-hidden`) | dropped: the panel's menu docks it, dragging resizes it; a compact mode may replace hiding later |
 | clock | ported |
 | World View (FvwmPager swallow) | ported as an fvwm-only widget (section 7.2) |
 | tasks | ported, pinned grid and overflow redesigned (section 7.3) |
@@ -369,8 +371,7 @@ and `date`.
 ### 7.2 World View
 
 FvwmPager in a `ForeignSlot`, under the module alias `JianWorldView`,
-showing desks 0 and 1 stacked. The alias is not the Python shelf's
-`ShelfPager`, so that both can run. The widget is offered only under fvwm:
+showing desks 0 and 1 stacked. The widget is offered only under fvwm:
 `FVWM_IS_FVWM3` is set, as fvwm sets it for everything it starts, and
 `FvwmCommand` is on the path. `FVWMMFL_SOCKET` cannot be the test: FvwmMFL
 hands it to fvwm only after `StartFunction` has run, so a panel started

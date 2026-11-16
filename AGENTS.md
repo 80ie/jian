@@ -4,8 +4,9 @@ A desktop panel in C++20 and Qt 6 Widgets, on X11 through xcb. `docs/spec.md`
 is the source of truth for what it does and in what order it gets built.
 `CLAUDE.md` is a symlink to this file.
 
-The Python program this replaces is in `~/.fvwm/bin/` (`shelf-panel`,
-`photon*.py`). Read it for reference. Never modify anything under `~/.fvwm`.
+The Python program this replaced is in the history of `~/.fvwm`:
+`git -C ~/.fvwm show 92b16fe^:bin/shelf-panel`, and likewise `photon*.py`.
+Read it for reference. Never modify anything under `~/.fvwm`.
 
 ## Build and test
 

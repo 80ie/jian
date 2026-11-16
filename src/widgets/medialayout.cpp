@@ -7,6 +7,9 @@ using namespace std::chrono;
 
 namespace {
 
+// The fields keep this far inside the widget's edges, and the dividers half as far.
+constexpr int padding = 4;
+constexpr int ruleInset = 2;
 constexpr int fieldHeight = 19;
 constexpr int buttonHeight = 22;
 constexpr int buttonGap = 2;
@@ -27,36 +30,39 @@ constexpr milliseconds quickestStep(40);
 MediaLayout mediaLayout(int width, QSize art, bool track)
 {
     MediaLayout l;
-    int y = 0;
+    const int inner = width - 2 * padding;
+    int y = padding;
     const auto take = [&y](int height) {
         const int top = y;
         y += height + gap;
         return top;
     };
-    l.source = QRect(0, take(fieldHeight), width, fieldHeight);
+    const auto field = [&](int height) { return QRect(padding, take(height), inner, height); };
+    const auto rule
+        = [&] { return QRect(ruleInset, take(ruleHeight), width - 2 * ruleInset, ruleHeight); };
+    l.source = field(fieldHeight);
     if (!art.isEmpty()) {
-        const int side = std::min(width, qRound(double(width) * art.height() / art.width()));
-        l.art = QRect(0, take(side), width, side);
-        l.artRule = take(ruleHeight);
+        l.art = field(std::min(inner, qRound(double(inner) * art.height() / art.width())));
+        l.artRule = rule();
     }
-    l.title = QRect(0, take(fieldHeight), width, fieldHeight);
+    l.title = field(fieldHeight);
     if (track)
-        l.track = QRect(0, take(trackHeight), width, trackHeight);
+        l.track = field(trackHeight);
     const int buttonsTop = take(buttonHeight);
-    const int room = std::max(4, width - 3 * buttonGap);
-    int x = 0;
+    const int room = std::max(4, inner - 3 * buttonGap);
+    int x = padding;
     for (int i = 0; i < 4; ++i) {
         const int buttonWidth = room / 4 + (i < room % 4);
         l.buttons[i] = QRect(x, buttonsTop, buttonWidth, buttonHeight);
         x += buttonWidth + buttonGap;
     }
-    l.rule = take(ruleHeight);
+    l.rule = rule();
     l.thumbTop = take(thumbSize.height());
-    l.speaker = speaker.translated(0, l.thumbTop);
-    l.groove = QRect(grooveLeft, l.thumbTop + grooveDrop,
-        std::max(shortestGroove, width - grooveLeft - grooveRight), 5);
-    l.output = QRect(0, y, width, fieldHeight);
-    l.height = l.output.bottom() + 1;
+    l.speaker = speaker.translated(padding, l.thumbTop);
+    l.groove = QRect(padding + grooveLeft, l.thumbTop + grooveDrop,
+        std::max(shortestGroove, inner - grooveLeft - grooveRight), 5);
+    l.output = QRect(padding, y, inner, fieldHeight);
+    l.height = l.output.bottom() + 1 + padding;
     return l;
 }
 

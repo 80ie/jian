@@ -15,13 +15,13 @@ struct MediaLayout {
     QRect source;
     // Null when there is nothing for the well to show.
     QRect art;
-    // The top rows of the dividers under the art and above the volume.
-    int artRule = 0;
+    // The dividers under the art and above the volume.
+    QRect artRule;
     QRect title;
     // Null when the trackbar is hidden.
     QRect track;
     std::array<QRect, 4> buttons;
-    int rule = 0;
+    QRect rule;
     QRect speaker;
     QRect groove;
     int thumbTop = 0;

@@ -100,7 +100,7 @@ void Media::paintEvent(QPaintEvent* event)
         // The marquee repaints its field many times a second, and scaling the art is not free.
         if (event->rect().intersects(l.art))
             drawArt(p, l.art, m_palette, m_art);
-        paint::divider(p, QRect(0, l.artRule, width(), 2), m_palette);
+        paint::divider(p, l.artRule, m_palette);
     }
     drawTitle(
         p, l.title, m_palette, m_title, current && !current->title.isEmpty(), m_scroll, m_span);
@@ -112,7 +112,7 @@ void Media::paintEvent(QPaintEvent* event)
     drawTransport(p, l.buttons, m_palette,
         { live && current->canGoPrevious, live, live, live && current->canGoNext }, m_pressed,
         current && current->playback == Playback::Playing);
-    paint::divider(p, QRect(0, l.rule, width(), 2), m_palette);
+    paint::divider(p, l.rule, m_palette);
 
     const Output* output = m_sinks.current();
     drawVolume(p, l, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),

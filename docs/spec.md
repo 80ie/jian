@@ -208,8 +208,11 @@ their edge with a well (World View, tasks, tray) or a full-width field
 (media), so a closed edge drawn just around such a widget would frame it
 twice. So each widget sits in a bay: sunk into the face behind a one-pixel
 soft bevel, `raised` turned half round, flush with the widget, the bays 5
-pixels apart and 2 from the panel's edges. A well at the edge merges with
-the bay into one deeper well. `tests/golden/panel.png` shows it.
+pixels apart and 2 from the panel's edges. A widget whose edges are a well
+of its own (World View, tasks, the tray) is its own bay, and the panel draws
+no bevel around it: merged with the well, the bevel doubled its outline into
+a softer, thicker edge than the Python shelf's, which the owner rejected
+beside it (issue #4). `tests/golden/panel.png` shows it.
 
 Tiles (each widget on a raised tile on a ground of tone -2) and grooves (no
 edge, the five-row `groove` between slots) were built beside it in

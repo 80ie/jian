@@ -23,6 +23,7 @@ public:
     int heightForWidth(int width) const override;
     int minimumHeightForWidth(int width) const override;
     bool wantsSpare() const override { return true; }
+    bool sunken() const override { return true; }
     // The thumbnail floor.
     QWidget* settingsPage() override;
     void setClients(const std::vector<Client>& clients);

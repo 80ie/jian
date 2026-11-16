@@ -24,8 +24,8 @@ namespace {
 
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
-// Each widget sits in a bay sunk into the face behind a one-pixel bevel: bays this far from the
-// panel's edges and from each other.
+// Each widget sits in a bay sunk into the face behind a one-pixel bevel, unless its edges are a
+// well already: bays this far from the panel's edges and from each other.
 constexpr int bayMargin = 2;
 constexpr int bayGap = 5;
 constexpr int bayBevel = 1;
@@ -178,7 +178,7 @@ void Panel::paintEvent(QPaintEvent*)
     p.fillRect(rect(), m_palette.tone(0));
     paint::frame(p, frameRect(), m_palette, m_side);
     for (const Slot& slot : m_slots)
-        if (slot.docked())
+        if (slot.docked() && !slot.widget->sunken())
             bay(p, slot.rect, m_palette);
 }
 
@@ -260,20 +260,22 @@ void Panel::relayout()
         unplaced = ::unplaced(m_offered, order());
         area.setBottom(area.bottom() - EditOverlay::stripHeight(int(unplaced.size())));
     }
-    const int width = area.width() - 2 * bayBevel;
     std::vector<Slot*> docked;
     std::vector<SlotHeights> heights;
     for (Slot& slot : m_slots) {
         if (!slot.docked())
             continue;
         docked.push_back(&slot);
-        heights.push_back({ slot.widget->heightForWidth(width) + 2 * bayBevel,
-            slot.widget->minimumHeightForWidth(width) + 2 * bayBevel, slot.widget->wantsSpare() });
+        const int bevel = slot.widget->sunken() ? 0 : bayBevel;
+        const int width = area.width() - 2 * bevel;
+        heights.push_back({ slot.widget->heightForWidth(width) + 2 * bevel,
+            slot.widget->minimumHeightForWidth(width) + 2 * bevel, slot.widget->wantsSpare() });
     }
     const std::vector<QRect> rects = layoutSlots(area, bayGap, heights);
     for (std::size_t i = 0; i < rects.size(); ++i) {
+        const int bevel = docked[i]->widget->sunken() ? 0 : bayBevel;
         docked[i]->rect = rects[i];
-        docked[i]->widget->setGeometry(rects[i].adjusted(bayBevel, bayBevel, -bayBevel, -bayBevel));
+        docked[i]->widget->setGeometry(rects[i].adjusted(bevel, bevel, -bevel, -bevel));
     }
     if (m_overlay) {
         const QPoint origin = slotArea().topLeft();

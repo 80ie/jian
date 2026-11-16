@@ -36,6 +36,7 @@ public:
 
     QString id() const override;
     int heightForWidth(int width) const override;
+    bool sunken() const override { return true; }
     void paletteSettled() override;
 
 protected:

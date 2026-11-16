@@ -35,6 +35,7 @@ public:
 
     QString id() const override;
     int heightForWidth(int width) const override;
+    bool sunken() const override { return true; }
     void paletteSettled() override;
     // The screen whose proportions the pages take. It follows the primary screen's virtual
     // geometry as that changes.

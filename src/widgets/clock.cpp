@@ -4,11 +4,15 @@
 
 #include <QFontDatabase>
 #include <QFormLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QTextDocument>
 #include <QtMath>
+
+#include <utility>
+#include <vector>
 
 using namespace Qt::StringLiterals;
 
@@ -26,6 +30,33 @@ QPlainTextEdit* formatEdit(const QString& format, QWidget* parent)
     const int margin = edit->frameWidth() + qCeil(edit->document()->documentMargin());
     edit->setFixedHeight(3 * line + 2 * margin + 1);
     return edit;
+}
+
+// Each token beside what it gives, a column to every eight rows. Returns the labels that show
+// what the tokens give, each with its token.
+std::vector<std::pair<QString, QLabel*>> fillSyntax(QGridLayout* grid, QWidget* parent)
+{
+    constexpr int rows = 8;
+    const QFont fixed = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    const int gap = QFontMetrics(fixed).horizontalAdvance(u"  "_s);
+    const auto place = [&](int i, QLabel* token, QLabel* gives) {
+        gives->setContentsMargins(0, 0, gap, 0);
+        grid->addWidget(token, i % rows, 2 * (i / rows));
+        grid->addWidget(gives, i % rows, 2 * (i / rows) + 1);
+    };
+    const QStringList tokens { u"h AP"_s, u"hh AP"_s, u"H"_s, u"HH"_s, u"mm"_s, u"ss"_s, u"AP"_s,
+        u"ap"_s, u"d"_s, u"dd"_s, u"ddd"_s, u"dddd"_s, u"M"_s, u"MM"_s, u"MMM"_s, u"MMMM"_s,
+        u"yy"_s, u"yyyy"_s, u"'at'"_s };
+    std::vector<std::pair<QString, QLabel*>> examples;
+    for (const QString& token : tokens) {
+        auto* label = new QLabel(token, parent);
+        label->setFont(fixed);
+        examples.emplace_back(token, new QLabel(parent));
+        place(int(examples.size()) - 1, label, examples.back().second);
+    }
+    place(int(tokens.size()), new QLabel(u"Enter"_s, parent), new QLabel(u"new line"_s, parent));
+    grid->setColumnStretch(grid->columnCount(), 1);
+    return examples;
 }
 
 } // namespace
@@ -76,15 +107,20 @@ QWidget* Clock::settingsPage()
     auto* date = formatEdit(m_dateFormat, page);
     auto* timePreview = new QLabel(page);
     auto* datePreview = new QLabel(page);
+    auto* syntax = new QGridLayout;
     auto* form = new QFormLayout(page);
     form->addRow(u"Time"_s, time);
     form->addRow(QString(), timePreview);
     form->addRow(u"Date"_s, date);
     form->addRow(QString(), datePreview);
-    const auto preview = [time, date, timePreview, datePreview] {
+    form->addRow(u"Syntax"_s, syntax);
+    const std::vector<std::pair<QString, QLabel*>> examples = fillSyntax(syntax, page);
+    const auto preview = [time, date, timePreview, datePreview, examples] {
         const QDateTime now = QDateTime::currentDateTime();
         timePreview->setText(now.toString(time->toPlainText()));
         datePreview->setText(now.toString(date->toPlainText()));
+        for (const auto& [token, label] : examples)
+            label->setText(now.toString(token));
     };
     for (QPlainTextEdit* edit : { time, date })
         connect(edit, &QPlainTextEdit::textChanged, this, [this, time, date, preview] {

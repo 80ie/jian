@@ -872,7 +872,8 @@ One window, opened from the panel's context menu ("Settings…") or `jian
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
 then one page per widget that returns a `settingsPage()`: Clock (its two
-formats, each with a preview of the time in it), Tasks (the tile
+formats, each with a preview of the time in it, and a sheet of the format
+tokens, each beside what it gives at the moment), Tasks (the tile
 size and the thumbnail floor) and Media (the source, as its drop-down chooses it). It is
 part of the same process and edits the same objects the panel draws from:
 the Layout page calls the panel's setters and writes `config.ini`, as

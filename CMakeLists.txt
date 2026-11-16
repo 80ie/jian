@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets DBus Network Test)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb xcb-composite xcb-damage)
+pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb xcb-composite)
 qt_standard_project_setup()
 
 add_compile_options(-Wall -Wextra -Wpedantic)

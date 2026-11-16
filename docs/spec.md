@@ -447,9 +447,7 @@ The panel captures thumbnails itself through the Composite extension
 replaces `lib/Thumbnail` and the `images/thumbs/` directory for the panel's
 purposes.
 
-- A mapped window is recaptured when it loses focus and, while it is shown
-  as a pinned tile, on Damage events throttled to about one capture a
-  second.
+- A mapped window is recaptured when it loses focus.
 - An unmapped window has no pixmap, so a minimized window shows its last
   capture from before it was minimized. A window is unmapped before the
   focus leaves it, so the panel names the focused window's storage while it
@@ -465,24 +463,22 @@ purposes.
 Verified in `fvwm-rig` (Xvfb, no compositor): automatic redirection of each
 client gives storage that `NameWindowPixmap` and `GetImage` read correctly,
 and costs nothing visible. A screenshot of four windows before and after
-they were redirected differed in no pixel, and page switches with two pinned
+they were redirected differed in no pixel, and page switches with two
 windows redrawing all the time still painted the list 5.8 to 7.1 ms after
 the last `ConfigureNotify`.
 
 Tried under `xcompmgr` in `fvwm-rig`, both as the live session runs it,
 `xcompmgr -o -Cc`, and as `xcompmgr -c -C`. The live command is not what it
 reads as: `-o` takes a value, so `-Cc` becomes the shadow opacity and
-neither `-C` nor `-c` applies. Pinned tiles went on recapturing about once a
-second, a window minimized while the compositor ran showed its capture, and
-ten screenshots over two seconds under `-c -C` differed only in the second
-hand of a pinned `xclock`. Nothing flickered or went black, and the pager
-and the tray drew as without a compositor.
+neither `-C` nor `-c` applies. A window minimized while the compositor ran
+showed its capture, and ten screenshots over two seconds under `-c -C`
+differed only in the second hand of an `xclock`. Nothing flickered or went
+black, and the pager and the tray drew as without a compositor.
 
 A capture is a `GetGeometry` and a `GetImage` round trip and a scale to at
 most 400x400, taken one per turn of the event loop. A 1250x868 window took
 1.4 to 4.6 ms in a release build (4.7 to 7.2 ms under ASan), a 300x200 one
-about 0.3 ms. Pinned windows that redraw constantly were captured once a
-second each. Not measured: a 4K window, with seven times those pixels. If
+about 0.3 ms. Not measured: a 4K window, with seven times those pixels. If
 that blocks visibly, the next step is to scale on the server with RENDER
 and read only the small image.
 

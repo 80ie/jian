@@ -7,14 +7,12 @@
 #include <QImage>
 
 #include <xcb/composite.h>
-#include <xcb/damage.h>
 
 #include <algorithm>
 
 namespace {
 
 const QSize largest(400, 400);
-constexpr int paceMs = 1000;
 
 } // namespace
 
@@ -39,31 +37,23 @@ std::unique_ptr<Thumbnails> Thumbnails::open(XConnection& x, WindowModel& model)
 {
     xcb_connection_t* c = x.xcb();
     const xcb_query_extension_reply_t* composite = xcb_get_extension_data(c, &xcb_composite_id);
-    const xcb_query_extension_reply_t* damage = xcb_get_extension_data(c, &xcb_damage_id);
-    if (composite && composite->present && damage && damage->present) {
-        // Both extensions must be told the version the client speaks before they are used.
-        const auto compositeCookie = xcb_composite_query_version(c, 0, 2);
-        const auto damageCookie = xcb_damage_query_version(c, 1, 1);
-        const auto compositeVersion = take(c, xcb_composite_query_version_reply, compositeCookie);
-        const auto damageVersion = take(c, xcb_damage_query_version_reply, damageCookie);
-        if (compositeVersion && damageVersion
-            && (compositeVersion->major_version > 0 || compositeVersion->minor_version >= 2))
-            return std::make_unique<Thumbnails>(x, model, damage->first_event + XCB_DAMAGE_NOTIFY);
+    if (composite && composite->present) {
+        // The extension must be told the version the client speaks before it is used.
+        const auto version
+            = take(c, xcb_composite_query_version_reply, xcb_composite_query_version(c, 0, 2));
+        if (version && (version->major_version > 0 || version->minor_version >= 2))
+            return std::make_unique<Thumbnails>(x, model);
     }
-    qWarning("no Composite 0.2 or Damage extension: tasks show icons only");
+    qWarning("no Composite 0.2 extension: tasks show icons only");
     return nullptr;
 }
 
-Thumbnails::Thumbnails(XConnection& x, WindowModel& model, quint8 damageNotify)
+Thumbnails::Thumbnails(XConnection& x, WindowModel& model)
     : m_x(x)
     , m_model(model)
-    , m_damageNotify(damageNotify)
 {
     m_next.setSingleShot(true);
     connect(&m_next, &QTimer::timeout, this, &Thumbnails::captureNext);
-    m_pace.setInterval(paceMs);
-    connect(&m_pace, &QTimer::timeout, this, &Thumbnails::captureDamaged);
-    connect(&x, &XConnection::received, this, &Thumbnails::handle);
     connect(&model, &WindowModel::changed, this, &Thumbnails::update);
     update();
 }
@@ -75,7 +65,6 @@ void Thumbnails::update()
 {
     xcb_connection_t* c = m_x.xcb();
     std::vector<quint32> shown;
-    std::vector<quint32> pinned;
     quint32 focused = 0;
     QSize focusedSize;
     for (const Client& client : m_model.shown()) {
@@ -88,12 +77,9 @@ void Thumbnails::update()
             focused = client.window;
             focusedSize = client.geometry.size();
         }
-        if (client.pinned && !client.minimized)
-            pinned.push_back(client.window);
     }
     m_shown = std::move(shown);
     follow(focused, focusedSize);
-    watch(pinned);
     xcb_flush(c);
 }
 
@@ -108,59 +94,6 @@ void Thumbnails::follow(quint32 window, QSize size)
         queue(m_focused);
     m_focused = window ? Capture { window, name(window) } : Capture { };
     m_focusedSize = size;
-}
-
-void Thumbnails::watch(const std::vector<quint32>& windows)
-{
-    xcb_connection_t* c = m_x.xcb();
-    std::erase_if(m_watched, [&](const auto& watched) {
-        const bool gone = std::ranges::find(windows, watched.first) == windows.end();
-        if (gone)
-            discard(c, xcb_damage_destroy_checked(c, watched.second.damage));
-        return gone;
-    });
-    for (quint32 window : windows) {
-        if (m_watched.contains(window))
-            continue;
-        const quint32 damage = xcb_generate_id(c);
-        discard(c, xcb_damage_create_checked(c, damage, window, XCB_DAMAGE_REPORT_LEVEL_NON_EMPTY));
-        m_watched.emplace(window, Watch { damage, false });
-        queue({ window, 0 });
-    }
-}
-
-void Thumbnails::handle(const xcb_generic_event_t* event)
-{
-    if (event->response_type != m_damageNotify)
-        return;
-    const auto* notify = reinterpret_cast<const xcb_damage_notify_event_t*>(event);
-    const auto watched = std::ranges::find_if(m_watched,
-        [notify](const auto& watched) { return watched.second.damage == notify->damage; });
-    if (watched == m_watched.end())
-        return;
-    watched->second.damaged = true;
-    if (!m_pace.isActive()) {
-        captureDamaged();
-        m_pace.start();
-    }
-}
-
-// A damage object at the non-empty level reports once and then waits for its damage to be
-// subtracted, so subtracting only here paces the events as well as the captures.
-void Thumbnails::captureDamaged()
-{
-    bool captured = false;
-    for (auto& [window, watched] : m_watched) {
-        if (!watched.damaged)
-            continue;
-        discard(
-            m_x.xcb(), xcb_damage_subtract_checked(m_x.xcb(), watched.damage, XCB_NONE, XCB_NONE));
-        watched.damaged = false;
-        captured = true;
-        queue({ window, 0 });
-    }
-    if (!captured)
-        m_pace.stop();
 }
 
 void Thumbnails::queue(const Capture& capture)

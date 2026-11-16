@@ -1,5 +1,6 @@
 #include "panel/panel.h"
 #include "paint/bevel.h"
+#include "paint/font.h"
 #include "palette/palette.h"
 #include "panel/editoverlay.h"
 #include "panel/layout.h"
@@ -57,6 +58,7 @@ Panel::Panel(const Palette& palette, QStringList offered, Create create)
     , m_dock(winId())
 {
     setWindowTitle(u"shelf"_s);
+    setFont(paint::font(QGuiApplication::font(), paint::textPoints));
     m_grip.setCursor(Qt::SplitHCursor);
     m_settle.setSingleShot(true);
     m_settle.setInterval(settleMs);

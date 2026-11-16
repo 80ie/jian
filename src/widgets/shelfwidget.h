@@ -1,5 +1,8 @@
 #pragma once
 
+#include "paint/font.h"
+
+#include <QGuiApplication>
 #include <QWidget>
 
 // What the panel asks of the widget in each slot. A widget paints only its own rectangle and
@@ -8,7 +11,11 @@ class ShelfWidget : public QWidget {
     Q_OBJECT
 
 public:
-    using QWidget::QWidget;
+    explicit ShelfWidget(QWidget* parent)
+        : QWidget(parent)
+    {
+        setFont(paint::font(QGuiApplication::font(), paint::textPoints));
+    }
 
     // Stable across versions: config.ini names widgets by it.
     virtual QString id() const = 0;

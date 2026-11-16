@@ -133,6 +133,11 @@ A settings page changes its widget through the widget's own setters, so a
 change shows at once, and the widget signals it so that `config.ini` is
 written, as the media widget's source selector already did.
 
+Text is drawn as `photon.py` drew it: in the family and weight of the
+desktop's font (qt6ct's `general`, Linux Libertine semibold here) at 10
+points, whatever size the desktop sets. The clock alone takes the desktop's
+fixed-pitch font, at a size it works out from its width.
+
 A widget owns nothing outside its own rectangle, and does not know whether it
 is docked or popped out. The existing rule carries over: a widget does not
 talk to fvwm. The one exception is the pager, which is an fvwm module by

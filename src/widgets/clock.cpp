@@ -1,4 +1,5 @@
 #include "widgets/clock.h"
+#include "paint/font.h"
 #include "palette/palette.h"
 
 #include <QFontDatabase>
@@ -140,18 +141,15 @@ void Clock::hideEvent(QHideEvent*) { m_timer.stop(); }
 // sets the size and the text can only step it down.
 QFont Clock::fontFor(int width) const
 {
-    QFont font = this->font();
     const auto fits = [&](int points) {
-        font.setPointSize(points);
-        const QFontMetrics metrics(font, this);
+        const QFontMetrics metrics(paint::font(font(), points), this);
         return metrics.horizontalAdvance(m_time) + metrics.horizontalAdvance(m_date)
             <= width - padLeft - padRight - gap;
     };
     int points = qRound(double(referencePoints) * width / referenceWidth);
     while (points > minimumPoints && !fits(points))
         --points;
-    font.setPointSize(std::max(points, minimumPoints));
-    return font;
+    return paint::font(font(), std::max(points, minimumPoints));
 }
 
 void Clock::tick()

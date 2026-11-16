@@ -1,4 +1,5 @@
 #include "panel/render.h"
+#include "paint/font.h"
 #include "palette/palette.h"
 #include "panel/config.h"
 #include "panel/panel.h"
@@ -92,17 +93,17 @@ QImage cannedArt(const Palette& palette)
 
 QImage renderPanel(const Palette& palette, const Config& config)
 {
-    // Spelled out in full, or the image would follow the desktop's font settings.
-    QFont font(u"DejaVu Sans Mono"_s);
-    font.setWeight(QFont::Normal);
-    font.setStyleName(QString());
+    // Spelled out, or the image would follow the desktop's fonts.
+    const QFont text
+        = paint::font(QFont(u"Linux Libertine"_s, -1, QFont::DemiBold), paint::textPoints);
+    const QFont fixed(u"Linux Libertine Mono O"_s);
     const QDateTime time(QDate(2026, 11, 13), QTime(9, 41));
 
     Panel panel(palette, { }, [&](const QString& id, QWidget* parent) {
         ShelfWidget* widget = createWidget(id, palette, config, nullptr, parent);
         if (!widget)
             return widget;
-        widget->setFont(font);
+        widget->setFont(qobject_cast<Clock*>(widget) ? fixed : text);
         if (auto* clock = qobject_cast<Clock*>(widget))
             clock->setTime(time);
         if (auto* tasks = qobject_cast<Tasks*>(widget))

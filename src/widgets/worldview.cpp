@@ -4,7 +4,6 @@
 #include "widgets/foreignslot.h"
 #include "widgets/tasklayout.h"
 
-#include <QFileInfo>
 #include <QFontInfo>
 #include <QFontMetrics>
 #include <QGuiApplication>
@@ -49,10 +48,11 @@ QFont atPixelSize(const QFont& font)
 
 } // namespace
 
+// FvwmMFL hands fvwm FVWMMFL_SOCKET only after StartFunction has run, so a panel started there
+// never has it. FvwmCommand finds the socket without it.
 bool fvwmReachable()
 {
-    const QString socket = qEnvironmentVariable("FVWMMFL_SOCKET");
-    return !socket.isEmpty() && QFileInfo::exists(socket)
+    return qEnvironmentVariableIsSet("FVWM_IS_FVWM3")
         && !QStandardPaths::findExecutable(u"FvwmCommand"_s).isEmpty();
 }
 

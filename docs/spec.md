@@ -370,9 +370,11 @@ and `date`.
 
 FvwmPager in a `ForeignSlot`, under the module alias `JianWorldView`,
 showing desks 0 and 1 stacked. The alias is not the Python shelf's
-`ShelfPager`, so that both can run. The widget is offered only when fvwm can
-be reached: `FVWMMFL_SOCKET` names a file that exists and `FvwmCommand` is
-on the path.
+`ShelfPager`, so that both can run. The widget is offered only under fvwm:
+`FVWM_IS_FVWM3` is set, as fvwm sets it for everything it starts, and
+`FvwmCommand` is on the path. `FVWMMFL_SOCKET` cannot be the test: FvwmMFL
+hands it to fvwm only after `StartFunction` has run, so a panel started
+there never has it, and `FvwmCommand` finds the socket without it.
 
 The widget owns everything fvwm needs for it and sends it over `FvwmCommand
 -c`, a batch to a process and one process at a time, so that fvwm runs the

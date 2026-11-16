@@ -1,7 +1,10 @@
 #include "palette/palette.h"
 #include "widgets/worldview.h"
 
+#include <QDir>
+#include <QFile>
 #include <QRegularExpression>
+#include <QTemporaryDir>
 #include <QTest>
 
 #include <algorithm>
@@ -55,6 +58,21 @@ private slots:
             1);
         QVERIFY(commands.contains(u"*JianWorldView: Geometry 149x206"_s));
         QVERIFY(commands.contains(u"*JianWorldView: Font xft:Sans"_s));
+    }
+
+    void offeredBeforeFvwmMflSetsItsSocket()
+    {
+        // Not under /tmp, which may be mounted noexec.
+        QTemporaryDir bin(QDir::current().filePath(u"path-XXXXXX"_s));
+        QFile command(bin.filePath(u"FvwmCommand"_s));
+        QVERIFY(command.open(QIODevice::WriteOnly));
+        command.setPermissions(QFile::ExeOwner | QFile::ReadOwner);
+        qputenv("PATH", QFile::encodeName(bin.path()));
+        qunsetenv("FVWMMFL_SOCKET");
+        qputenv("FVWM_IS_FVWM3", "1");
+        QVERIFY(fvwmReachable());
+        qunsetenv("FVWM_IS_FVWM3");
+        QVERIFY(!fvwmReachable());
     }
 
     void colorsetsNamedAreSent()

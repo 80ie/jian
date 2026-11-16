@@ -7,6 +7,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <numbers>
 #include <numeric>
 #include <random>
 #include <ranges>
@@ -28,7 +29,7 @@ constexpr double faceChroma = 0.05;
 constexpr double sameColor = 0.04;
 // Colors whose faces differ by less than this in hue and chroma and in lightness give one
 // candidate, which they must together cover this much of the image to make.
-constexpr double faceHueApart = 0.02;
+constexpr double faceHueApart = 0.03;
 constexpr double faceLightnessApart = 0.1;
 constexpr double faceShare = 0.04;
 constexpr std::size_t candidateCount = 6;
@@ -40,6 +41,8 @@ constexpr double fillApart = 0.15;
 constexpr double deskApart = 0.15;
 constexpr double inkLightness = 0.2;
 constexpr double inkChroma = 0.03;
+constexpr double neutralChroma = 0.04;
+constexpr double hueFamily = 30 * std::numbers::pi / 180;
 
 double chroma(const Oklab& c) { return std::hypot(c.a, c.b); }
 
@@ -206,39 +209,69 @@ std::vector<FaceGroup> faceGroups(std::span<const ImageColor> colors)
 }
 
 struct Source {
-    Oklab color;
+    std::size_t index = 0;
+    Oklab lab;
     double share = 0;
     bool taken = false;
 };
 
-// The source that scores highest among those not yet taken, or among all once every one is.
-const Source& best(std::vector<Source>& sources, auto score)
+bool sameHue(const Oklab& p, const Oklab& q)
+{
+    const double cp = chroma(p);
+    const double cq = chroma(q);
+    if (cp < neutralChroma || cq < neutralChroma)
+        return cp < neutralChroma && cq < neutralChroma;
+    return (p.a * q.a + p.b * q.b) / (cp * cq) > std::cos(hueFamily);
+}
+
+struct EarlierPicks {
+    std::vector<Oklab> selection;
+    std::vector<Oklab> fill;
+    std::vector<Oklab> desk;
+};
+
+// Dividing by the colors of its hue taken before spreads the accents over hues and candidates.
+Oklab best(std::vector<Source>& sources, std::vector<Oklab>& mine, std::vector<Oklab>& earlier,
+    auto score, bool colorful)
 {
     const bool anyLeft = std::ranges::any_of(sources, std::not_fn(&Source::taken));
     auto pool = sources
         | std::views::filter([anyLeft](const Source& source) { return !anyLeft || !source.taken; });
-    Source& chosen = *std::ranges::max_element(pool, { }, score);
+    const auto weighed = [&](const Source& source) {
+        const auto alike = [&source](const Oklab& before) { return sameHue(before, source.lab); };
+        const auto count
+            = std::ranges::count_if(mine, alike) + std::ranges::count_if(earlier, alike);
+        return std::pair(colorful && chroma(source.lab) >= neutralChroma,
+            std::invoke(score, source) / double(1 + count));
+    };
+    Source& chosen = *std::ranges::max_element(pool, { }, weighed);
     chosen.taken = true;
-    return chosen;
+    mine.push_back(chosen.lab);
+    earlier.push_back(chosen.lab);
+    return chosen.lab;
 }
 
 // Selection and fill are the colors most unlike the face in hue and chroma, the pager desk the
 // most common of the rest, and ink the darkest, darkened until text in it reads.
-void nameColors(Palette& palette, const Oklab& face, std::vector<Source> others)
+void nameColors(
+    Palette& palette, const Oklab& face, std::vector<Source>& others, EarlierPicks& earlier)
 {
-    if (others.empty())
+    if (std::ranges::all_of(others, &Source::taken))
         return;
     const auto colorfulness = [&face](const Source& source) {
-        const Oklab& c = source.color;
+        const Oklab& c = source.lab;
         return std::hypot(c.a - face.a, c.b - face.b) + chroma(c);
     };
-    palette.selection
-        = fromOklab(darkerThan(best(others, colorfulness).color, face, selectionApart));
-    palette.fill = fromOklab(apartFrom(best(others, colorfulness).color, face, fillApart));
-    palette.pagerDesk = fromOklab(apartFrom(best(others, &Source::share).color, face, deskApart));
+    std::vector<Oklab> mine;
+    palette.selection = fromOklab(darkerThan(
+        best(others, mine, earlier.selection, colorfulness, true), face, selectionApart));
+    palette.fill = fromOklab(
+        apartFrom(best(others, mine, earlier.fill, colorfulness, true), face, fillApart));
+    palette.pagerDesk = fromOklab(
+        apartFrom(best(others, mine, earlier.desk, &Source::share, false), face, deskApart));
     const auto darkest = std::ranges::min_element(
-        others, { }, [](const Source& source) { return source.color.lightness; });
-    Oklab ink = limitChroma(darkest->color, inkChroma);
+        others, { }, [](const Source& source) { return source.lab.lightness; });
+    Oklab ink = limitChroma(darkest->lab, inkChroma);
     ink.lightness = std::min(ink.lightness, inkLightness);
     palette.ink = fromOklab(ink);
 }
@@ -276,17 +309,20 @@ std::vector<ImageColor> imageColors(const QImage& image)
 
 std::vector<Palette> candidates(std::span<const ImageColor> colors)
 {
+    std::vector<Source> sources;
+    for (std::size_t i = 0; i < colors.size(); ++i)
+        if (colors[i].share >= namedShare)
+            sources.push_back({ i, toOklab(colors[i].color), colors[i].share });
+    EarlierPicks earlier;
     std::vector<Palette> palettes;
     for (const FaceGroup& group : faceGroups(colors)) {
         if (group.share < faceShare || palettes.size() == candidateCount)
             break;
-        std::vector<Source> others;
-        for (std::size_t i = 0; i < colors.size(); ++i)
-            if (i != group.source && colors[i].share >= namedShare)
-                others.push_back({ toOklab(colors[i].color), colors[i].share });
+        for (Source& source : sources)
+            source.taken = source.index == group.source;
         Palette palette;
         palette.face = fromOklab(group.face);
-        nameColors(palette, group.face, std::move(others));
+        nameColors(palette, group.face, sources, earlier);
         palettes.push_back(palette);
     }
     return palettes;

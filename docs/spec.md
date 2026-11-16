@@ -714,27 +714,35 @@ In-process, no wallust and no parameters to tune. "From image":
    page with their shares;
 3. clamp each color into a face: lightness so that tone -6 stays above 0.2
    and tone +5 below 0.97 (0.576 to 0.736), chroma to at most 0.05, the hue
-   kept. Colors whose faces differ by less than 0.02 in a and b and less than
+   kept. Colors whose faces differ by less than 0.03 in a and b and less than
    0.1 in lightness give one candidate, with the face of the most common of
    them, and they must cover 4% of the image between them. At most six,
    most common first;
 4. take the named colors from the image's other colors (those covering at
    least 1%): selection and then fill are the colors most unlike the face
-   (distance in a and b plus their own chroma); the pager desk is the most
-   common of the rest; ink is the darkest, brought to lightness 0.2 and
-   chroma 0.03 at most. Selection is kept 0.25 darker than the face, since
-   light text is drawn on it; fill and pager desk are moved 0.15 away from
-   the face's lightness. An image of one color has no others, and its
-   candidate keeps the stock named colors.
+   (distance in a and b plus their own chroma), and not grey while the
+   image has a color that is not; the pager desk is the most common of the
+   rest; ink is the darkest, brought to lightness 0.2 and chroma 0.03 at
+   most. Selection is kept 0.25 darker than the face, since light text is
+   drawn on it; fill and pager desk are moved 0.15 away from the face's
+   lightness. An image of one color has no others, and its candidate keeps
+   the stock named colors.
+5. spread the named colors over the candidates. A color's score is divided
+   by one more than the number of colors of its hue (within 30 degrees, or
+   both under chroma 0.04) that the candidate has taken already or that
+   earlier candidates gave the same role. Without this every candidate took
+   the image's one strongest red and orange, and the rows told apart only
+   by their quiet faces (issue #6).
 
 The clamp is what makes these suggestions rather than results: an image's
 colors are rarely a usable face as they stand, and every candidate is a
 quiet face that the editor can push further. Measured in a release build on
 the 2560x1440 wallpapers in `~/.fvwm/images/bg/`: decoding takes 12 to 67
 ms, the clustering 4 to 13 ms, the choice well under a millisecond, so it
-runs on the GUI thread. They gave two to six candidates: two for a painting
-in shades of one ochre, three for a brown cloth with red and grey, six for a
-photograph of a red gate under a blue sky.
+runs on the GUI thread. They gave one to six candidates: one for a painting
+in shades of one ochre, two for a brown cloth with red and grey, six for a
+photograph of a red gate under a blue sky, whose selections run red, orange,
+red, blue, orange, red.
 
 Each candidate is shown as its ramp strip plus named colors, the face
 standing taller than the other swatches, as in the editor. Picking one

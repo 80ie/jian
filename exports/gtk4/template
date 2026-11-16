@@ -1,4 +1,4 @@
-/* Written by shelf from ~/.config/shelf/exports/gtk4/template; edit that instead. */
+/* Written by jian from ~/.config/jian/exports/gtk4/template; edit that instead. */
 @define-color accent_color {selection};
 @define-color accent_bg_color {selection};
 @define-color accent_fg_color {tone+3};

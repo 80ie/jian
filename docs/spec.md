@@ -69,7 +69,7 @@ icon arrived. So the slot moves the window back to its place after every
 
 ### 3.1 Source layout
 
-Its own repository under `~/projects/`, name undecided (`<name>` below).
+Its own repository, `~/projects/jian`. The program is `jian`.
 
 ```
 src/
@@ -145,7 +145,7 @@ definition and keeps all fvwm traffic inside its own file.
 
 ### 3.4 Configuration
 
-`~/.config/<name>/`:
+`~/.config/jian/`:
 
 ```
 config.ini          side, width, widget order, pop-outs, per-widget settings
@@ -197,7 +197,7 @@ no strut command.
 
 fvwm makes a dock sticky but still gives it a title, and `config` sets
 `Style * NoDecorHint`, which ignores the frameless hint Qt sets. `config`
-therefore keeps a `Style shelf !Title, !Handles, BorderWidth 0` line in
+therefore keeps a `Style jian !Title, !Handles, BorderWidth 0` line in
 place of the `ShelfPanel` one.
 
 ## 5. Widget separation and edit mode
@@ -268,12 +268,12 @@ pager or a re-added tray, stays hidden until edit mode ends. Verified in
 out stays live in edit mode.
 
 Pop-out reparents the widget to a normal top-level window with its own
-`WM_CLASS` instance (`<name>-media` and so on), so a window manager rule can
+`WM_CLASS` instance (`jian-media` and so on), so a window manager rule can
 target it. Its position is remembered. Closing the window docks it back.
 
-The class is `Shelf`. fvwm matches `Style` names with case, so `config`'s
-`Style shelf` line for the panel, whose instance and class are both `shelf`,
-leaves the windows alone; with the class `shelf` they lost their titles in
+The class is `Jian`. fvwm matches `Style` names with case, so `config`'s
+`Style jian` line for the panel, whose instance and class are both `jian`,
+leaves the windows alone; with the class `jian` they lost their titles in
 `fvwm-rig`. A window is as tall as its widget's natural height at its width,
 which is the width the widget had in the panel.
 
@@ -368,7 +368,7 @@ and `date`.
 
 ### 7.2 World View
 
-FvwmPager in a `ForeignSlot`, under the module alias `ShelfWorldView`,
+FvwmPager in a `ForeignSlot`, under the module alias `JianWorldView`,
 showing desks 0 and 1 stacked. The alias is not the Python shelf's
 `ShelfPager`, so that both can run. The widget is offered only when fvwm can
 be reached: `FVWMMFL_SOCKET` names a file that exists and `FvwmCommand` is
@@ -378,8 +378,8 @@ The widget owns everything fvwm needs for it and sends it over `FvwmCommand
 -c`, a batch to a process and one process at a time, so that fvwm runs the
 commands in order; in `fvwm-rig` FvwmMFL ran every line of a single write,
 forty lines included. A launch is `KillModule`, `DestroyModuleConfig
-ShelfWorldView:*`, the module configuration, the four colorsets, then
-`Module FvwmPager ShelfWorldView 0 1`. The configuration is the old
+JianWorldView:*`, the module configuration, the four colorsets, then
+`Module FvwmPager JianWorldView 0 1`. The configuration is the old
 `*ShelfPager:` block less the lines that set defaults: the colorsets,
 `Font`, `Rows 2`, `MiniIcons`, `SolidSeparators`, `HideSmallWindows`,
 `UseSkipList` and `Geometry`.
@@ -432,7 +432,7 @@ sends no `$[...]`.
 `config` keeps one line, so that the pager's window does not show as an
 ordinary one for the moment before the slot takes it:
 
-    Style ShelfWorldView !Title, !Handles, BorderWidth 0, HandleWidth 0, \
+    Style JianWorldView !Title, !Handles, BorderWidth 0, HandleWidth 0, \
         Sticky, WindowListSkip, CirculateSkip, NeverFocus, !Iconifiable
 
 Without it the window gets the styles that match its class, `FvwmPager`.
@@ -755,7 +755,7 @@ picture too (issue #9). Nothing is written until Save.
 This replaces `palette sweep`.
 
 Existing `palette/schemes/*.json` are imported once at switch-over, one at
-a time, with `<name> --import-scheme scheme.json out.ini`, as `roles.j2`
+a time, with `jian --import-scheme scheme.json out.ini`, as `roles.j2`
 maps them today: face from color7, ink from color0 with each sRGB channel
 scaled by 0.1 (wallust's `darken(0.9)`), fill from color10 (`fill_mem`),
 selection from color4, pager desk from color14, chrome from color1;
@@ -817,14 +817,14 @@ stand. Each comes disabled. Where they write, and what runs after:
 | target | destination | command |
 |---|---|---|
 | fvwm | `~/.fvwm/colorsets` | `FvwmCommand 'Read colorsets'` |
-| qt6ct, qt5ct | `~/.config/qt6ct/colors/shelf.conf`, likewise qt5ct | none |
-| kde | `~/.local/share/color-schemes/Shelf.colors` | none |
+| qt6ct, qt5ct | `~/.config/qt6ct/colors/jian.conf`, likewise qt5ct | none |
+| kde | `~/.local/share/color-schemes/Jian.colors` | none |
 | gtk3 | `~/.themes/Redmond97 Deer/gtk-3.0/gtk.css` | none |
 | gtk4 | `~/.config/gtk-4.0/gtk.css` | none |
 
 qt6ct and qt5ct are pointed at their file once, in their own settings. The
 old tool merged the KDE scheme into `kdeglobals` with `kwriteconfig6`;
-`plasma-apply-colorscheme Shelf` applies it once, but refuses a scheme
+`plasma-apply-colorscheme Jian` applies it once, but refuses a scheme
 already in use, so it is not the KDE target's command. The fvwm target keeps
 the `FVWM_PHOTON_*` variables, by the table in 8.1, since menus and modules
 read them and the Python shelf does until switch-over; it drops colorsets
@@ -847,7 +847,7 @@ write is left alone, so it is not copied either.
 
 ## 10. Settings window
 
-One window, opened from the panel's context menu ("Settings…") or `<name>
+One window, opened from the panel's context menu ("Settings…") or `jian
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
 then one page per widget that returns a `settingsPage()`: Clock (its two
@@ -858,11 +858,11 @@ the Layout page calls the panel's setters and writes `config.ini`, as
 dragging the width does.
 
 `--settings` reaches a running panel through a local socket,
-`$XDG_RUNTIME_DIR/<name>.socket`, next to the lock file that already keeps a
+`$XDG_RUNTIME_DIR/jian.socket`, next to the lock file that already keeps a
 second panel from starting: a connection is the whole request, and nothing
 is read from it. With no panel listening, `--settings` starts one with the
 window open, so the window always has a live panel to show changes on. The
-window's `WM_CLASS` is `<name>-settings`, `Shelf`, like a popped-out
+window's `WM_CLASS` is `jian-settings`, `Jian`, like a popped-out
 widget's.
 
 ## 11. Build and test
@@ -871,9 +871,9 @@ widget's.
   Network), xcb, xcb-composite if 7.3 goes that way. All present on this
   machine.
 - A development preset with AddressSanitizer and UBSan.
-- `<name> --only <widget>` runs one widget as a plain window, as tall as
+- `jian --only <widget>` runs one widget as a plain window, as tall as
   the widget asks to be.
-- `<name> --render out.png --fixture <dir>` draws the panel offscreen with
+- `jian --render out.png --fixture <dir>` draws the panel offscreen with
   canned data. Until there are fixtures, `--render out.png [--palette
   file.ini]` draws the default layout with a fixed time, font and screen
   size, foreign slots as empty wells, and
@@ -920,12 +920,11 @@ the last one.
 
 ## 14. Open questions
 
-1. Name of the program.
-2. Config format: INI or TOML (3.4).
-3. Tone count and offsets (8.1), settled by rendering in milestone 1.
-4. Terminal colors and the Xresources export (9).
+1. Config format: INI or TOML (3.4).
+2. Tone count and offsets (8.1), settled by rendering in milestone 1.
+3. Terminal colors and the Xresources export (9).
 
-Decided: own repository in `~/projects/`; launcher rows dropped; thumbnails
+Decided: own repository, `~/projects/jian`, and the program is `jian`; launcher rows dropped; thumbnails
 captured by the panel through Composite; extraction in-process, no wallust;
 palette is a tonal ramp plus named colors, not a role list; widgets sit in
 bays (5).

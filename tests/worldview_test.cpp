@@ -53,14 +53,14 @@ private slots:
         QCOMPARE(std::ranges::count_if(commands,
                      [](const QString& c) { return c.startsWith(u"Module FvwmPager "_s); }),
             1);
-        QVERIFY(commands.contains(u"*ShelfWorldView: Geometry 149x206"_s));
-        QVERIFY(commands.contains(u"*ShelfWorldView: Font xft:Sans"_s));
+        QVERIFY(commands.contains(u"*JianWorldView: Geometry 149x206"_s));
+        QVERIFY(commands.contains(u"*JianWorldView: Font xft:Sans"_s));
     }
 
     void colorsetsNamedAreSent()
     {
         const QStringList colorsets = pagerColorsets(Palette());
-        const QRegularExpression named(u"^\\*ShelfWorldView: \\w*Colorset (\\d+)$"_s);
+        const QRegularExpression named(u"^\\*JianWorldView: \\w*Colorset (\\d+)$"_s);
         int count = 0;
         for (const QString& command : pagerLaunch(Palette(), u"xft:Sans"_s, QSize(149, 206))) {
             const QRegularExpressionMatch match = named.match(command);

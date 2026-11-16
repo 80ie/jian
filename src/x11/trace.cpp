@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-Q_LOGGING_CATEGORY(traceX, "shelf.trace-x", QtWarningMsg)
+Q_LOGGING_CATEGORY(traceX, "jian.trace-x", QtWarningMsg)
 
 double traceClock()
 {

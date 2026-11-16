@@ -38,7 +38,7 @@ SettingsWindow::SettingsWindow(Panel& panel, Config& config, PaletteEditor& pale
     , m_revert(new QPushButton(u"Revert"_s, this))
     , m_save(new QPushButton(u"Save"_s, this))
 {
-    setWindowTitle(u"Shelf settings[*]"_s);
+    setWindowTitle(u"Jian settings[*]"_s);
     addPage(u"Layout"_s,
         new LayoutPage(panel, config, palette.dir().filePath(u"config.ini"_s), m_stack));
     addPage(u"Palette"_s, new PalettePage(palette, m_stack));
@@ -86,7 +86,7 @@ void SettingsWindow::closeEvent(QCloseEvent* event)
     if (!m_palette.unsaved())
         return;
     event->ignore();
-    auto* box = new QMessageBox(QMessageBox::Question, u"Shelf settings"_s, u"Unsaved changes"_s,
+    auto* box = new QMessageBox(QMessageBox::Question, u"Jian settings"_s, u"Unsaved changes"_s,
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, this);
     box->setAttribute(Qt::WA_DeleteOnClose);
     connect(box, &QMessageBox::buttonClicked, this, [this, box](QAbstractButton* button) {

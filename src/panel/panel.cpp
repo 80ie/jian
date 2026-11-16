@@ -55,7 +55,7 @@ Panel::Panel(const Palette& palette, QStringList offered, Create create)
     , m_create(std::move(create))
     , m_dock(winId())
 {
-    setWindowTitle(u"shelf"_s);
+    setWindowTitle(u"jian"_s);
     setFont(paint::font(QGuiApplication::font(), paint::textPoints));
     m_grip.setCursor(Qt::SplitHCursor);
     m_settle.setSingleShot(true);

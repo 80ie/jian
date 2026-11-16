@@ -1,4 +1,4 @@
-/* Written by shelf from ~/.config/shelf/exports/gtk3/template; edit that instead. */
+/* Written by jian from ~/.config/jian/exports/gtk3/template; edit that instead. */
 /* base colors */
 @define-color bg_color {face};
 @define-color fg_color {ink};

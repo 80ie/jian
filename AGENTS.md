@@ -1,4 +1,4 @@
-# Working on shelf
+# Working on jian
 
 A desktop panel in C++20 and Qt 6 Widgets, on X11 through xcb. `docs/spec.md`
 is the source of truth for what it does and in what order it gets built.

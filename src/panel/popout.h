@@ -6,8 +6,8 @@
 class ShelfWidget;
 struct Palette;
 
-// A widget out of the panel, in a normal window of its own whose WM_CLASS is "shelf-<id>",
-// "Shelf", so that a window manager rule can pick it out. The window keeps to the widget's
+// A widget out of the panel, in a normal window of its own whose WM_CLASS is "jian-<id>",
+// "Jian", so that a window manager rule can pick it out. The window keeps to the widget's
 // natural height at its width.
 class PopOut : public QWidget {
     Q_OBJECT

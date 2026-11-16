@@ -1,6 +1,6 @@
 foreach(name palette export extract library scheme paletteeditor sheet layout order config dock clock client tasklayout thumbnails tray worldview panel player pulse coverart medialayout)
     add_executable(${name}_test ${name}_test.cpp)
-    target_link_libraries(${name}_test PRIVATE shelfcore Qt6::Test)
+    target_link_libraries(${name}_test PRIVATE jiancore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)
 endforeach()
 set_tests_properties(sheet worldview panel PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
@@ -12,7 +12,7 @@ set_target_properties(fakeplayer_main PROPERTIES OUTPUT_NAME fakeplayer)
 target_link_libraries(fakeplayer_main PRIVATE fakeplayer Qt6::Gui)
 
 add_executable(mpris_test mpris_test.cpp)
-target_link_libraries(mpris_test PRIVATE shelfcore fakeplayer Qt6::Test)
+target_link_libraries(mpris_test PRIVATE jiancore fakeplayer Qt6::Test)
 add_test(NAME mpris COMMAND mpris_test)
 # The test starts its own bus; an address that leads nowhere catches anything that reaches for
 # the session's.

@@ -203,7 +203,7 @@ int runPanel(const QDir& dir, WindowModel* windows, const QString& socket, bool 
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
-    QApplication::setApplicationName(u"shelf"_s);
+    QApplication::setApplicationName(u"jian"_s);
     QCommandLineParser parser;
     const QCommandLineOption renderOption(
         u"render"_s, u"Draw the panel with canned data to <png>."_s, u"png"_s);
@@ -247,11 +247,11 @@ int main(int argc, char* argv[])
     }
 
     const QDir runtime(QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation));
-    const QString socket = runtime.filePath(u"shelf.socket"_s);
+    const QString socket = runtime.filePath(u"jian.socket"_s);
     if (parser.isSet(settingsOption) && askRunningPanel(socket))
         return 0;
     if (parser.isSet(traceOption))
-        QLoggingCategory::setFilterRules(u"shelf.trace-x.info=true"_s);
+        QLoggingCategory::setFilterRules(u"jian.trace-x.info=true"_s);
     const QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
     const std::unique_ptr<XConnection> x = XConnection::open();
     const std::unique_ptr<WindowModel> windows = x ? std::make_unique<WindowModel>(*x) : nullptr;
@@ -261,9 +261,9 @@ int main(int argc, char* argv[])
             readPalette(dir.filePath(u"palette.ini"_s)).value_or(Palette()),
             readConfig(dir.filePath(u"config.ini"_s)).value_or(Config()), windows.get());
 
-    QLockFile lock(runtime.filePath(u"shelf.lock"_s));
+    QLockFile lock(runtime.filePath(u"jian.lock"_s));
     if (!lock.tryLock()) {
-        qWarning("shelf is already running");
+        qWarning("jian is already running");
         return 1;
     }
     if (!QDir().mkpath(dir.path())) {

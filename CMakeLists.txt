@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(shelf LANGUAGES CXX)
+project(jian LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,7 @@ qt_standard_project_setup()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(shelfcore STATIC
+add_library(jiancore STATIC
     src/media/coverart.cpp
     src/media/mpris.cpp
     src/media/player.cpp
@@ -62,18 +62,18 @@ add_library(shelfcore STATIC
     src/x11/thumbnails.cpp
     src/x11/trace.cpp
     src/x11/windowmodel.cpp)
-target_include_directories(shelfcore PUBLIC src)
-qt_add_resources(shelfcore exports PREFIX / FILES
+target_include_directories(jiancore PUBLIC src)
+qt_add_resources(jiancore exports PREFIX / FILES
     exports/fvwm/target.ini exports/fvwm/template
     exports/gtk3/target.ini exports/gtk3/template
     exports/gtk4/target.ini exports/gtk4/template
     exports/kde/target.ini exports/kde/template
     exports/qt5ct/target.ini exports/qt5ct/template
     exports/qt6ct/target.ini exports/qt6ct/template)
-target_link_libraries(shelfcore PUBLIC Qt6::Widgets Qt6::DBus Qt6::Network PkgConfig::XCB)
+target_link_libraries(jiancore PUBLIC Qt6::Widgets Qt6::DBus Qt6::Network PkgConfig::XCB)
 
-add_executable(shelf src/main.cpp)
-target_link_libraries(shelf PRIVATE shelfcore)
+add_executable(jian src/main.cpp)
+target_link_libraries(jian PRIVATE jiancore)
 
 enable_testing()
 add_subdirectory(tests)

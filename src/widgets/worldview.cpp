@@ -19,8 +19,7 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
-// Apart from the ShelfPager the Python shelf starts, so that both can run.
-constexpr QLatin1StringView alias = "ShelfWorldView"_L1;
+constexpr QLatin1StringView alias = "JianWorldView"_L1;
 constexpr int desks = 2;
 // Far above the numbers configs give their own colorsets.
 constexpr int deskColorset = 300;

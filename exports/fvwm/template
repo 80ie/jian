@@ -1,5 +1,5 @@
 ## vim: sts=0:noet:syntax=fvwm
-## Written by shelf from ~/.config/shelf/exports/fvwm/template; edit that instead.
+## Written by jian from ~/.config/jian/exports/fvwm/template; edit that instead.
 
 InfoStoreAdd cs_shelf        30
 InfoStoreAdd cs_shelf_hi     31

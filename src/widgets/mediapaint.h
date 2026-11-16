@@ -18,7 +18,8 @@ enum class Transport { Previous, Stop, PlayPause, Next };
 // What separates the end of a scrolling title from its beginning coming round again.
 inline constexpr QLatin1StringView marqueeGap("   ...   ");
 
-// A drop-down: `text` in a sunken field with a button at its right end bearing a wedge.
+// A drop-down, as photon_media.py styled its combo box: `text` on a flat field inside a hard
+// outline, and a wedge in a cell of its own at the right end.
 void drawSelector(
     QPainter& p, const QRect& r, const Palette& palette, const QString& text, bool enabled);
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art);

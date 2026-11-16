@@ -4,7 +4,20 @@
 #include <QLinearGradient>
 #include <QPainter>
 
+#include <algorithm>
 #include <utility>
+
+namespace {
+
+// Photon shades a colored block by moving every channel the same amount, not by mixing in white
+// or black.
+QColor shifted(const QColor& color, int delta)
+{
+    const auto channel = [delta](int value) { return std::clamp(value + delta, 0, 255); };
+    return QColor(channel(color.red()), channel(color.green()), channel(color.blue()));
+}
+
+} // namespace
 
 namespace paint {
 
@@ -41,6 +54,19 @@ void trough(QPainter& p, const QRect& r, const Palette& palette)
     p.setPen(palette.tone(-4));
     p.drawLine(outline.left() + 1, outline.top() + 1, outline.right() - 1, outline.top() + 1);
     p.drawLine(outline.left() + 1, outline.top() + 1, outline.left() + 1, outline.bottom() - 1);
+}
+
+void bar(QPainter& p, const QRect& r, const QColor& color)
+{
+    if (r.isEmpty())
+        return;
+    p.fillRect(r, color);
+    p.setPen(shifted(color, 40));
+    p.drawLine(r.topLeft(), r.topRight());
+    p.drawLine(r.topLeft(), r.bottomLeft());
+    p.setPen(shifted(color, -40));
+    p.drawLine(r.bottomLeft(), r.bottomRight());
+    p.drawLine(r.topRight(), r.bottomRight());
 }
 
 void groove(QPainter& p, const QRect& r, const Palette& palette)

@@ -77,7 +77,10 @@ double volumeAt(const QRect& groove, int x)
     return std::clamp(double(x - groove.left() - thumbSize.width() / 2) / travel, 0.0, 1.0);
 }
 
-QRect trackInside(const QRect& track) { return track.adjusted(2, 2, -1, -1); }
+QRect trackInside(const QRect& track)
+{
+    return QRect(track.left() + 1, track.top() + 1, track.width() - 2, track.height() - 3);
+}
 
 int trackFill(const QRect& track, microseconds position, microseconds length)
 {

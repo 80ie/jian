@@ -34,6 +34,13 @@ void well(QPainter& p, const QRect& r, const Palette& palette)
     paint::sunken(p, r, palette, palette.tone(-1));
 }
 
+void meter(QPainter& p, const QRect& r, const Palette& palette)
+{
+    paint::trough(p, r, palette);
+    paint::bar(
+        p, QRect(r.left() + 1, r.top() + 1, (r.width() - 2) * 3 / 5, r.height() - 3), palette.fill);
+}
+
 void buttons(QPainter& p, const QRect& r, const Palette& palette)
 {
     const int width = (r.width() - 2) / 2;
@@ -69,6 +76,7 @@ QImage paint::sheet(const Palette& palette)
         { u"raised"_s, { sampleWidth, 20 }, raised },
         { u"sunken"_s, { sampleWidth, 20 }, well },
         { u"trough"_s, { sampleWidth, 16 }, trough },
+        { u"bar"_s, { sampleWidth, 16 }, meter },
         { u"groove"_s, { sampleWidth, 5 }, groove },
         { u"button"_s, { sampleWidth, 22 }, buttons },
         { u"thumb"_s, { 10, 17 }, thumb },

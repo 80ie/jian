@@ -28,7 +28,7 @@ int titleRoom(const QRect& field);
 // While `span` is not 0, the title is drawn `scroll` pixels into a loop of itself and the gap.
 void drawTitle(QPainter& p, const QRect& field, const Palette& palette, const QString& title,
     bool enabled, int scroll, int span);
-// The trackbar: a trough filled `fill` pixels from the left in the palette's fill color.
+// The trackbar: a trough with a bar `fill` pixels long in the palette's fill color.
 void drawTrack(QPainter& p, const QRect& track, const Palette& palette, int fill);
 // The buttons' marks keep the reference's sizes whatever the buttons': a 7-pixel square, and
 // triangles 5 wide by 7 tall. While `playing`, play is drawn as pause.

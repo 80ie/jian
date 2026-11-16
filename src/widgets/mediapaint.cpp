@@ -127,7 +127,7 @@ void drawTrack(QPainter& p, const QRect& track, const Palette& palette, int fill
     paint::trough(p, track, palette);
     QRect filled = trackInside(track);
     filled.setWidth(fill);
-    p.fillRect(filled, palette.fill);
+    paint::bar(p, filled, palette.fill);
 }
 
 void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palette& palette,

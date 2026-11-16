@@ -57,7 +57,7 @@ private slots:
     {
         const QRect track = mediaLayout(153, QSize(), true).track;
         const QRect inside = trackInside(track);
-        QCOMPARE(trackFill(track, 60s, 120s), inside.width() / 2);
+        QCOMPARE(trackFill(track, 60s, 120s), qRound(inside.width() / 2.0));
         QCOMPARE(trackFill(track, 200s, 120s), inside.width());
         QCOMPARE(trackPosition(track, inside.left(), 120s), 0s);
         QCOMPARE(trackPosition(track, inside.left() + inside.width(), 120s), 120s);

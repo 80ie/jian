@@ -68,8 +68,9 @@ Tray::Tray(const Palette& palette, WindowModel* windows, QWidget* parent)
 
     m_process.setProgram(u"stalonetray"_s);
     m_process.setProcessChannelMode(QProcess::ForwardedChannels);
-    // A signal or a broken X connection ends the panel without running ~Tray.
-    m_process.setChildProcessModifier([] { prctl(PR_SET_PDEATHSIG, SIGTERM); });
+    // A signal or a broken X connection ends the panel without running ~Tray. Not SIGTERM:
+    // stalonetray catches it and, while idle, sleeps on.
+    m_process.setChildProcessModifier([] { prctl(PR_SET_PDEATHSIG, SIGKILL); });
     connect(&m_process, &QProcess::finished, this, [this] {
         if (!m_restarting) {
             qWarning("tray: stalonetray exited");

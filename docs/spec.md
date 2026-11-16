@@ -603,12 +603,15 @@ its background, once the palette has held still (3.3), so that dragging
 the contrast slider in the editor does not dock every icon again at each
 step. It starts the new one once the old has exited and given up the
 selection.
-stalonetray asks for SIGTERM when the panel dies (`PR_SET_PDEATHSIG`): a
+stalonetray asks for SIGKILL when the panel dies (`PR_SET_PDEATHSIG`): a
 signal or a broken X connection ends the panel without its destructors, and
-in `fvwm-rig` a stalonetray whose panel was killed otherwise lived on and
-then ignored SIGTERM. One that exits on its own is reported and leaves the
-well empty. A stalonetray started while another runs takes the selection
-from it, and the other deactivates.
+a stalonetray whose panel was killed otherwise lives on. SIGTERM is not
+enough: stalonetray catches it and, while idle, sleeps on. With SIGTERM, 6
+of 39 panels killed in `fvwm-rig` left their tray running under init; with
+SIGKILL, none of 50 did, and a Qt tray icon docked again in the next tray.
+One that exits on its own is reported and leaves the well empty. A
+stalonetray started while another runs takes the selection from it, and the
+other deactivates.
 
 The height follows the icons, as in the Python shelf. stalonetray's window
 holds one child per icon and two 1x1 windows of its own. The widget counts

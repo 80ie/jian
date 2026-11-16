@@ -38,7 +38,6 @@ protected:
     void hideEvent(QHideEvent* event) override;
 
 private:
-    QFont fontFor(int width) const;
     void tick();
 
     const Palette& m_palette;

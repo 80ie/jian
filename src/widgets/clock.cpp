@@ -1,6 +1,6 @@
 #include "widgets/clock.h"
-#include "paint/font.h"
 #include "palette/palette.h"
+#include "widgets/clocklayout.h"
 
 #include <QFontDatabase>
 #include <QFormLayout>
@@ -8,23 +8,7 @@
 #include <QLineEdit>
 #include <QPainter>
 
-#include <algorithm>
-
 using namespace Qt::StringLiterals;
-
-namespace {
-
-// At referenceWidth the text is referencePoints and the strip stripHeight tall; both scale with
-// the width.
-constexpr int referenceWidth = 200;
-constexpr int referencePoints = 11;
-constexpr int minimumPoints = 8;
-constexpr int stripHeight = 30;
-constexpr int padLeft = 4;
-constexpr int padRight = 3;
-constexpr int gap = 10;
-
-} // namespace
 
 bool showsSeconds(QStringView format)
 {
@@ -62,7 +46,7 @@ QString Clock::id() const { return u"clock"_s; }
 
 int Clock::heightForWidth(int width) const
 {
-    return qRound(double(stripHeight) * fontFor(width).pointSize() / referencePoints);
+    return clockLayout(width, font(), m_time, m_date).height;
 }
 
 QWidget* Clock::settingsPage()
@@ -117,40 +101,20 @@ void Clock::setTime(const QDateTime& time)
 
 void Clock::paintEvent(QPaintEvent*)
 {
-    const QFont font = fontFor(width());
-    const QFontMetrics metrics(font, this);
-    const int room = width() - padLeft - padRight;
-    const QString time = metrics.elidedText(m_time, Qt::ElideRight, room);
-    const QString date
-        = metrics.elidedText(m_date, Qt::ElideRight, room - gap - metrics.horizontalAdvance(time));
-    const int baseline = (height() + metrics.capHeight()) / 2;
-
+    const ClockLayout l = clockLayout(width(), font(), m_time, m_date);
     QPainter p(this);
     p.fillRect(rect(), m_palette.tone(0));
-    p.setFont(font);
     p.setPen(m_palette.ink);
-    p.drawText(padLeft, baseline, time);
-    p.drawText(width() - padRight - metrics.horizontalAdvance(date), baseline, date);
+    for (const ClockSide* side : { &l.time, &l.date }) {
+        p.setFont(side->font);
+        for (const ClockLine& line : side->lines)
+            p.drawText(line.origin, line.text);
+    }
 }
 
 void Clock::showEvent(QShowEvent*) { tick(); }
 
 void Clock::hideEvent(QHideEvent*) { m_timer.stop(); }
-
-// Scaling with the text as well would blow a short format up to fill the strip, so the width
-// sets the size and the text can only step it down.
-QFont Clock::fontFor(int width) const
-{
-    const auto fits = [&](int points) {
-        const QFontMetrics metrics(paint::font(font(), points), this);
-        return metrics.horizontalAdvance(m_time) + metrics.horizontalAdvance(m_date)
-            <= width - padLeft - padRight - gap;
-    };
-    int points = qRound(double(referencePoints) * width / referenceWidth);
-    while (points > minimumPoints && !fits(points))
-        --points;
-    return paint::font(font(), std::max(points, minimumPoints));
-}
 
 void Clock::tick()
 {

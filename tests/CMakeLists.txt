@@ -3,7 +3,7 @@ foreach(name palette export extract library scheme paletteeditor sheet layout or
     target_link_libraries(${name}_test PRIVATE jiancore Qt6::Test)
     add_test(NAME ${name} COMMAND ${name}_test)
 endforeach()
-set_tests_properties(sheet worldview panel PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+set_tests_properties(sheet clock worldview panel PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 
 add_library(fakeplayer STATIC fakeplayer.cpp)
 target_link_libraries(fakeplayer PUBLIC Qt6::DBus)

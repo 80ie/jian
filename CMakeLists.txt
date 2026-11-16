@@ -45,6 +45,7 @@ add_library(jiancore STATIC
     src/palette/scheme.cpp
     src/widgets/catalog.cpp
     src/widgets/clock.cpp
+    src/widgets/clocklayout.cpp
     src/widgets/foreignslot.cpp
     src/widgets/media.cpp
     src/widgets/medialayout.cpp

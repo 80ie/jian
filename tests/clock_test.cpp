@@ -146,6 +146,15 @@ private slots:
         QCOMPARE(l.time.font.pointSize(), l.date.font.pointSize());
     }
 
+    void growthCutsNothing()
+    {
+        for (int width = 140; width <= 260; ++width) {
+            const ClockLayout l = clockLayout(width, mono(), u"12:55PM"_s, u"11.16\nMon"_s);
+            QCOMPARE(l.time.lines.front().text, u"12:55PM"_s);
+            QCOMPARE(l.date.lines.front().text, u"11.16"_s);
+        }
+    }
+
     void staysInside_data()
     {
         QTest::addColumn<int>("width");

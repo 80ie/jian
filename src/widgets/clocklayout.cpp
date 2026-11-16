@@ -3,6 +3,7 @@
 
 #include <QFontMetrics>
 #include <QStringList>
+#include <QtMath>
 
 #include <algorithm>
 
@@ -18,12 +19,14 @@ constexpr int padLeft = 4;
 constexpr int padRight = 3;
 constexpr int gap = 10;
 
-int widest(const QFontMetrics& metrics, const QStringList& lines)
+// Rounded up: QFontMetrics rounds each advance, but elidedText() compares the exact width.
+int widest(const QFont& font, const QStringList& lines)
 {
-    int widest = 0;
+    const QFontMetricsF metrics(font);
+    qreal widest = 0;
     for (const QString& line : lines)
         widest = std::max(widest, metrics.horizontalAdvance(line));
-    return widest;
+    return qCeil(widest);
 }
 
 // From the top of the first line's capitals to the last baseline.
@@ -37,8 +40,8 @@ int span(const QFontMetrics& metrics, qsizetype lines)
 int basePoints(int width, const QFont& family, const QStringList& time, const QStringList& date)
 {
     const auto fits = [&](int points) {
-        const QFontMetrics metrics(paint::font(family, points));
-        return widest(metrics, time) + widest(metrics, date) <= width - padLeft - padRight - gap;
+        const QFont font = paint::font(family, points);
+        return widest(font, time) + widest(font, date) <= width - padLeft - padRight - gap;
     };
     int points = qRound(double(referencePoints) * width / referenceWidth);
     while (points > minimumPoints && !fits(points))
@@ -53,12 +56,12 @@ int grownPoints(
 {
     if (lines.size() >= other.size())
         return base;
-    const QFontMetrics metrics(paint::font(family, base));
-    const int tallest = span(metrics, other.size());
-    const int room = width - padLeft - padRight - gap - widest(metrics, other);
+    const QFont font = paint::font(family, base);
+    const int tallest = span(QFontMetrics(font), other.size());
+    const int room = width - padLeft - padRight - gap - widest(font, other);
     const auto fits = [&](int points) {
-        const QFontMetrics grown(paint::font(family, points));
-        return span(grown, lines.size()) <= tallest && widest(grown, lines) <= room;
+        const QFont grown = paint::font(family, points);
+        return span(QFontMetrics(grown), lines.size()) <= tallest && widest(grown, lines) <= room;
     };
     int points = base;
     while (fits(points + 1))
@@ -102,11 +105,10 @@ ClockLayout clockLayout(int width, const QFont& family, const QString& time, con
         = paint::font(family, grownPoints(width, family, base, timeLines, dateLines));
     const QFont dateFont
         = paint::font(family, grownPoints(width, family, base, dateLines, timeLines));
-    const QFontMetrics timeMetrics(timeFont);
     const int room = width - padLeft - padRight;
-    const QStringList shownTime = elided(timeMetrics, timeLines, room);
+    const QStringList shownTime = elided(QFontMetrics(timeFont), timeLines, room);
     const QStringList shownDate
-        = elided(QFontMetrics(dateFont), dateLines, room - gap - widest(timeMetrics, shownTime));
+        = elided(QFontMetrics(dateFont), dateLines, room - gap - widest(timeFont, shownTime));
     return { stack(timeFont, shownTime, height, [](int) { return padLeft; }),
         stack(dateFont, shownDate, height,
             [width](int advance) { return width - padRight - advance; }),

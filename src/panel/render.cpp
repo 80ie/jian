@@ -35,7 +35,7 @@ std::vector<Client> cannedTasks(const Palette& palette)
         Client client;
         client.window = window;
         client.title = title;
-        client.icon = cannedImage(QSize(32, 32), color, palette.ink);
+        client.icon = cannedImage(QSize(64, 64), color, palette.ink);
         return client;
     };
     std::vector<Client> tasks { task(1, u"Mail — Inbox (3)"_s, palette.selection),

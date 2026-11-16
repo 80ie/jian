@@ -11,7 +11,8 @@
 
 namespace {
 
-constexpr int iconSize = 32;
+// Large enough that the biggest pinned tile scales an icon down rather than up.
+constexpr int iconSize = 128;
 // A change of page or focus arrives as events spread over a millisecond or two, which one update
 // should take in together.
 constexpr int gatherMs = 5;

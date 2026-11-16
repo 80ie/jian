@@ -439,11 +439,14 @@ Without it the window gets the styles that match its class, `FvwmPager`.
 
 ### 7.3 Tasks
 
-Pinned (sticky) windows are a strip of tiles in a well of their own above
-the rows, as in the Python shelf: as many 32-pixel tiles across as fit, each
-its window's icon at 24 pixels and nothing else, the title a tooltip. A
-two-column grid of thumbnails was built first and dropped: the owner wanted
-the icons alone (issue #5).
+Pinned (sticky) windows are a strip of square tiles in a well of their own
+above the rows, as many across as fit, wrapping to more rows; the title is a
+tooltip. A tile is its window's icon and nothing else (issue #5), drawn the
+Python shelf's way: an etched rule along its right and under its row, the
+icon three quarters of the tile and centred, as 24 in 32. Tiles are bigger
+than that shelf's 32 pixels by default, since those were hard to hit (issue
+#10). The window model decodes the icon nearest 128 pixels, so a tile scales
+it down rather than up whenever the window offers one that large.
 
 The panel captures thumbnails itself through the Composite extension
 (`xcb_composite_name_window_pixmap`), scaled down and held in memory. This
@@ -491,9 +494,10 @@ Overflow, in order, as the list outgrows its height:
 2. below the floor they collapse to plain rows, oldest first;
 3. the row list scrolls.
 
-Rows never go below `ROW_H`. The floor is a setting, `config.ini` `[tasks]`
-`floor`, in pixels (default 64). "Oldest" is the window minimized longest
-ago.
+The strip keeps its size when room runs short; only the rows give way.
+Rows never go below `ROW_H`. The tile and the floor are settings,
+`config.ini` `[tasks]` `tile` (default 48) and `floor` (default 64), both in
+pixels. "Oldest" is the window minimized longest ago.
 
 ### 7.4 Media
 
@@ -836,8 +840,8 @@ One window, opened from the panel's context menu ("Settings…") or `<name>
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
 then one page per widget that returns a `settingsPage()`: Clock (its two
-formats, each with a preview of the time in it), Tasks (the thumbnail
-floor) and Media (the source, as its drop-down chooses it). It is
+formats, each with a preview of the time in it), Tasks (the tile
+size and the thumbnail floor) and Media (the source, as its drop-down chooses it). It is
 part of the same process and edits the same objects the panel draws from:
 the Layout page calls the panel's setters and writes `config.ini`, as
 dragging the width does.

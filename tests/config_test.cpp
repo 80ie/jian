@@ -35,6 +35,7 @@ private slots:
         changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
         changed.clockTime = "HH:mm:ss";
         changed.clockDate = "dddd d MMMM";
+        changed.tasksTile = 60;
         changed.tasksThumbnailFloor = 40;
         changed.mediaSource = "vlc";
         changed.exportOnSave = true;
@@ -69,6 +70,7 @@ private slots:
         QTest::addColumn<QByteArray>("text");
         QTest::newRow("side") << QByteArray("[panel]\nside=top\n");
         QTest::newRow("width") << QByteArray("[panel]\nwidth=wide\n");
+        QTest::newRow("tile") << QByteArray("[tasks]\ntile=big\n");
         QTest::newRow("pop-out position") << QByteArray("[popout]\nmedia=12\n");
         QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");
     }

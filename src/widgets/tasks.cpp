@@ -21,7 +21,6 @@ using namespace Qt::StringLiterals;
 namespace {
 
 constexpr int rowIcon = 16;
-constexpr int tileIcon = 24;
 // Of a row: the icon's left edge, and the gaps either side of the title.
 constexpr int iconLeft = 6;
 constexpr int titleLeft = 6;
@@ -30,7 +29,6 @@ constexpr int titleRight = 4;
 constexpr int troughMargin = 6;
 constexpr int troughTop = 4;
 constexpr int troughInset = 4;
-constexpr int tileInset = 3;
 
 QRect inside(const QRect& well)
 {
@@ -64,10 +62,10 @@ void drawCropped(QPainter& p, const QImage& image, const QRect& box)
 
 } // namespace
 
-Tasks::Tasks(const Palette& palette, int thumbnailFloor, WindowModel* model, QWidget* parent)
+Tasks::Tasks(const Palette& palette, const TaskSizes& sizes, WindowModel* model, QWidget* parent)
     : ShelfWidget(parent)
     , m_palette(palette)
-    , m_thumbnailFloor(thumbnailFloor)
+    , m_sizes(sizes)
     , m_model(model)
 {
     setMouseTracking(true);
@@ -79,30 +77,42 @@ Tasks::Tasks(const Palette& palette, int thumbnailFloor, WindowModel* model, QWi
 
 QString Tasks::id() const { return u"tasks"_s; }
 
-int Tasks::heightForWidth(int width) const { return naturalHeight(width, m_counts); }
+int Tasks::heightForWidth(int width) const { return naturalHeight(width, m_counts, m_sizes); }
 
 QWidget* Tasks::settingsPage()
 {
     auto* page = new QWidget;
-    auto* floor = new QSpinBox(page);
-    floor->setRange(rowHeight, largestThumbnail);
-    floor->setValue(m_thumbnailFloor);
-    floor->setSuffix(u" px"_s);
+    const auto spinBox = [page](int value, int least) {
+        auto* box = new QSpinBox(page);
+        box->setRange(least, largestThumbnail);
+        box->setValue(value);
+        box->setSuffix(u" px"_s);
+        return box;
+    };
+    auto* tile = spinBox(m_sizes.tile, smallestTile);
+    auto* floor = spinBox(m_sizes.thumbnailFloor, rowHeight);
     auto* form = new QFormLayout(page);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    form->addRow(u"Tile size"_s, tile);
     form->addRow(u"Smallest thumbnail"_s, floor);
-    connect(floor, &QSpinBox::valueChanged, this, &Tasks::setThumbnailFloor);
+    for (QSpinBox* box : { tile, floor })
+        connect(box, &QSpinBox::valueChanged, this,
+            [this, tile, floor] { setSizes({ tile->value(), floor->value() }); });
     return page;
 }
 
-void Tasks::setThumbnailFloor(int floor)
+void Tasks::setSizes(const TaskSizes& sizes)
 {
-    m_thumbnailFloor = floor;
+    m_sizes = sizes;
+    emit heightChanged();
     update();
-    emit thumbnailFloorChosen(floor);
+    emit sizesChosen(sizes);
 }
 
-int Tasks::minimumHeightForWidth(int width) const { return ::minimumHeight(width, m_counts); }
+int Tasks::minimumHeightForWidth(int width) const
+{
+    return ::minimumHeight(width, m_counts, m_sizes);
+}
 
 void Tasks::setClients(const std::vector<Client>& clients)
 {
@@ -220,13 +230,14 @@ void Tasks::wheelEvent(QWheelEvent* event)
 // Pinned tasks come first in m_tasks, so a task's index is also its place in the grid.
 Tasks::Layout Tasks::layout() const
 {
-    const TaskFit fit = fitTasks(size(), m_counts, m_thumbnailFloor);
+    const TaskFit fit = fitTasks(size(), m_counts, m_sizes);
     Layout l;
     int top = 0;
-    const int columns = tileColumns(width());
+    const int tile = m_sizes.tile;
+    const int columns = tileColumns(width(), tile);
     if (m_counts.pinned > 0) {
         const int gridRows = (m_counts.pinned + columns - 1) / columns;
-        l.tiles = QRect(0, 0, width(), 2 * wellPadding + gridRows * tileSize - etch);
+        l.tiles = QRect(0, 0, width(), 2 * wellPadding + gridRows * tile - etch);
         top = l.tiles.bottom() + 1 + wellGap;
     }
     if (m_counts.rows + m_counts.thumbnails > 0 || m_counts.pinned == 0)
@@ -238,8 +249,8 @@ Tasks::Layout Tasks::layout() const
     int y = rows.top() - std::clamp(m_scroll, 0, l.scrollRange);
     for (std::size_t i = 0; i < m_tasks.size(); ++i) {
         if (m_tasks[i].pinned) {
-            l.rects.emplace_back(tiles.left() + int(i) % columns * tileSize,
-                tiles.top() + int(i) / columns * tileSize, tileSize, tileSize);
+            l.rects.emplace_back(tiles.left() + int(i) % columns * tile,
+                tiles.top() + int(i) / columns * tile, tile, tile);
             l.thumbnails.push_back(0);
             continue;
         }
@@ -267,7 +278,7 @@ void Tasks::paintTile(QPainter& p, const Layout& layout, std::size_t task, bool 
     const Client& client = m_tasks[task];
     const QRect r = layout.rects[task];
     const QRect tiles = inside(layout.tiles);
-    const int columns = tileColumns(width());
+    const int columns = tileColumns(width(), m_sizes.tile);
     const QRect face = r.adjusted(0, 0, -etch, -etch);
     p.fillRect(face, faceFor(client, hovered));
     p.setPen(m_palette.tone(-4));
@@ -280,8 +291,10 @@ void Tasks::paintTile(QPainter& p, const Layout& layout, std::size_t task, bool 
 
     if (!client.icon.isNull()) {
         p.setOpacity(client.minimized ? 0.6 : 1);
-        drawIcon(p, client.icon,
-            QRect(face.left() + tileInset, face.top() + tileInset, tileIcon, tileIcon));
+        // Three quarters of the tile, as Photon's 24 in 32.
+        const int icon = r.width() * 3 / 4;
+        const int inset = (face.width() - icon) / 2;
+        drawIcon(p, client.icon, QRect(face.left() + inset, face.top() + inset, icon, icon));
         p.setOpacity(1);
     } else {
         p.setPen(m_palette.ink);

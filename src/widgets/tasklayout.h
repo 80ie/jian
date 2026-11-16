@@ -9,12 +9,17 @@
 // Every height the tasks widget is built from, in pixels. A row and a tile each include the
 // etched rule under them; a thumbnail's padding is what its trough adds to its row.
 constexpr int rowHeight = 25;
-constexpr int tileSize = 32;
+constexpr int smallestTile = 32;
 constexpr int largestThumbnail = 136;
 constexpr int thumbnailPadding = 18;
 constexpr int wellPadding = 2;
 constexpr int wellGap = 3;
 constexpr int etch = 2;
+
+struct TaskSizes {
+    int tile = 48;
+    int thumbnailFloor = 64;
+};
 
 // Pinned windows, then the others, then minimized ones, each in the order given.
 std::vector<Client> taskOrder(std::vector<Client> clients);
@@ -29,7 +34,7 @@ struct TaskCounts {
 
 TaskCounts countTasks(const std::vector<Client>& tasks);
 
-int tileColumns(int width);
+int tileColumns(int width, int tile);
 
 struct TaskFit {
     int thumbnailHeight = 0;
@@ -41,9 +46,9 @@ struct TaskFit {
     bool operator==(const TaskFit&) const = default;
 };
 
-TaskFit fitTasks(QSize size, const TaskCounts& counts, int thumbnailFloor);
-int naturalHeight(int width, const TaskCounts& counts);
-int minimumHeight(int width, const TaskCounts& counts);
+TaskFit fitTasks(QSize size, const TaskCounts& counts, const TaskSizes& sizes);
+int naturalHeight(int width, const TaskCounts& counts, const TaskSizes& sizes);
+int minimumHeight(int width, const TaskCounts& counts, const TaskSizes& sizes);
 
 // The windows among `tasks` whose captures show when only `count` can.
 std::vector<quint32> keptThumbnails(const std::vector<Client>& tasks, int count);

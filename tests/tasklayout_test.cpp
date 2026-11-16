@@ -21,11 +21,11 @@ Client captured(quint32 window, quint64 minimizedOrder)
     return client;
 }
 
-// 170 wide holds five tiles across. Two pinned, three rows, two minimized with captures: 11 of
-// wells, 30 of tiles, 125 of rows.
+// 170 wide holds three 48-pixel tiles across. Two pinned, three rows, two minimized with
+// captures: 11 of wells, 46 of tiles, 125 of rows.
 constexpr int width = 170;
 const TaskCounts counts { .pinned = 2, .rows = 3, .thumbnails = 2 };
-constexpr int thumbnailFloor = 64;
+const TaskSizes sizes { .tile = 48, .thumbnailFloor = 64 };
 
 } // namespace
 
@@ -54,18 +54,19 @@ private slots:
 
     void tilesFillTheWidth()
     {
-        QCOMPARE(tileColumns(width), 5);
-        QCOMPARE(tileColumns(4 + 5 * tileSize - 1), 4);
-        QCOMPARE(tileColumns(20), 1);
+        QCOMPARE(tileColumns(width, 48), 3);
+        QCOMPARE(tileColumns(width, 32), 5);
+        QCOMPARE(tileColumns(4 + 4 * 38 - 1, 38), 3);
+        QCOMPARE(tileColumns(20, 32), 1);
     }
 
     void naturalAndMinimum()
     {
-        QCOMPARE(naturalHeight(width, counts), 11 + 30 + 125 + 2 * (18 + 136));
-        QCOMPARE(minimumHeight(width, counts), 11 + 30 + 25);
-        QCOMPARE(naturalHeight(width, { }), 4);
-        QCOMPARE(naturalHeight(width, { .pinned = 5 }), 4 + 30);
-        QCOMPARE(naturalHeight(width, { .pinned = 6 }), 4 + 62);
+        QCOMPARE(naturalHeight(width, counts, sizes), 11 + 46 + 125 + 2 * (18 + 136));
+        QCOMPARE(minimumHeight(width, counts, sizes), 11 + 46 + 25);
+        QCOMPARE(naturalHeight(width, { }, sizes), 4);
+        QCOMPARE(naturalHeight(width, { .pinned = 3 }, sizes), 4 + 46);
+        QCOMPARE(naturalHeight(width, { .pinned = 4 }, sizes), 4 + 94);
     }
 
     void fit_data()
@@ -73,22 +74,22 @@ private slots:
         QTest::addColumn<int>("height");
         QTest::addColumn<TaskFit>("fit");
         QTest::newRow("room to spare") << 600 << TaskFit { 136, 2, 125 + 2 * 154, false };
-        QTest::newRow("natural") << 474 << TaskFit { 136, 2, 125 + 2 * 154, false };
+        QTest::newRow("natural") << 490 << TaskFit { 136, 2, 125 + 2 * 154, false };
         QTest::newRow("thumbnails shrink together")
-            << 400 << TaskFit { 99, 2, 125 + 2 * 117, false };
+            << 400 << TaskFit { 91, 2, 125 + 2 * 109, false };
         QTest::newRow("one collapses below the floor")
-            << 329 << TaskFit { 136, 1, 125 + 154, false };
-        QTest::newRow("the last at the floor") << 248 << TaskFit { 64, 1, 125 + 82, false };
-        QTest::newRow("all collapsed") << 247 << TaskFit { 0, 0, 125, false };
-        QTest::newRow("rows and tiles just fit") << 166 << TaskFit { 0, 0, 125, false };
-        QTest::newRow("rows scroll") << 165 << TaskFit { 0, 0, 125, true };
+            << 345 << TaskFit { 136, 1, 125 + 154, false };
+        QTest::newRow("the last at the floor") << 264 << TaskFit { 64, 1, 125 + 82, false };
+        QTest::newRow("all collapsed") << 263 << TaskFit { 0, 0, 125, false };
+        QTest::newRow("rows and tiles just fit") << 182 << TaskFit { 0, 0, 125, false };
+        QTest::newRow("rows scroll") << 181 << TaskFit { 0, 0, 125, true };
     }
 
     void fit()
     {
         QFETCH(int, height);
         QFETCH(TaskFit, fit);
-        QCOMPARE(fitTasks(QSize(width, height), counts, thumbnailFloor), fit);
+        QCOMPARE(fitTasks(QSize(width, height), counts, sizes), fit);
     }
 
     void keptAreTheMostRecentlyMinimized()

@@ -14,7 +14,7 @@ class Tasks : public ShelfWidget {
 
 public:
     // Without a model it shows what setClients() gives it and acts on nothing.
-    Tasks(const Palette& palette, int thumbnailFloor, WindowModel* model, QWidget* parent);
+    Tasks(const Palette& palette, const TaskSizes& sizes, WindowModel* model, QWidget* parent);
 
     QString id() const override;
     int heightForWidth(int width) const override;
@@ -23,10 +23,10 @@ public:
     bool sunken() const override { return true; }
     QWidget* settingsPage() override;
     void setClients(const std::vector<Client>& clients);
-    void setThumbnailFloor(int floor);
+    void setSizes(const TaskSizes& sizes);
 
 signals:
-    void thumbnailFloorChosen(int floor);
+    void sizesChosen(const TaskSizes& sizes);
 
 protected:
     bool event(QEvent* event) override;
@@ -54,7 +54,7 @@ private:
     QColor faceFor(const Client& client, bool hovered) const;
 
     const Palette& m_palette;
-    int m_thumbnailFloor;
+    TaskSizes m_sizes;
     WindowModel* m_model;
     std::vector<Client> m_tasks;
     TaskCounts m_counts;

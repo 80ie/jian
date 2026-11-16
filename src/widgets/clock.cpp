@@ -5,10 +5,30 @@
 #include <QFontDatabase>
 #include <QFormLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QPainter>
+#include <QPlainTextEdit>
+#include <QTextDocument>
+#include <QtMath>
 
 using namespace Qt::StringLiterals;
+
+namespace {
+
+QPlainTextEdit* formatEdit(const QString& format, QWidget* parent)
+{
+    auto* edit = new QPlainTextEdit(format, parent);
+    edit->setToolTip(u"QDateTime format"_s);
+    edit->setTabChangesFocus(true);
+    edit->setLineWrapMode(QPlainTextEdit::NoWrap);
+    // Three lines without a scroll bar. QPlainTextEdit rounds each line up to a whole pixel and
+    // wants a pixel to spare below the margins.
+    const int line = qCeil(QFontMetricsF(edit->font()).lineSpacing());
+    const int margin = edit->frameWidth() + qCeil(edit->document()->documentMargin());
+    edit->setFixedHeight(3 * line + 2 * margin + 1);
+    return edit;
+}
+
+} // namespace
 
 bool showsSeconds(QStringView format)
 {
@@ -52,8 +72,8 @@ int Clock::heightForWidth(int width) const
 QWidget* Clock::settingsPage()
 {
     auto* page = new QWidget;
-    auto* time = new QLineEdit(m_timeFormat, page);
-    auto* date = new QLineEdit(m_dateFormat, page);
+    auto* time = formatEdit(m_timeFormat, page);
+    auto* date = formatEdit(m_dateFormat, page);
     auto* timePreview = new QLabel(page);
     auto* datePreview = new QLabel(page);
     auto* form = new QFormLayout(page);
@@ -63,16 +83,14 @@ QWidget* Clock::settingsPage()
     form->addRow(QString(), datePreview);
     const auto preview = [time, date, timePreview, datePreview] {
         const QDateTime now = QDateTime::currentDateTime();
-        timePreview->setText(now.toString(time->text()));
-        datePreview->setText(now.toString(date->text()));
+        timePreview->setText(now.toString(time->toPlainText()));
+        datePreview->setText(now.toString(date->toPlainText()));
     };
-    for (QLineEdit* edit : { time, date }) {
-        edit->setToolTip(u"QDateTime format"_s);
-        connect(edit, &QLineEdit::textEdited, this, [this, time, date, preview] {
+    for (QPlainTextEdit* edit : { time, date })
+        connect(edit, &QPlainTextEdit::textChanged, this, [this, time, date, preview] {
             preview();
-            setFormats(time->text(), date->text());
+            setFormats(time->toPlainText(), date->toPlainText());
         });
-    }
     preview();
     return page;
 }

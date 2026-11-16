@@ -24,6 +24,6 @@ struct ClockLayout {
     int height = 0;
 };
 
-// The clock `width` wide with `time` at the left end and `date` at the right, in the family and
-// weight of `family`.
+// The clock `width` wide with `time` at the left end and `date` at the right, each broken into
+// lines at its newlines, in the family and weight of `family`.
 ClockLayout clockLayout(int width, const QFont& family, const QString& time, const QString& date);

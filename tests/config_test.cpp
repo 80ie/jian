@@ -34,7 +34,7 @@ private slots:
         changed.poppedOut = QStringList { "media" };
         changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
         changed.clockTime = "HH:mm:ss";
-        changed.clockDate = "dddd d MMMM";
+        changed.clockDate = "MM.dd.yyyy\ndddd";
         changed.tasksTile = 60;
         changed.tasksThumbnailFloor = 40;
         changed.mediaSource = "vlc";

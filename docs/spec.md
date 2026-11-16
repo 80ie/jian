@@ -367,9 +367,24 @@ ms after the last `ConfigureNotify`, after one round trip, for
 
 ### 7.1 Clock
 
-As now: the time at the left end, the date at the right. The clock draws
-two strings, so `config.ini` holds two QDateTime formats, `[clock] time`
-and `date`.
+The time at the left end, the date at the right, each from a QDateTime
+format that `config.ini` holds as `[clock] time` and `date`. A newline in a
+format starts another line on its side, written `\n` in the file, so a date
+can stand over its weekday. Time lines align left, date lines right.
+
+The width sets the size: 11 points at 200 pixels and in proportion, stepped
+down a point at a time until the widest time line and the widest date line
+fit side by side, but never below 8 points. Text too wide even then is cut
+short with an ellipsis. The strip is 30 pixels tall at 11 points and in
+proportion, and a line taller for each line past the first on the side with
+more.
+
+The side with fewer lines then grows a point at a time while it stands no
+taller than the other, from the top of the first line's capitals to the
+last baseline, and the two still fit side by side. A date stacked over its
+weekday keeps the size it would have on one line and leaves the time room
+to grow. Sides with as many lines as each other do not grow. Each side is
+centred in the strip.
 
 ### 7.2 World View
 

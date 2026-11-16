@@ -74,6 +74,7 @@ target_link_libraries(jiancore PUBLIC Qt6::Widgets Qt6::DBus Qt6::Network PkgCon
 
 add_executable(jian src/main.cpp)
 target_link_libraries(jian PRIVATE jiancore)
+install(TARGETS jian)
 
 enable_testing()
 add_subdirectory(tests)

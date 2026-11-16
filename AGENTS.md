@@ -8,6 +8,17 @@ The Python program this replaced is in the history of `~/.fvwm`:
 `git -C ~/.fvwm show 92b16fe^:bin/shelf-panel`, and likewise `photon*.py`.
 Read it for reference. Never modify anything under `~/.fvwm`.
 
+## Approach
+
+"For each desired change, make the change easy (warning: this may be hard),
+then make the easy change." (Kent Beck)
+
+When a change fights the code, first reshape the code until the change is
+small, in a commit of its own that keeps behavior as it was, then make it.
+The same holds for the user: where a setting can be one general mechanism,
+such as a format string, that they combine for themselves, prefer it to an
+option per need.
+
 ## Build and test
 
     cmake --preset dev && cmake --build --preset dev && ctest --preset dev

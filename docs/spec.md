@@ -373,7 +373,8 @@ format starts another line on its side, written `\n` in the file, so a date
 can stand over its weekday. Time lines align left, date lines right.
 
 The width sets a size: 11 points at 200 pixels and in proportion. Each side
-is drawn at its own percentage of that size, rounded to a whole point. Where
+is drawn at its own percentage of that size, rounded to a whole point, which
+`config.ini` holds as `[clock] timeSize` and `dateSize`, 100 unless set. Where
 the widest time line and the widest date line do not fit side by side, the
 size steps down a point at a time, so that both sides shrink together and
 keep their proportion. Neither goes below 8 points: a side that reaches 8
@@ -870,8 +871,8 @@ One window, opened from the panel's context menu ("Settings…") or `jian
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
 then one page per widget that returns a `settingsPage()`: Clock (its two
-formats, each with a preview of the time in it, and a sheet of the format
-tokens, each beside what it gives at the moment), Tasks (the tile
+formats, each with its size beside it and a preview of the time in it, and a
+sheet of the format tokens, each beside what it gives at the moment), Tasks (the tile
 size and the thumbnail floor) and Media (the source, as its drop-down chooses it). It is
 part of the same process and edits the same objects the panel draws from:
 the Layout page calls the panel's setters and writes `config.ini`, as

@@ -1,13 +1,14 @@
 #include "widgets/clock.h"
 #include "palette/palette.h"
-#include "widgets/clocklayout.h"
 
 #include <QFontDatabase>
 #include <QFormLayout>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPainter>
 #include <QPlainTextEdit>
+#include <QSpinBox>
 #include <QTextDocument>
 #include <QtMath>
 
@@ -59,6 +60,25 @@ std::vector<std::pair<QString, QLabel*>> fillSyntax(QGridLayout* grid, QWidget* 
     return examples;
 }
 
+QHBoxLayout* withSize(QPlainTextEdit* edit, QSpinBox* size)
+{
+    auto* row = new QHBoxLayout;
+    row->addWidget(edit);
+    row->addWidget(size, 0, Qt::AlignTop);
+    return row;
+}
+
+QSpinBox* sizeBox(int percent, QWidget* parent)
+{
+    auto* box = new QSpinBox(parent);
+    box->setToolTip(u"Size"_s);
+    box->setRange(50, 300);
+    box->setSingleStep(10);
+    box->setSuffix(u" %"_s);
+    box->setValue(percent);
+    return box;
+}
+
 } // namespace
 
 bool showsSeconds(QStringView format)
@@ -79,12 +99,13 @@ int msecsToNextTick(const QTime& now, bool seconds)
     return period - now.msecsSinceStartOfDay() % period;
 }
 
-Clock::Clock(
-    const Palette& palette, const QString& timeFormat, const QString& dateFormat, QWidget* parent)
+Clock::Clock(const Palette& palette, const QString& timeFormat, const QString& dateFormat,
+    const ClockSizes& sizes, QWidget* parent)
     : ShelfWidget(parent)
     , m_palette(palette)
     , m_timeFormat(timeFormat)
     , m_dateFormat(dateFormat)
+    , m_sizes(sizes)
     , m_seconds(showsSeconds(timeFormat) || showsSeconds(dateFormat))
 {
     setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
@@ -97,7 +118,7 @@ QString Clock::id() const { return u"clock"_s; }
 
 int Clock::heightForWidth(int width) const
 {
-    return clockLayout(width, font(), m_time, m_date, { }).height;
+    return clockLayout(width, font(), m_time, m_date, m_sizes).height;
 }
 
 QWidget* Clock::settingsPage()
@@ -105,13 +126,15 @@ QWidget* Clock::settingsPage()
     auto* page = new QWidget;
     auto* time = formatEdit(m_timeFormat, page);
     auto* date = formatEdit(m_dateFormat, page);
+    auto* timeSize = sizeBox(m_sizes.time, page);
+    auto* dateSize = sizeBox(m_sizes.date, page);
     auto* timePreview = new QLabel(page);
     auto* datePreview = new QLabel(page);
     auto* syntax = new QGridLayout;
     auto* form = new QFormLayout(page);
-    form->addRow(u"Time"_s, time);
+    form->addRow(u"Time"_s, withSize(time, timeSize));
     form->addRow(QString(), timePreview);
-    form->addRow(u"Date"_s, date);
+    form->addRow(u"Date"_s, withSize(date, dateSize));
     form->addRow(QString(), datePreview);
     form->addRow(u"Syntax"_s, syntax);
     const std::vector<std::pair<QString, QLabel*>> examples = fillSyntax(syntax, page);
@@ -127,6 +150,9 @@ QWidget* Clock::settingsPage()
             preview();
             setFormats(time->toPlainText(), date->toPlainText());
         });
+    for (QSpinBox* box : { timeSize, dateSize })
+        connect(box, &QSpinBox::valueChanged, this,
+            [this, timeSize, dateSize] { setSizes({ timeSize->value(), dateSize->value() }); });
     preview();
     return page;
 }
@@ -143,6 +169,14 @@ void Clock::setFormats(const QString& timeFormat, const QString& dateFormat)
     emit formatsChosen(timeFormat, dateFormat);
 }
 
+void Clock::setSizes(const ClockSizes& sizes)
+{
+    m_sizes = sizes;
+    emit heightChanged();
+    update();
+    emit sizesChosen(sizes);
+}
+
 void Clock::setTime(const QDateTime& time)
 {
     const int before = heightForWidth(width());
@@ -155,7 +189,7 @@ void Clock::setTime(const QDateTime& time)
 
 void Clock::paintEvent(QPaintEvent*)
 {
-    const ClockLayout l = clockLayout(width(), font(), m_time, m_date, { });
+    const ClockLayout l = clockLayout(width(), font(), m_time, m_date, m_sizes);
     QPainter p(this);
     p.fillRect(rect(), m_palette.tone(0));
     p.setPen(m_palette.ink);

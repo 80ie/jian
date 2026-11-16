@@ -1,5 +1,6 @@
 #pragma once
 
+#include "widgets/clocklayout.h"
 #include "widgets/shelfwidget.h"
 
 #include <QDateTime>
@@ -18,19 +19,21 @@ class Clock : public ShelfWidget {
 
 public:
     Clock(const Palette& palette, const QString& timeFormat, const QString& dateFormat,
-        QWidget* parent);
+        const ClockSizes& sizes, QWidget* parent);
 
     QString id() const override;
     int heightForWidth(int width) const override;
-    // The two formats, with a preview of each.
+    // The two formats, each with a preview and its size.
     QWidget* settingsPage() override;
     // Shows `time` until the next tick. Ticks follow the wall clock while the clock is visible.
     void setTime(const QDateTime& time);
     void setFormats(const QString& timeFormat, const QString& dateFormat);
+    void setSizes(const ClockSizes& sizes);
 
 signals:
     // setFormats() changed them.
     void formatsChosen(const QString& timeFormat, const QString& dateFormat);
+    void sizesChosen(const ClockSizes& sizes);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -43,6 +46,7 @@ private:
     const Palette& m_palette;
     QString m_timeFormat;
     QString m_dateFormat;
+    ClockSizes m_sizes;
     bool m_seconds = false;
     QString m_time;
     QString m_date;

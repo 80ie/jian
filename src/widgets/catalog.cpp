@@ -60,7 +60,8 @@ ShelfWidget* createWidget(QStringView id, const Palette& palette, const Config& 
         return nullptr;
     }
     if (id == u"clock")
-        return new Clock(palette, config.clockTime, config.clockDate, parent);
+        return new Clock(palette, config.clockTime, config.clockDate,
+            { config.clockTimeSize, config.clockDateSize }, parent);
     if (id == u"worldview")
         return new WorldView(palette, windows, parent);
     if (id == u"media")

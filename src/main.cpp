@@ -71,13 +71,20 @@ int runWidget(QStringView id, const Palette& palette, const Config& config, Wind
 // What a widget's own controls or its settings page change goes into config.ini.
 void keepSettings(ShelfWidget* widget, Config& config, const QString& path)
 {
-    if (auto* clock = qobject_cast<Clock*>(widget))
+    if (auto* clock = qobject_cast<Clock*>(widget)) {
         QObject::connect(clock, &Clock::formatsChosen, clock,
             [&config, path](const QString& time, const QString& date) {
                 config.clockTime = time;
                 config.clockDate = date;
                 saveConfig(config, path);
             });
+        QObject::connect(
+            clock, &Clock::sizesChosen, clock, [&config, path](const ClockSizes& sizes) {
+                config.clockTimeSize = sizes.time;
+                config.clockDateSize = sizes.date;
+                saveConfig(config, path);
+            });
+    }
     if (auto* tasks = qobject_cast<Tasks*>(widget))
         QObject::connect(
             tasks, &Tasks::sizesChosen, tasks, [&config, path](const TaskSizes& sizes) {

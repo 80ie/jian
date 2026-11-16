@@ -35,6 +35,8 @@ private slots:
         changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
         changed.clockTime = "HH:mm:ss";
         changed.clockDate = "MM.dd.yyyy\ndddd";
+        changed.clockTimeSize = 150;
+        changed.clockDateSize = 80;
         changed.tasksTile = 60;
         changed.tasksThumbnailFloor = 40;
         changed.mediaSource = "vlc";
@@ -73,12 +75,14 @@ private slots:
         QTest::newRow("tile") << QByteArray("[tasks]\ntile=big\n");
         QTest::newRow("pop-out position") << QByteArray("[popout]\nmedia=12\n");
         QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");
+        QTest::newRow("time size") << QByteArray("[clock]\ntimeSize=big\n");
+        QTest::newRow("date size") << QByteArray("[clock]\ndateSize=0\n");
     }
 
     void badValuesAreRejected()
     {
         QFETCH(QByteArray, text);
-        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks|popout)/"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks|popout|clock)/"));
         QVERIFY(!loadText(text));
     }
 };

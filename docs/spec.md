@@ -199,8 +199,11 @@ no strut command.
 
 fvwm makes a dock sticky but still gives it a title, and `config` sets
 `Style * NoDecorHint`, which ignores the frameless hint Qt sets. `config`
-therefore keeps a `Style jian !Title, !Handles, BorderWidth 0` line in
-place of the `ShelfPanel` one.
+therefore keeps a `Style jian !Title, !Handles, BorderWidth 0, Layer 5,
+EWMHIgnoreStackingOrderHints` line in place of the `ShelfPanel` one. fvwm puts
+a dock in layer 6, with the dialogs and picture-in-picture windows `config`
+raises there. `Layer 5`, where the Python shelf sat, keeps it under them;
+verified in `fvwm-rig`, it takes only with the stacking hints ignored.
 
 ## 5. Widget separation and edit mode
 

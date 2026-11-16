@@ -2,23 +2,19 @@
 
 #include "x11/client.h"
 
+#include <QSize>
+
 #include <vector>
 
 // Every height the tasks widget is built from, in pixels. A row and a tile each include the
 // etched rule under them; a thumbnail's padding is what its trough adds to its row.
 constexpr int rowHeight = 25;
-constexpr int iconTileHeight = 32;
+constexpr int tileSize = 32;
 constexpr int largestThumbnail = 136;
 constexpr int thumbnailPadding = 18;
 constexpr int wellPadding = 2;
 constexpr int wellGap = 3;
 constexpr int etch = 2;
-
-// The settings in config.ini [tasks].
-struct TaskSizes {
-    int tile = 48;
-    int floor = 64;
-};
 
 // Pinned windows, then the others, then minimized ones, each in the order given.
 std::vector<Client> taskOrder(std::vector<Client> clients);
@@ -33,8 +29,10 @@ struct TaskCounts {
 
 TaskCounts countTasks(const std::vector<Client>& tasks);
 
+// How many pinned windows' tiles fit across the tasks widget `width` wide.
+int tileColumns(int width);
+
 struct TaskFit {
-    int tileHeight = 0;
     int thumbnailHeight = 0;
     // How many of the minimized windows with a capture show it: the most recently minimized.
     int thumbnails = 0;
@@ -44,12 +42,11 @@ struct TaskFit {
     bool operator==(const TaskFit&) const = default;
 };
 
-// Fits the tasks to `height` by spec 7.3: minimized windows' thumbnails shrink together to the
-// floor, then collapse to rows oldest first, then the pinned tiles drop to icons, then the rows
-// scroll.
-TaskFit fitTasks(int height, const TaskCounts& counts, const TaskSizes& sizes);
-int naturalHeight(const TaskCounts& counts, const TaskSizes& sizes);
-int minimumHeight(const TaskCounts& counts);
+// Fits the tasks to `size` by spec 7.3: minimized windows' thumbnails shrink together to `floor`,
+// then collapse to rows oldest first, then the rows scroll.
+TaskFit fitTasks(QSize size, const TaskCounts& counts, int floor);
+int naturalHeight(int width, const TaskCounts& counts);
+int minimumHeight(int width, const TaskCounts& counts);
 
 // The windows among `tasks` whose captures show when only `count` can.
 std::vector<quint32> keptThumbnails(const std::vector<Client>& tasks, int count);

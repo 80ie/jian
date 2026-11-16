@@ -436,8 +436,11 @@ Without it the window gets the styles that match its class, `FvwmPager`.
 
 ### 7.3 Tasks
 
-Pinned (sticky) windows become a two-column grid of tiles big enough to hit,
-each showing a thumbnail when one is available and a large icon when not.
+Pinned (sticky) windows are a strip of tiles in a well of their own above
+the rows, as in the Python shelf: as many 32-pixel tiles across as fit, each
+its window's icon at 24 pixels and nothing else, the title a tooltip. A
+two-column grid of thumbnails was built first and dropped: the owner wanted
+the icons alone (issue #5).
 
 The panel captures thumbnails itself through the Composite extension
 (`xcb_composite_name_window_pixmap`), scaled down and held in memory. This
@@ -487,13 +490,11 @@ Overflow, in order, as the list outgrows its height:
 
 1. minimized-window thumbnails shrink together to a floor height;
 2. below the floor they collapse to plain rows, oldest first;
-3. the pinned grid drops from thumbnails to icon tiles;
-4. the row list scrolls.
+3. the row list scrolls.
 
-Rows never go below `ROW_H`. The floor and the pinned tile size are settings:
-`config.ini` `[tasks]` `floor` (default 64) and `tile` (default 48), both in
-pixels; the tile is the height, as there are always two columns. "Oldest" is
-the window minimized longest ago. Icon tiles are 32 pixels tall.
+Rows never go below `ROW_H`. The floor is a setting, `config.ini` `[tasks]`
+`floor`, in pixels (default 64). "Oldest" is the window minimized longest
+ago.
 
 ### 7.4 Media
 
@@ -836,8 +837,8 @@ One window, opened from the panel's context menu ("Settings…") or `<name>
 --settings`. Pages: Layout (side, width, widget order, edit mode toggle),
 Palette (8.2), From image (8.3), Presets and History (8.4), Exports (9),
 then one page per widget that returns a `settingsPage()`: Clock (its two
-formats, each with a preview of the time in it), Tasks (tile height and
-thumbnail floor) and Media (the source, as its drop-down chooses it). It is
+formats, each with a preview of the time in it), Tasks (the thumbnail
+floor) and Media (the source, as its drop-down chooses it). It is
 part of the same process and edits the same objects the panel draws from:
 the Layout page calls the panel's setters and writes `config.ini`, as
 dragging the width does.

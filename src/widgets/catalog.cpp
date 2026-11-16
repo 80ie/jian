@@ -66,7 +66,7 @@ ShelfWidget* createWidget(QStringView id, const Palette& palette, const Config& 
     if (id == u"media")
         return new Media(palette, config.mediaSource, windows, parent);
     if (id == u"tasks")
-        return new Tasks(palette, { config.tasksTile, config.tasksFloor }, windows, parent);
+        return new Tasks(palette, config.tasksFloor, windows, parent);
     if (id == u"tray")
         return new Tray(palette, windows, parent);
     qWarning("no widget called %s", qUtf8Printable(id.toString()));

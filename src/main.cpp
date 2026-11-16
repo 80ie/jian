@@ -79,12 +79,10 @@ void keepSettings(ShelfWidget* widget, Config& config, const QString& path)
                 saveConfig(config, path);
             });
     if (auto* tasks = qobject_cast<Tasks*>(widget))
-        QObject::connect(
-            tasks, &Tasks::sizesChosen, tasks, [&config, path](const TaskSizes& sizes) {
-                config.tasksTile = sizes.tile;
-                config.tasksFloor = sizes.floor;
-                saveConfig(config, path);
-            });
+        QObject::connect(tasks, &Tasks::floorChosen, tasks, [&config, path](int floor) {
+            config.tasksFloor = floor;
+            saveConfig(config, path);
+        });
     if (auto* media = qobject_cast<Media*>(widget))
         QObject::connect(
             media, &Media::sourceChosen, media, [&config, path](const QString& source) {

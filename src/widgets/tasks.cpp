@@ -21,7 +21,7 @@ using namespace Qt::StringLiterals;
 namespace {
 
 constexpr int rowIcon = 16;
-constexpr int largeIcon = 32;
+constexpr int tileIcon = 24;
 // Of a row: the icon's left edge, and the gaps either side of the title.
 constexpr int iconLeft = 6;
 constexpr int titleLeft = 7;
@@ -42,12 +42,10 @@ QString titleOf(const Client& client)
     return client.title.isEmpty() ? u"(untitled)"_s : client.title;
 }
 
-void drawFitted(QPainter& p, const QImage& image, const QRect& box)
+void drawIcon(QPainter& p, const QImage& icon, const QRect& box)
 {
-    const QImage scaled = image.scaled(
-        box.size().boundedTo(image.size()), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    p.drawImage(box.left() + (box.width() - scaled.width()) / 2,
-        box.top() + (box.height() - scaled.height()) / 2, scaled);
+    p.drawImage(
+        box.topLeft(), icon.scaled(box.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 // Filling `box`'s width at a fixed scale, top first, so that a shrinking box crops the capture
@@ -66,10 +64,10 @@ void drawCropped(QPainter& p, const QImage& image, const QRect& box)
 
 } // namespace
 
-Tasks::Tasks(const Palette& palette, const TaskSizes& sizes, WindowModel* model, QWidget* parent)
+Tasks::Tasks(const Palette& palette, int floor, WindowModel* model, QWidget* parent)
     : ShelfWidget(parent)
     , m_palette(palette)
-    , m_sizes(sizes)
+    , m_floor(floor)
     , m_model(model)
 {
     setMouseTracking(true);
@@ -81,39 +79,30 @@ Tasks::Tasks(const Palette& palette, const TaskSizes& sizes, WindowModel* model,
 
 QString Tasks::id() const { return u"tasks"_s; }
 
-int Tasks::heightForWidth(int) const { return naturalHeight(m_counts, m_sizes); }
+int Tasks::heightForWidth(int width) const { return naturalHeight(width, m_counts); }
 
 QWidget* Tasks::settingsPage()
 {
     auto* page = new QWidget;
-    const auto spinBox = [page](int value, int least) {
-        auto* box = new QSpinBox(page);
-        box->setRange(least, largestThumbnail);
-        box->setValue(value);
-        box->setSuffix(u" px"_s);
-        return box;
-    };
-    auto* tile = spinBox(m_sizes.tile, iconTileHeight);
-    auto* floor = spinBox(m_sizes.floor, rowHeight);
+    auto* floor = new QSpinBox(page);
+    floor->setRange(rowHeight, largestThumbnail);
+    floor->setValue(m_floor);
+    floor->setSuffix(u" px"_s);
     auto* form = new QFormLayout(page);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-    form->addRow(u"Tile height"_s, tile);
     form->addRow(u"Smallest thumbnail"_s, floor);
-    for (QSpinBox* box : { tile, floor })
-        connect(box, &QSpinBox::valueChanged, this,
-            [this, tile, floor] { setSizes({ tile->value(), floor->value() }); });
+    connect(floor, &QSpinBox::valueChanged, this, &Tasks::setFloor);
     return page;
 }
 
-void Tasks::setSizes(const TaskSizes& sizes)
+void Tasks::setFloor(int floor)
 {
-    m_sizes = sizes;
-    emit heightChanged();
+    m_floor = floor;
     update();
-    emit sizesChosen(sizes);
+    emit floorChosen(floor);
 }
 
-int Tasks::minimumHeightForWidth(int) const { return ::minimumHeight(m_counts); }
+int Tasks::minimumHeightForWidth(int width) const { return ::minimumHeight(width, m_counts); }
 
 void Tasks::setClients(const std::vector<Client>& clients)
 {
@@ -231,17 +220,17 @@ void Tasks::wheelEvent(QWheelEvent* event)
 // Pinned tasks come first in m_tasks, so a task's index is also its place in the grid.
 Tasks::Layout Tasks::layout() const
 {
-    const TaskFit fit = fitTasks(height(), m_counts, m_sizes);
+    const TaskFit fit = fitTasks(size(), m_counts, m_floor);
     Layout l;
     int top = 0;
+    const int columns = tileColumns(width());
     if (m_counts.pinned > 0) {
-        const int gridRows = (m_counts.pinned + 1) / 2;
-        l.tiles = QRect(0, 0, width(), 2 * wellPadding + gridRows * fit.tileHeight - etch);
+        const int gridRows = (m_counts.pinned + columns - 1) / columns;
+        l.tiles = QRect(0, 0, width(), 2 * wellPadding + gridRows * tileSize - etch);
         top = l.tiles.bottom() + 1 + wellGap;
     }
     if (m_counts.rows + m_counts.thumbnails > 0 || m_counts.pinned == 0)
         l.rows = QRect(0, top, width(), height() - top);
-    l.tileThumbnails = fit.tileHeight == m_sizes.tile;
     const QRect tiles = inside(l.tiles);
     const QRect rows = inside(l.rows);
     l.scrollRange = std::max(0, fit.listHeight - rows.height());
@@ -249,11 +238,8 @@ Tasks::Layout Tasks::layout() const
     int y = rows.top() - std::clamp(m_scroll, 0, l.scrollRange);
     for (std::size_t i = 0; i < m_tasks.size(); ++i) {
         if (m_tasks[i].pinned) {
-            const int half = tiles.width() / 2;
-            const bool left = i % 2 == 0;
-            l.rects.emplace_back(left ? tiles.left() : tiles.left() + half,
-                tiles.top() + int(i / 2) * fit.tileHeight, left ? half : tiles.width() - half,
-                fit.tileHeight);
+            l.rects.emplace_back(tiles.left() + int(i) % columns * tileSize,
+                tiles.top() + int(i) / columns * tileSize, tileSize, tileSize);
             l.thumbnails.push_back(0);
             continue;
         }
@@ -276,36 +262,32 @@ std::optional<std::size_t> Tasks::taskAt(const Layout& layout, QPoint pos) const
     return std::nullopt;
 }
 
-// A tile has an etched rule on its right when it is in the left column, and one under it; the
-// well's own edge closes the rest.
+// A tile has an etched rule on its right, and the first in a row draws one under the whole row
+// unless it is the last; the well's own edge closes the rest.
 void Tasks::paintTile(QPainter& p, const Layout& layout, std::size_t task, bool hovered) const
 {
     const Client& client = m_tasks[task];
     const QRect r = layout.rects[task];
-    const bool left = task % 2 == 0;
-    const QRect face = r.adjusted(0, 0, left ? -etch : 0, -etch);
+    const QRect tiles = inside(layout.tiles);
+    const int columns = tileColumns(width());
+    const QRect face = r.adjusted(0, 0, -etch, -etch);
     p.fillRect(face, faceFor(client, hovered));
-    if (left) {
-        p.setPen(m_palette.tone(-4));
-        p.drawLine(face.right() + 1, r.top(), face.right() + 1, face.bottom());
-        p.setPen(m_palette.tone(3));
-        p.drawLine(face.right() + 2, r.top(), face.right() + 2, face.bottom());
-    }
-    paint::divider(p, QRect(r.left(), r.bottom() - 1, r.width(), etch), m_palette);
+    p.setPen(m_palette.tone(-4));
+    p.drawLine(face.right() + 1, r.top(), face.right() + 1, face.bottom());
+    p.setPen(m_palette.tone(3));
+    p.drawLine(face.right() + 2, r.top(), face.right() + 2, face.bottom());
+    if (int(task) % columns == 0 && int(task) / columns < (m_counts.pinned - 1) / columns)
+        paint::divider(p, QRect(tiles.left(), r.bottom() - 1, tiles.width(), etch), m_palette);
 
-    const QRect inner = face.adjusted(tileInset, tileInset, -tileInset, -tileInset);
-    p.setOpacity(client.minimized ? 0.6 : 1);
-    if (layout.tileThumbnails && !client.thumbnail.isNull()) {
-        drawFitted(p, client.thumbnail, inner);
-    } else if (!client.icon.isNull()) {
-        const int size = std::min(largeIcon, inner.height());
-        drawFitted(p, client.icon,
-            QRect(inner.center().x() - size / 2, inner.center().y() - size / 2, size, size));
+    if (!client.icon.isNull()) {
+        p.setOpacity(client.minimized ? 0.6 : 1);
+        drawIcon(p, client.icon,
+            QRect(face.left() + tileInset, face.top() + tileInset, tileIcon, tileIcon));
+        p.setOpacity(1);
     } else {
         p.setPen(m_palette.ink);
-        p.drawText(face, Qt::AlignCenter, titleOf(client).left(1));
+        p.drawText(face, Qt::AlignCenter, client.title.isEmpty() ? u"?"_s : client.title.left(1));
     }
-    p.setOpacity(1);
     if (client.focused) {
         p.setPen(m_palette.tone(-6));
         p.drawRect(face.adjusted(0, 0, -1, -1));
@@ -323,7 +305,7 @@ void Tasks::paintRow(QPainter& p, const Layout& layout, std::size_t task, bool h
 
     const QRect icon(r.left() + iconLeft, r.top() + (rowHeight - rowIcon) / 2, rowIcon, rowIcon);
     if (!client.icon.isNull())
-        drawFitted(p, client.icon, icon);
+        drawIcon(p, client.icon, icon);
     const QFontMetrics metrics = fontMetrics();
     const int x = icon.right() + 1 + titleLeft;
     p.setPen(client.minimized ? m_palette.tone(-4) : m_palette.ink);

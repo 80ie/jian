@@ -10,7 +10,12 @@ bool captured(const Client& client)
     return client.minimized && !client.pinned && !client.thumbnail.isNull();
 }
 
-int gridHeight(int pinned, int tile) { return pinned ? (pinned + 1) / 2 * tile - etch : 0; }
+// The well closes the last row of tiles, so it has no rule of its own.
+int gridHeight(int pinned, int width)
+{
+    const int columns = tileColumns(width);
+    return pinned ? (pinned + columns - 1) / columns * tileSize - etch : 0;
+}
 
 // The wells' edges, and the panel face between the two when there are both.
 int chrome(const TaskCounts& counts)
@@ -45,28 +50,29 @@ TaskCounts countTasks(const std::vector<Client>& tasks)
     return counts;
 }
 
-TaskFit fitTasks(int height, const TaskCounts& counts, const TaskSizes& sizes)
+int tileColumns(int width) { return std::max(1, (width - 2 * wellPadding) / tileSize); }
+
+TaskFit fitTasks(QSize size, const TaskCounts& counts, int floor)
 {
-    const int room = height - chrome(counts) - listHeight(counts, 0, 0);
-    const int thumbnailRoom = room - gridHeight(counts.pinned, sizes.tile);
+    const int room = size.height() - chrome(counts) - gridHeight(counts.pinned, size.width())
+        - listHeight(counts, 0, 0);
     for (int kept = counts.thumbnails; kept > 0; --kept) {
-        const int each = std::min(largestThumbnail, thumbnailRoom / kept - thumbnailPadding);
-        if (each >= sizes.floor)
-            return { sizes.tile, each, kept, listHeight(counts, kept, each), false };
+        const int each = std::min(largestThumbnail, room / kept - thumbnailPadding);
+        if (each >= floor)
+            return { each, kept, listHeight(counts, kept, each), false };
     }
-    const int tile = thumbnailRoom >= 0 ? sizes.tile : std::min(sizes.tile, iconTileHeight);
-    return { tile, 0, 0, listHeight(counts, 0, 0), room < gridHeight(counts.pinned, tile) };
+    return { 0, 0, listHeight(counts, 0, 0), room < 0 };
 }
 
-int naturalHeight(const TaskCounts& counts, const TaskSizes& sizes)
+int naturalHeight(int width, const TaskCounts& counts)
 {
-    return chrome(counts) + gridHeight(counts.pinned, sizes.tile)
+    return chrome(counts) + gridHeight(counts.pinned, width)
         + listHeight(counts, counts.thumbnails, largestThumbnail);
 }
 
-int minimumHeight(const TaskCounts& counts)
+int minimumHeight(int width, const TaskCounts& counts)
 {
-    return chrome(counts) + gridHeight(counts.pinned, iconTileHeight)
+    return chrome(counts) + gridHeight(counts.pinned, width)
         + std::min(counts.rows + counts.thumbnails, 1) * rowHeight;
 }
 

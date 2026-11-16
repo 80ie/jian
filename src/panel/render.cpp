@@ -45,7 +45,6 @@ std::vector<Client> cannedTasks(const Palette& palette)
         task(6, u"Calculator"_s, palette.tone(-2)), task(7, u"Downloads"_s, palette.fill) };
     const QSize capture(320, 200);
     tasks[0].pinned = true;
-    tasks[0].thumbnail = cannedImage(capture, palette.tone(5), palette.selection);
     tasks[1].focused = true;
     tasks[2].pinned = true;
     tasks[5].minimized = true;

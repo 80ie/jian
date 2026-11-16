@@ -719,14 +719,17 @@ In-process, no wallust and no parameters to tune. "From image":
    them, and they must cover 4% of the image between them. At most six,
    most common first;
 4. take the named colors from the image's other colors (those covering at
-   least 1%): selection and then fill are the colors most unlike the face
-   (distance in a and b plus their own chroma), and not grey while the
-   image has a color that is not; the pager desk is the most common of the
-   rest; ink is the darkest, brought to lightness 0.2 and chroma 0.03 at
-   most. Selection is kept 0.25 darker than the face, since light text is
-   drawn on it; fill and pager desk are moved 0.15 away from the face's
-   lightness. An image of one color has no others, and its candidate keeps
-   the stock named colors.
+   least 1%): selection is the color most unlike the face (distance in a
+   and b plus its own chroma), the chrome the strongest, fill the most
+   unlike the face of the rest, the pager desk the most common of the rest,
+   and ink the darkest, brought to lightness 0.2 and chroma 0.03 at most.
+   Selection, chrome and fill are not grey while the image has a color that
+   is not, even if one color has to serve twice. Selection is kept 0.25
+   darker than the face, since light text is drawn on it; the chrome is
+   brought to a lightness between 0.3 and 0.42, so that the face and the
+   title text (`chrome+1`) read against its title bars; fill and pager desk
+   are moved 0.15 away from the face's lightness. An image of one color has
+   no others, and its candidate keeps the stock named colors.
 5. spread the named colors over the candidates. A color's score is divided
    by one more than the number of colors of its hue (within 30 degrees, or
    both under chroma 0.04) that the candidate has taken already or that
@@ -744,11 +747,11 @@ in shades of one ochre, two for a brown cloth with red and grey, six for a
 photograph of a red gate under a blue sky, whose selections run red, orange,
 red, blue, orange, red.
 
-Each candidate is shown as its ramp strip plus named colors, the face
-standing taller than the other swatches, as in the editor. Picking one
-loads it into the editor as unsaved changes, keeping the chrome being
-edited: the chrome is the window manager's, and an image chosen for the
-panel says nothing about it. Nothing is written until Save.
+Each candidate is shown as its ramp strip plus named colors, chrome among
+them, the face standing taller than the other swatches, as in the editor.
+Picking one loads it into the editor as unsaved changes, its chrome
+included: the owner wanted the window manager's color to come from the
+picture too (issue #9). Nothing is written until Save.
 This replaces `palette sweep`.
 
 Existing `palette/schemes/*.json` are imported once at switch-over, one at

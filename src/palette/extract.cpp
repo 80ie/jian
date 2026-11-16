@@ -11,6 +11,7 @@
 #include <numeric>
 #include <random>
 #include <ranges>
+#include <tuple>
 
 namespace {
 
@@ -40,6 +41,9 @@ constexpr double selectionApart = 0.25;
 constexpr double fillApart = 0.15;
 constexpr double deskApart = 0.15;
 constexpr double inkLightness = 0.2;
+// Title bars: dark enough that the face and the chrome's own lightest tone read against them.
+constexpr double chromeDarkest = 0.3;
+constexpr double chromeLightest = 0.42;
 constexpr double inkChroma = 0.03;
 constexpr double neutralChroma = 0.04;
 constexpr double hueFamily = 30 * std::numbers::pi / 180;
@@ -226,33 +230,33 @@ bool sameHue(const Oklab& p, const Oklab& q)
 
 struct EarlierPicks {
     std::vector<Oklab> selection;
+    std::vector<Oklab> chrome;
     std::vector<Oklab> fill;
     std::vector<Oklab> desk;
 };
 
-// Dividing by the colors of its hue taken before spreads the accents over hues and candidates.
+// A colorful role would rather take a color again than a grey. Dividing by the colors of its hue
+// taken before spreads the accents over hues and candidates.
 Oklab best(std::vector<Source>& sources, std::vector<Oklab>& mine, std::vector<Oklab>& earlier,
     auto score, bool colorful)
 {
-    const bool anyLeft = std::ranges::any_of(sources, std::not_fn(&Source::taken));
-    auto pool = sources
-        | std::views::filter([anyLeft](const Source& source) { return !anyLeft || !source.taken; });
     const auto weighed = [&](const Source& source) {
         const auto alike = [&source](const Oklab& before) { return sameHue(before, source.lab); };
         const auto count
             = std::ranges::count_if(mine, alike) + std::ranges::count_if(earlier, alike);
-        return std::pair(colorful && chroma(source.lab) >= neutralChroma,
+        return std::tuple(colorful && chroma(source.lab) >= neutralChroma, !source.taken,
             std::invoke(score, source) / double(1 + count));
     };
-    Source& chosen = *std::ranges::max_element(pool, { }, weighed);
+    Source& chosen = *std::ranges::max_element(sources, { }, weighed);
     chosen.taken = true;
     mine.push_back(chosen.lab);
     earlier.push_back(chosen.lab);
     return chosen.lab;
 }
 
-// Selection and fill are the colors most unlike the face in hue and chroma, the pager desk the
-// most common of the rest, and ink the darkest, darkened until text in it reads.
+// Selection and fill are the colors most unlike the face in hue and chroma, the chrome the
+// strongest, the pager desk the most common of the rest, and ink the darkest, darkened until text
+// in it reads.
 void nameColors(
     Palette& palette, const Oklab& face, std::vector<Source>& others, EarlierPicks& earlier)
 {
@@ -265,6 +269,11 @@ void nameColors(
     std::vector<Oklab> mine;
     palette.selection = fromOklab(darkerThan(
         best(others, mine, earlier.selection, colorfulness, true), face, selectionApart));
+    Oklab chrome = best(
+        others, mine, earlier.chrome, [](const Source& source) { return chroma(source.lab); },
+        true);
+    chrome.lightness = std::clamp(chrome.lightness, chromeDarkest, chromeLightest);
+    palette.chrome = fromOklab(chrome);
     palette.fill = fromOklab(
         apartFrom(best(others, mine, earlier.fill, colorfulness, true), face, fillApart));
     palette.pagerDesk = fromOklab(

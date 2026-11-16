@@ -183,6 +183,28 @@ private slots:
         }));
     }
 
+    void chromeIsAStrongDarkColorOfTheImage()
+    {
+        const QColor green(0x20, 0xa0, 0x40);
+        const std::vector<Palette> palettes = candidates(imageColors(
+            bands({ { QColor(0xa0, 0xa0, 0x98), 240 }, { blue, 100 }, { green, 60 } })));
+        QVERIFY(!palettes.empty());
+        for (const Palette& palette : palettes) {
+            const double lightness = toOklab(palette.chrome).lightness;
+            QVERIFY(lightness > 0.29 && lightness < 0.43);
+            QVERIFY(lightness < toOklab(palette.face).lightness - 0.15);
+            QVERIFY(chroma(palette.chrome) > 0.08);
+            QVERIFY(hueApart(palette.chrome, blue) < 10 || hueApart(palette.chrome, green) < 10);
+        }
+    }
+
+    void oneColorKeepsTheStockChrome()
+    {
+        const std::vector<Palette> palettes = candidates(imageColors(halves(red, red)));
+        QCOMPARE(palettes.size(), 1);
+        QCOMPARE(palettes[0].chrome, Palette().chrome);
+    }
+
     void transparentPixelsAreLeftOut()
     {
         const std::vector<ImageColor> colors = imageColors(halves(Qt::transparent, blue));

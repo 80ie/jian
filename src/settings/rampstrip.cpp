@@ -32,7 +32,8 @@ QString toneName(int tone)
 
 QIcon paletteStrip(const Palette& palette, QSize size)
 {
-    const std::array named { palette.ink, palette.fill, palette.selection, palette.pagerDesk };
+    const std::array named { palette.ink, palette.fill, palette.selection, palette.pagerDesk,
+        palette.chrome };
     const int units = toneCount + 1 + int(named.size());
     const int inset = size.height() / 5;
     const auto column = [&size, units](int unit, const QColor& color, int inset, QPainter& p) {

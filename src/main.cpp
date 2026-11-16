@@ -79,8 +79,8 @@ void keepSettings(ShelfWidget* widget, Config& config, const QString& path)
                 saveConfig(config, path);
             });
     if (auto* tasks = qobject_cast<Tasks*>(widget))
-        QObject::connect(tasks, &Tasks::floorChosen, tasks, [&config, path](int floor) {
-            config.tasksFloor = floor;
+        QObject::connect(tasks, &Tasks::thumbnailFloorChosen, tasks, [&config, path](int floor) {
+            config.tasksThumbnailFloor = floor;
             saveConfig(config, path);
         });
     if (auto* media = qobject_cast<Media*>(widget))

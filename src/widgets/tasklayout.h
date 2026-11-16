@@ -29,7 +29,6 @@ struct TaskCounts {
 
 TaskCounts countTasks(const std::vector<Client>& tasks);
 
-// How many pinned windows' tiles fit across the tasks widget `width` wide.
 int tileColumns(int width);
 
 struct TaskFit {
@@ -42,9 +41,7 @@ struct TaskFit {
     bool operator==(const TaskFit&) const = default;
 };
 
-// Fits the tasks to `size` by spec 7.3: minimized windows' thumbnails shrink together to `floor`,
-// then collapse to rows oldest first, then the rows scroll.
-TaskFit fitTasks(QSize size, const TaskCounts& counts, int floor);
+TaskFit fitTasks(QSize size, const TaskCounts& counts, int thumbnailFloor);
 int naturalHeight(int width, const TaskCounts& counts);
 int minimumHeight(int width, const TaskCounts& counts);
 

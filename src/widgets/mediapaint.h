@@ -18,8 +18,6 @@ enum class Transport { Previous, Stop, PlayPause, Next };
 // What separates the end of a scrolling title from its beginning coming round again.
 inline constexpr QLatin1StringView marqueeGap("   ...   ");
 
-// A drop-down, as photon_media.py styled its combo box: `text` on a flat field inside a hard
-// outline, and a wedge in a cell of its own at the right end.
 void drawSelector(
     QPainter& p, const QRect& r, const Palette& palette, const QString& text, bool enabled);
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art);
@@ -28,7 +26,6 @@ int titleRoom(const QRect& field);
 // While `span` is not 0, the title is drawn `scroll` pixels into a loop of itself and the gap.
 void drawTitle(QPainter& p, const QRect& field, const Palette& palette, const QString& title,
     bool enabled, int scroll, int span);
-// The trackbar: a trough with a bar `fill` pixels long in the palette's fill color.
 void drawTrack(QPainter& p, const QRect& track, const Palette& palette, int fill);
 // The buttons' marks keep the reference's sizes whatever the buttons': a 7-pixel square, and
 // triangles 5 wide by 7 tall. While `playing`, play is drawn as pause.

@@ -64,10 +64,10 @@ void drawCropped(QPainter& p, const QImage& image, const QRect& box)
 
 } // namespace
 
-Tasks::Tasks(const Palette& palette, int floor, WindowModel* model, QWidget* parent)
+Tasks::Tasks(const Palette& palette, int thumbnailFloor, WindowModel* model, QWidget* parent)
     : ShelfWidget(parent)
     , m_palette(palette)
-    , m_floor(floor)
+    , m_thumbnailFloor(thumbnailFloor)
     , m_model(model)
 {
     setMouseTracking(true);
@@ -86,20 +86,20 @@ QWidget* Tasks::settingsPage()
     auto* page = new QWidget;
     auto* floor = new QSpinBox(page);
     floor->setRange(rowHeight, largestThumbnail);
-    floor->setValue(m_floor);
+    floor->setValue(m_thumbnailFloor);
     floor->setSuffix(u" px"_s);
     auto* form = new QFormLayout(page);
     form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
     form->addRow(u"Smallest thumbnail"_s, floor);
-    connect(floor, &QSpinBox::valueChanged, this, &Tasks::setFloor);
+    connect(floor, &QSpinBox::valueChanged, this, &Tasks::setThumbnailFloor);
     return page;
 }
 
-void Tasks::setFloor(int floor)
+void Tasks::setThumbnailFloor(int floor)
 {
-    m_floor = floor;
+    m_thumbnailFloor = floor;
     update();
-    emit floorChosen(floor);
+    emit thumbnailFloorChosen(floor);
 }
 
 int Tasks::minimumHeightForWidth(int width) const { return ::minimumHeight(width, m_counts); }
@@ -220,7 +220,7 @@ void Tasks::wheelEvent(QWheelEvent* event)
 // Pinned tasks come first in m_tasks, so a task's index is also its place in the grid.
 Tasks::Layout Tasks::layout() const
 {
-    const TaskFit fit = fitTasks(size(), m_counts, m_floor);
+    const TaskFit fit = fitTasks(size(), m_counts, m_thumbnailFloor);
     Layout l;
     int top = 0;
     const int columns = tileColumns(width());
@@ -262,8 +262,6 @@ std::optional<std::size_t> Tasks::taskAt(const Layout& layout, QPoint pos) const
     return std::nullopt;
 }
 
-// A tile has an etched rule on its right, and the first in a row draws one under the whole row
-// unless it is the last; the well's own edge closes the rest.
 void Tasks::paintTile(QPainter& p, const Layout& layout, std::size_t task, bool hovered) const
 {
     const Client& client = m_tasks[task];
@@ -276,7 +274,8 @@ void Tasks::paintTile(QPainter& p, const Layout& layout, std::size_t task, bool 
     p.drawLine(face.right() + 1, r.top(), face.right() + 1, face.bottom());
     p.setPen(m_palette.tone(3));
     p.drawLine(face.right() + 2, r.top(), face.right() + 2, face.bottom());
-    if (int(task) % columns == 0 && int(task) / columns < (m_counts.pinned - 1) / columns)
+    const bool lastRow = int(task) / columns == (m_counts.pinned - 1) / columns;
+    if (int(task) % columns == 0 && !lastRow)
         paint::divider(p, QRect(tiles.left(), r.bottom() - 1, tiles.width(), etch), m_palette);
 
     if (!client.icon.isNull()) {

@@ -9,29 +9,24 @@
 class WindowModel;
 struct Palette;
 
-// The windows on the page in view: pinned ones as a strip of icon tiles, the rest as rows,
-// minimized ones last with their last capture under them.
 class Tasks : public ShelfWidget {
     Q_OBJECT
 
 public:
-    // Without a model it shows what setClients() gives it and acts on nothing. `floor` is the
-    // least height a capture shrinks to before it gives way to a plain row.
-    Tasks(const Palette& palette, int floor, WindowModel* model, QWidget* parent);
+    // Without a model it shows what setClients() gives it and acts on nothing.
+    Tasks(const Palette& palette, int thumbnailFloor, WindowModel* model, QWidget* parent);
 
     QString id() const override;
     int heightForWidth(int width) const override;
     int minimumHeightForWidth(int width) const override;
     bool wantsSpare() const override { return true; }
     bool sunken() const override { return true; }
-    // The thumbnail floor.
     QWidget* settingsPage() override;
     void setClients(const std::vector<Client>& clients);
-    void setFloor(int floor);
+    void setThumbnailFloor(int floor);
 
 signals:
-    // setFloor() changed it.
-    void floorChosen(int floor);
+    void thumbnailFloorChosen(int floor);
 
 protected:
     bool event(QEvent* event) override;
@@ -59,7 +54,7 @@ private:
     QColor faceFor(const Client& client, bool hovered) const;
 
     const Palette& m_palette;
-    int m_floor;
+    int m_thumbnailFloor;
     WindowModel* m_model;
     std::vector<Client> m_tasks;
     TaskCounts m_counts;

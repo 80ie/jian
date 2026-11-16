@@ -35,7 +35,7 @@ private slots:
         changed.windowPositions = { { "media", QPoint(1220, 300) }, { "clock", QPoint(-4, 0) } };
         changed.clockTime = "HH:mm:ss";
         changed.clockDate = "dddd d MMMM";
-        changed.tasksFloor = 40;
+        changed.tasksThumbnailFloor = 40;
         changed.mediaSource = "vlc";
         changed.exportOnSave = true;
         QTest::newRow("changed") << changed;

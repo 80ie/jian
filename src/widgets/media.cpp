@@ -112,7 +112,7 @@ void Media::paintEvent(QPaintEvent* event)
     drawTransport(p, l.buttons, m_palette,
         { live && current->canGoPrevious, live, live, live && current->canGoNext }, m_pressed,
         current && current->playback == Playback::Playing);
-    paint::divider(p, l.rule, m_palette);
+    paint::divider(p, l.volumeRule, m_palette);
 
     const Output* output = m_sinks.current();
     drawVolume(p, l, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),

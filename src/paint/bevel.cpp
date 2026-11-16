@@ -9,8 +9,7 @@
 
 namespace {
 
-// Photon shades a colored block by moving every channel the same amount, not by mixing in white
-// or black.
+// Photon shades by moving every channel the same amount, not by mixing in white or black.
 QColor shifted(const QColor& color, int delta)
 {
     const auto channel = [delta](int value) { return std::clamp(value + delta, 0, 255); };

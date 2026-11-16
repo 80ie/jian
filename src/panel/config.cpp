@@ -54,8 +54,8 @@ std::optional<Config> loadConfig(const QString& path)
     ini.endGroup();
     config.clockTime = ini.value("clock/time", config.clockTime).toString();
     config.clockDate = ini.value("clock/date", config.clockDate).toString();
-    config.tasksFloor = ini.value("tasks/floor", config.tasksFloor).toInt(&ok);
-    if (!ok || config.tasksFloor < 1)
+    config.tasksThumbnailFloor = ini.value("tasks/floor", config.tasksThumbnailFloor).toInt(&ok);
+    if (!ok || config.tasksThumbnailFloor < 1)
         return bad("tasks/floor");
     config.mediaSource = ini.value("media/source").toString();
     config.exportOnSave = ini.value("exports/onsave").toBool();
@@ -75,7 +75,7 @@ bool saveConfig(const Config& config, const QString& path)
             u"popout/"_s + id, QStringList { QString::number(at.x()), QString::number(at.y()) });
     ini.setValue("clock/time", config.clockTime);
     ini.setValue("clock/date", config.clockDate);
-    ini.setValue("tasks/floor", config.tasksFloor);
+    ini.setValue("tasks/floor", config.tasksThumbnailFloor);
     ini.setValue("media/source", config.mediaSource);
     ini.setValue("exports/onsave", config.exportOnSave);
     ini.sync();

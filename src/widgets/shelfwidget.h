@@ -24,7 +24,6 @@ public:
     virtual int minimumHeightForWidth(int width) const { return heightForWidth(width); }
     // Takes a share of the height the panel has left over.
     virtual bool wantsSpare() const { return false; }
-    // Its edges are a well of its own, which needs no bay around it.
     virtual bool sunken() const { return false; }
     virtual void paletteChanged() { update(); }
     // Where a widget hands colors to another program, which would fall behind a drag in the editor.

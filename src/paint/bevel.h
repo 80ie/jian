@@ -16,8 +16,6 @@ void raised(QPainter& p, const QRect& r, const Palette& palette);
 // The last row and column are a light lip outside the outline.
 void sunken(QPainter& p, const QRect& r, const Palette& palette, const QColor& floor);
 void trough(QPainter& p, const QRect& r, const Palette& palette);
-// What fills a trough, bevelled in its own color: lighter along the top and left, darker along
-// the bottom and right.
 void bar(QPainter& p, const QRect& r, const QColor& color);
 // Five rows tall.
 void groove(QPainter& p, const QRect& r, const Palette& palette);

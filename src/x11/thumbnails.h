@@ -18,13 +18,10 @@ class XConnection;
 // depth other than 24 or 32.
 QImage thumbnailFrom(xcb_get_image_reply_t& reply, int width, int height);
 
-// Captures of the listed windows through the Composite extension, scaled down and handed to the
-// window model when a window loses the focus.
 class Thumbnails : public QObject {
     Q_OBJECT
 
 public:
-    // Nothing without the Composite extension.
     static std::unique_ptr<Thumbnails> open(XConnection& x, WindowModel& model);
     Thumbnails(XConnection& x, WindowModel& model);
 

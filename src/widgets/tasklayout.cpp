@@ -52,13 +52,13 @@ TaskCounts countTasks(const std::vector<Client>& tasks)
 
 int tileColumns(int width) { return std::max(1, (width - 2 * wellPadding) / tileSize); }
 
-TaskFit fitTasks(QSize size, const TaskCounts& counts, int floor)
+TaskFit fitTasks(QSize size, const TaskCounts& counts, int thumbnailFloor)
 {
     const int room = size.height() - chrome(counts) - gridHeight(counts.pinned, size.width())
         - listHeight(counts, 0, 0);
     for (int kept = counts.thumbnails; kept > 0; --kept) {
         const int each = std::min(largestThumbnail, room / kept - thumbnailPadding);
-        if (each >= floor)
+        if (each >= thumbnailFloor)
             return { each, kept, listHeight(counts, kept, each), false };
     }
     return { 0, 0, listHeight(counts, 0, 0), room < 0 };

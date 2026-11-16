@@ -10,9 +10,8 @@ namespace {
 
 constexpr int textLeft = 3;
 constexpr int artInset = 4;
-// A drop-down's text starts this far in, past its outline, and its wedge has a cell this wide.
 constexpr int selectorTextLeft = 4;
-constexpr int selectorCell = 15;
+constexpr int wedgeCellWidth = 15;
 
 // Inside a sunken field's bevel and clear of its lip.
 QRect fieldInside(const QRect& field) { return field.adjusted(2, 2, -2, -2); }
@@ -75,7 +74,7 @@ void drawSelector(
     p.fillRect(r, palette.tone(5));
     p.setPen(palette.tone(-6));
     p.drawRect(r.adjusted(0, 0, -1, -1));
-    const int cell = r.right() - selectorCell - 1;
+    const int cell = r.right() - wedgeCellWidth - 1;
     p.drawLine(cell, r.top(), cell, r.bottom());
     const QPoint centre(r.right() - 7, r.top() + r.height() / 2);
     for (int row = 0; row < 4; ++row)

@@ -7,8 +7,7 @@ using namespace std::chrono;
 
 namespace {
 
-// The fields keep this far inside the widget's edges, and the dividers half as far.
-constexpr int padding = 4;
+constexpr int fieldInset = 4;
 constexpr int ruleInset = 2;
 constexpr int fieldHeight = 19;
 constexpr int buttonHeight = 22;
@@ -30,14 +29,14 @@ constexpr milliseconds quickestStep(40);
 MediaLayout mediaLayout(int width, QSize art, bool track)
 {
     MediaLayout l;
-    const int inner = width - 2 * padding;
-    int y = padding;
+    const int inner = width - 2 * fieldInset;
+    int y = fieldInset;
     const auto take = [&y](int height) {
         const int top = y;
         y += height + gap;
         return top;
     };
-    const auto field = [&](int height) { return QRect(padding, take(height), inner, height); };
+    const auto field = [&](int height) { return QRect(fieldInset, take(height), inner, height); };
     const auto rule
         = [&] { return QRect(ruleInset, take(ruleHeight), width - 2 * ruleInset, ruleHeight); };
     l.source = field(fieldHeight);
@@ -50,19 +49,19 @@ MediaLayout mediaLayout(int width, QSize art, bool track)
         l.track = field(trackHeight);
     const int buttonsTop = take(buttonHeight);
     const int room = std::max(4, inner - 3 * buttonGap);
-    int x = padding;
+    int x = fieldInset;
     for (int i = 0; i < 4; ++i) {
         const int buttonWidth = room / 4 + (i < room % 4);
         l.buttons[i] = QRect(x, buttonsTop, buttonWidth, buttonHeight);
         x += buttonWidth + buttonGap;
     }
-    l.rule = rule();
+    l.volumeRule = rule();
     l.thumbTop = take(thumbSize.height());
-    l.speaker = speaker.translated(padding, l.thumbTop);
-    l.groove = QRect(padding + grooveLeft, l.thumbTop + grooveDrop,
+    l.speaker = speaker.translated(fieldInset, l.thumbTop);
+    l.groove = QRect(fieldInset + grooveLeft, l.thumbTop + grooveDrop,
         std::max(shortestGroove, inner - grooveLeft - grooveRight), 5);
-    l.output = QRect(padding, y, inner, fieldHeight);
-    l.height = l.output.bottom() + 1 + padding;
+    l.output = QRect(fieldInset, y, inner, fieldHeight);
+    l.height = l.output.bottom() + 1 + fieldInset;
     return l;
 }
 

@@ -24,8 +24,6 @@ namespace {
 
 // Between the panel and a widget's window the first time it pops out.
 constexpr int windowGap = 8;
-// Each widget sits in a bay sunk into the face behind a one-pixel bevel, unless its edges are a
-// well already: bays this far from the panel's edges and from each other.
 constexpr int bayMargin = 2;
 constexpr int bayGap = 5;
 constexpr int bayBevel = 1;

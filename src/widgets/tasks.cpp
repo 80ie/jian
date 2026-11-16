@@ -24,7 +24,7 @@ constexpr int rowIcon = 16;
 constexpr int tileIcon = 24;
 // Of a row: the icon's left edge, and the gaps either side of the title.
 constexpr int iconLeft = 6;
-constexpr int titleLeft = 7;
+constexpr int titleLeft = 6;
 constexpr int titleRight = 4;
 // Around a capture: the trough's margin in its row, and the capture's in the trough.
 constexpr int troughMargin = 6;

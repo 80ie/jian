@@ -14,6 +14,16 @@ namespace {
 // The family the golden image draws the clock in.
 QFont mono() { return QFont(u"Linux Libertine Mono O"_s); }
 
+// Where each column starts in `line`: at its start and after each run of two spaces or more.
+QList<qsizetype> columnStarts(const QString& line)
+{
+    QList<qsizetype> starts { 0 };
+    for (qsizetype i = 2; i < line.size(); ++i)
+        if (line[i] != u' ' && line[i - 1] == u' ' && line[i - 2] == u' ')
+            starts.append(i);
+    return starts;
+}
+
 // Every line on the strip, the time's lines clear of the date's, and each side centred.
 bool staysInside(const ClockLayout& l, int width)
 {
@@ -80,6 +90,24 @@ private slots:
         QFETCH(bool, seconds);
         QFETCH(int, msecs);
         QCOMPARE(::msecsToNextTick(now, seconds), msecs);
+    }
+
+    void syntaxColumnsLineUp_data()
+    {
+        QTest::addColumn<QDate>("day");
+        QTest::newRow("May") << QDate(2026, 5, 6);
+        QTest::newRow("November") << QDate(2026, 11, 18);
+    }
+
+    void syntaxColumnsLineUp()
+    {
+        QFETCH(QDate, day);
+        const QStringList lines = syntaxSheet(QDateTime(day, QTime(9, 5))).split(u'\n');
+        QCOMPARE(lines.size(), 8);
+        const QList<qsizetype> starts = columnStarts(lines.front());
+        QCOMPARE(starts.size(), 6);
+        for (const QString& line : lines)
+            QCOMPARE(starts.first(columnStarts(line).size()), columnStarts(line));
     }
 
     void sizeFollowsWidth_data()

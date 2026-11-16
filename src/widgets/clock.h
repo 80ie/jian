@@ -12,6 +12,8 @@ struct Palette;
 bool showsSeconds(QStringView format);
 // How long from `now` until a clock that shows seconds, or only minutes, next changes.
 int msecsToNextTick(const QTime& now, bool seconds);
+// The format tokens, each beside what it gives at `now`, in columns for a fixed-pitch font.
+QString syntaxSheet(const QDateTime& now);
 
 // The time at the left end and the date at the right, straight on the panel face.
 class Clock : public ShelfWidget {

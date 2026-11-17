@@ -10,7 +10,6 @@
 #include <optional>
 
 class QPainter;
-struct SoundLayout;
 struct Palette;
 
 enum class Transport { Previous, Stop, PlayPause, Next };
@@ -29,6 +28,3 @@ void drawTrack(QPainter& p, const QRect& track, const Palette& palette, int fill
 // triangles 5 wide by 7 tall. While `playing`, play is drawn as pause.
 void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palette& palette,
     const std::array<bool, 4>& enabled, std::optional<Transport> down, bool playing);
-// The speaker, the groove with its scale, and the thumb at `volume`.
-void drawVolume(
-    QPainter& p, const SoundLayout& l, const Palette& palette, double volume, bool muted);

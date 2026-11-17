@@ -1,7 +1,6 @@
 #pragma once
 
 #include "media/player.h"
-#include "media/pulse.h"
 #include "widgets/medialayout.h"
 #include "widgets/mediapaint.h"
 #include "widgets/shelfwidget.h"
@@ -31,7 +30,6 @@ public:
     // The source, as the widget's own drop-down chooses it.
     QWidget* settingsPage() override;
     void setPlayers(const std::vector<Player>& players);
-    void setSinks(const Sinks& sinks);
     void setArt(const QImage& art);
 
 signals:
@@ -46,7 +44,6 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
-    void wheelEvent(QWheelEvent* event) override;
 
 private:
     const Player* player() const;
@@ -63,21 +60,16 @@ private:
     std::vector<Source> sources() const;
     void setSource(const QString& source);
     void chooseSource(const QRect& field);
-    void chooseOutput(const QRect& field);
-    void dragVolume(int x);
     void act(Transport which);
 
     const Palette& m_palette;
     QString m_source;
     std::vector<Player> m_players;
-    Sinks m_sinks;
     QImage m_art;
     Mpris* m_mpris = nullptr;
-    Pulse* m_pulse = nullptr;
     CoverArt* m_cover = nullptr;
-    // What the mouse holds: a transport button, the volume thumb, or a place on the trackbar.
+    // What the mouse holds: a transport button or a place on the trackbar.
     std::optional<Transport> m_pressed;
-    std::optional<double> m_volume;
     std::optional<std::chrono::microseconds> m_seek;
     QString m_title;
     int m_scroll = 0;

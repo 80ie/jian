@@ -16,15 +16,15 @@ constexpr QRect speaker(2, 1, 16, 16);
 
 } // namespace
 
-SoundLayout soundLayout(int width, int top)
+SoundLayout soundLayout(int width)
 {
     SoundLayout l;
     const int inner = width - 2 * fieldInset;
-    l.thumbTop = top;
-    l.speaker = speaker.translated(fieldInset, top);
-    l.groove = QRect(fieldInset + grooveLeft, top + grooveDrop,
+    l.thumbTop = fieldInset;
+    l.speaker = speaker.translated(fieldInset, l.thumbTop);
+    l.groove = QRect(fieldInset + grooveLeft, l.thumbTop + grooveDrop,
         std::max(shortestGroove, inner - grooveLeft - grooveRight), 5);
-    l.output = QRect(fieldInset, top + thumbSize.height() + gap, inner, fieldHeight);
+    l.output = QRect(fieldInset, l.thumbTop + thumbSize.height() + gap, inner, fieldHeight);
     l.height = l.output.bottom() + 1 + fieldInset;
     return l;
 }

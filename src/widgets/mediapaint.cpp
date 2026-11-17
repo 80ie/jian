@@ -55,15 +55,6 @@ void glyph(QPainter& p, QPoint centre, Transport which, bool playing)
     }
 }
 
-// Drawn rather than taken from an icon theme, which a render cannot count on.
-void speaker(QPainter& p, const QRect& r)
-{
-    const int y = r.center().y();
-    p.drawPolygon(QPolygon({ QPoint(r.left() + 2, y - 3), QPoint(r.left() + 6, y - 3),
-        QPoint(r.left() + 11, r.top() + 2), QPoint(r.left() + 11, r.bottom() - 2),
-        QPoint(r.left() + 6, y + 3), QPoint(r.left() + 2, y + 3) }));
-}
-
 } // namespace
 
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art)
@@ -119,24 +110,4 @@ void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palet
         glyph(p, buttons[i].center() + QPoint(pressed, pressed), which, playing);
         p.restore();
     }
-}
-
-void drawVolume(
-    QPainter& p, const SoundLayout& l, const Palette& palette, double volume, bool muted)
-{
-    p.save();
-    p.setRenderHint(QPainter::Antialiasing, false);
-    p.setPen(Qt::NoPen);
-    p.setBrush(muted ? palette.tone(-4) : palette.ink);
-    speaker(p, l.speaker);
-    p.restore();
-    paint::groove(p, l.groove, palette);
-    // Five marks, ends included, spaced by the groove's width rather than a fixed pitch.
-    const int travel = l.groove.width() - thumbSize.width();
-    for (int i = 0; i < 5; ++i)
-        paint::tick(p,
-            { l.groove.left() + thumbSize.width() / 2 + qRound(travel * i / 4.0),
-                l.thumbTop + thumbSize.height() - 1 },
-            palette);
-    paint::thumb(p, QRect(QPoint(thumbLeft(l.groove, volume), l.thumbTop), thumbSize), palette);
 }

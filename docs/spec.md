@@ -31,8 +31,8 @@ records them so the architecture leaves room, and nothing more.
 | clock | ported |
 | World View (FvwmPager swallow) | ported as an fvwm-only widget (section 7.2) |
 | tasks | ported, pinned grid and overflow redesigned (section 7.3) |
-| media | ported, plus trackbar and source selector (section 7.4) |
-| tray (stalonetray swallow) | ported (section 7.5) |
+| media | ported, plus trackbar and source selector (section 7.4); volume and output a widget of their own (section 7.5) |
+| tray (stalonetray swallow) | ported (section 7.6) |
 | meters | dropped |
 | launcher rows (`item` lines, all commented out today) | dropped for now |
 | group headers and collapsing | removed, replaced by edit mode (section 5) |
@@ -82,7 +82,7 @@ src/
   x11/                xcb connection, atoms, event filter, WindowModel,
                       requests to the window manager
   media/              MPRIS, sink and cover art sources, free of widgets (section 12)
-  widgets/            clock, tasks, media, pager, tray, ForeignSlot
+  widgets/            clock, tasks, media, sound, pager, tray, ForeignSlot
   settings/           the settings window and palette editor
 exports/              the export targets that come with the program (section 9)
 tests/                Qt Test, golden images
@@ -127,7 +127,7 @@ signals:
 ```
 
 `paletteSettled()` is how the pager and the tray hand new colors to the
-programs that draw them (7.2, 7.5). The panel calls it once the palette has
+programs that draw them (7.2, 7.6). The panel calls it once the palette has
 held still for 300 ms, so that dragging a color in the editor repaints the
 panel at every step but sends another program only the color it stops on.
 
@@ -169,7 +169,8 @@ assumes INI.
 
 The panel is an ordered list of slots, one widget per slot. Unless
 `config.ini` says otherwise the order is clock, World View, tasks, media,
-tray; a widget that is not offered (7.2, 7.5) is left out. For a given width:
+sound, tray; a widget that is not offered (7.2, 7.6) is left out. For a
+given width:
 
 1. Every widget gets its natural height.
 2. Spare height goes to widgets with `wantsSpare()`, split evenly. Today that
@@ -210,10 +211,10 @@ verified in `fvwm-rig`, it takes only with the stacking hints ignored.
 Headers go. Each slot is drawn as its own unit, so that a widget reads as an
 object sitting in the panel and not as a region of it. Most widgets meet
 their edge with a well (World View, tasks, tray) or a full-width field
-(media), so a closed edge drawn just around such a widget would frame it
-twice. So each widget sits in a bay: sunk into the face behind a one-pixel
-soft bevel, `raised` turned half round, flush with the widget, the bays 5
-pixels apart and 2 from the panel's edges. A widget whose edges are a well
+(media, sound), so a closed edge drawn just around such a widget would frame
+it twice. So each widget sits in a bay: sunk into the face behind a
+one-pixel soft bevel, `raised` turned half round, flush with the widget, the
+bays 5 pixels apart and 2 from the panel's edges. A widget whose edges are a well
 of its own (World View, tasks, the tray) is its own bay, and the panel draws
 no bevel around it: merged with the well, the bevel doubled its outline into
 a softer, thicker edge than the Python shelf's, which the owner rejected
@@ -286,7 +287,7 @@ which is the width the widget had in the panel.
 
 ```ini
 [panel]
-widgets=clock, worldview, tasks, media, tray
+widgets=clock, worldview, tasks, media, sound, tray
 popped=media
 
 [popout]
@@ -301,7 +302,7 @@ beside the panel, level with its slot as far as the screen allows. Qt takes a
 position as the frame's only when it is set before the window exists; a
 window placed by its inside instead came up 11 pixels lower in `fvwm-rig`
 than asked, on every restart. Widgets that `widgets` names but that cannot
-run here (7.2, 7.5) keep their place in it too, so that a panel started
+run here (7.2, 7.6) keep their place in it too, so that a panel started
 without fvwm does not drop World View from the file.
 
 Verified in `fvwm-rig`: the pager and the tray survive the reparent both
@@ -521,8 +522,8 @@ pixels. "Oldest" is the window minimized longest ago.
 
 ### 7.4 Media
 
-Ported: MPRIS transport, marquee title, cover art, sink volume, output
-selection. `pactl subscribe` stays as a subprocess. The Python widget's
+Ported: MPRIS transport, marquee title, cover art. The Python widget's sink
+volume and output selection are the sound widget (7.5). Its
 picture-in-picture monitor, which held a browser's floating video in the
 well, is dropped: at the panel's width the video was too small to be of use.
 
@@ -547,10 +548,28 @@ Added:
   a player that can run twice carries its pid.
 
 Top to bottom: the source, the cover in a well shaped to it, the title, the
-trackbar, transport, volume, the output. The Python widget had the output at
-the top and no source. Both are drop-downs drawn with the painters that open
-a menu. The speaker is drawn rather than taken from the Haiku icon theme, so
-that a render depends on nothing installed.
+trackbar, transport. The Python widget had no source. The source is a
+drop-down drawn with the painters that open a menu.
+
+`mpris:artUrl` is whatever the page a browser plays put there, so cover art
+is bounded: a fetch is abandoned past 8 MB or ten seconds, or when the track
+changes, follows at most three redirects and only to http or https, and a
+local cover must be a regular file within the same 8 MB, read directly
+rather than through Qt's network layer. Loopback and private addresses are
+not refused, since the response is only ever decoded as an image inside the
+panel and the browser that named the URL could fetch it anyway.
+
+### 7.5 Sound
+
+Ported from the Python media widget: sink volume and output selection.
+`pactl subscribe` stays as a subprocess.
+
+Top to bottom: the volume, then the output. The volume is a speaker that
+mutes on a click, beside a groove with a scale of five marks and a thumb to
+drag; the wheel over the widget steps it by 5%. The output is a drop-down
+like media's source. The Python widget had the output at the top of media.
+The speaker is drawn rather than taken from the Haiku icon theme, so that a
+render depends on nothing installed.
 
 Output selection is a direct `pactl` call, where the Python widget went
 through `FvwmCommand`, so the widget has no fvwm dependency.
@@ -566,15 +585,7 @@ pipewire-pulse restarts, is started again after two seconds, the wait
 doubling to about a minute while the server stays away; nothing signals that
 a server is back.
 
-`mpris:artUrl` is whatever the page a browser plays put there, so cover art
-is bounded: a fetch is abandoned past 8 MB or ten seconds, or when the track
-changes, follows at most three redirects and only to http or https, and a
-local cover must be a regular file within the same 8 MB, read directly
-rather than through Qt's network layer. Loopback and private addresses are
-not refused, since the response is only ever decoded as an image inside the
-panel and the browser that named the URL could fetch it anyway.
-
-### 7.5 Tray
+### 7.6 Tray
 
 stalonetray in a `ForeignSlot`, launched and owned by the panel through
 `QProcess`, offered only when `stalonetray` is on the path. A native XEmbed
@@ -918,17 +929,16 @@ widget's.
 | dockapp tray | `ForeignSlot` handles windows it did not launch; a slot can hold a grid of 64x64 foreign windows |
 | system monitor in the cputnik manner | none beyond the widget contract |
 | Winamp-style player | media's data sources (MPRIS, sink) stay separate classes from its painting, so a second face can reuse them |
-| analyzer | none; a strip of the sound widget, once volume and output leave media for a widget of their own (section 12.1) |
+| analyzer | none; a strip of the sound widget (section 12.1) |
 | notes, pomodoro | per-widget persistent state in `config.ini` |
 | calendar and reminders | none yet |
 
 ### 12.1 Analyzer
 
 A spectrum in the manner of Strawberry's Boom analyzer: bars that fall under
-gravity, each with a peak cap that hangs and then drops. Not built, and not
-to be built into media as it stands, which is full already. It waits for the
-sink volume and the output drop-down to move out of media into a sound
-widget, where it would be a strip of its own.
+gravity, each with a peak cap that hangs and then drops. Not built. It
+belongs in the sound widget (7.5) as a strip of its own, not in media, which
+is full already.
 
 The panel does not play the audio, and does not need to. Every PipeWire or
 PulseAudio sink has a monitor source carrying what goes to the speakers, and

@@ -8,7 +8,7 @@ class SoundLayoutTest : public QObject {
 private slots:
     void volume()
     {
-        const QRect groove = soundLayout(153, 0).groove;
+        const QRect groove = soundLayout(153).groove;
         for (double v : { 0.0, 0.25, 0.6, 1.0 })
             QVERIFY(std::abs(volumeAt(groove, thumbLeft(groove, v) + thumbSize.width() / 2) - v)
                 < 0.01);

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "widgets/soundlayout.h"
-
 #include <QRect>
 #include <QSize>
 
@@ -19,8 +17,6 @@ struct MediaLayout {
     // Null when the trackbar is hidden.
     QRect track;
     std::array<QRect, 4> buttons;
-    QRect volumeRule;
-    SoundLayout sound;
     int height = 0;
 };
 

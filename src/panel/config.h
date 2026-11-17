@@ -11,7 +11,8 @@ struct Config {
     Qt::Edge side = Qt::RightEdge;
     int width = 160;
     QStringList widgets { QStringLiteral("clock"), QStringLiteral("worldview"),
-        QStringLiteral("tasks"), QStringLiteral("media"), QStringLiteral("tray") };
+        QStringLiteral("tasks"), QStringLiteral("media"), QStringLiteral("sound"),
+        QStringLiteral("tray") };
     // Widgets out of the panel in windows of their own. Each keeps its place in `widgets`, where
     // it docks again.
     QStringList poppedOut;

@@ -2,6 +2,7 @@
 #include "panel/config.h"
 #include "widgets/clock.h"
 #include "widgets/media.h"
+#include "widgets/sound.h"
 #include "widgets/tasks.h"
 #include "widgets/tray.h"
 #include "widgets/worldview.h"
@@ -20,8 +21,9 @@ struct Entry {
     QStringView name;
 };
 
-constexpr std::array<Entry, 5> entries { { { u"clock", u"Clock" }, { u"worldview", u"World View" },
-    { u"tasks", u"Tasks" }, { u"media", u"Media" }, { u"tray", u"Tray" } } };
+constexpr std::array<Entry, 6> entries { { { u"clock", u"Clock" }, { u"worldview", u"World View" },
+    { u"tasks", u"Tasks" }, { u"media", u"Media" }, { u"sound", u"Sound" },
+    { u"tray", u"Tray" } } };
 
 // Why the widget `id` cannot run here, or null if it can.
 const char* missing(QStringView id, const WindowModel* windows)
@@ -66,6 +68,8 @@ ShelfWidget* createWidget(QStringView id, const Palette& palette, const Config& 
         return new WorldView(palette, windows, parent);
     if (id == u"media")
         return new Media(palette, config.mediaSource, windows, parent);
+    if (id == u"sound")
+        return new Sound(palette, windows, parent);
     if (id == u"tasks")
         return new Tasks(
             palette, { config.tasksTile, config.tasksThumbnailFloor }, windows, parent);

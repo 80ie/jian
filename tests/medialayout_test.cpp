@@ -14,12 +14,12 @@ private slots:
         QTest::addColumn<QSize>("art");
         QTest::addColumn<bool>("track");
         QTest::addColumn<int>("height");
-        QTest::newRow("bare") << 153 << QSize() << false << 121;
-        QTest::newRow("trackbar") << 153 << QSize() << true << 134;
+        QTest::newRow("bare") << 153 << QSize() << false << 74;
+        QTest::newRow("trackbar") << 153 << QSize() << true << 87;
         // The well is as wide as the fields, a divider and two gaps under it.
-        QTest::newRow("square art") << 153 << QSize(300, 300) << false << 121 + 145 + 8;
-        QTest::newRow("wide art") << 150 << QSize(320, 180) << true << 134 + 80 + 8;
-        QTest::newRow("tall art stays square") << 150 << QSize(100, 400) << false << 121 + 142 + 8;
+        QTest::newRow("square art") << 153 << QSize(300, 300) << false << 74 + 145 + 8;
+        QTest::newRow("wide art") << 150 << QSize(320, 180) << true << 87 + 80 + 8;
+        QTest::newRow("tall art stays square") << 150 << QSize(100, 400) << false << 74 + 142 + 8;
     }
 
     void height()

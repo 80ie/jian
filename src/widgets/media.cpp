@@ -13,7 +13,6 @@
 #include <QPainter>
 
 #include <algorithm>
-#include <cmath>
 #include <utility>
 
 using namespace Qt::StringLiterals;
@@ -22,9 +21,6 @@ using namespace std::chrono;
 namespace {
 
 constexpr int marqueeMs = 60;
-constexpr double wheelStep = 0.05;
-// A drag finer than this is not worth a write.
-constexpr double volumeGrain = 0.005;
 
 QString labelOf(const Player& player)
 {
@@ -54,8 +50,6 @@ Media::Media(const Palette& palette, const QString& source, WindowModel* windows
     } else {
         qWarning("media: no session bus");
     }
-    m_pulse = new Pulse(this);
-    connect(m_pulse, &Pulse::changed, this, [this] { setSinks(m_pulse->sinks()); });
     m_cover = new CoverArt(this);
     connect(m_cover, &CoverArt::changed, this, [this] { setArt(m_cover->image()); });
 }
@@ -72,12 +66,6 @@ void Media::setPlayers(const std::vector<Player>& players)
     const int before = heightForWidth(width());
     m_players = players;
     refresh(before);
-}
-
-void Media::setSinks(const Sinks& sinks)
-{
-    m_sinks = sinks;
-    update();
 }
 
 void Media::setArt(const QImage& art)
@@ -113,13 +101,6 @@ void Media::paintEvent(QPaintEvent* event)
     drawTransport(p, l.buttons, m_palette,
         { live && current->canGoPrevious, live, live, live && current->canGoNext }, m_pressed,
         current && current->playback == Playback::Playing);
-    paint::divider(p, l.volumeRule, m_palette);
-
-    const Output* output = m_sinks.current();
-    drawVolume(p, l.sound, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),
-        !output || output->muted);
-    paint::dropDown(p, l.sound.output, m_palette,
-        output ? output->description : u"No output device"_s, !m_sinks.outputs.empty());
 }
 
 void Media::resizeEvent(QResizeEvent*) { restartTimers(); }
@@ -141,17 +122,8 @@ void Media::mousePressEvent(QMouseEvent* event)
             return;
         }
     }
-    const QRect volumeBand(l.sound.groove.left() - 6, l.sound.thumbTop - 2,
-        l.sound.groove.width() + 12, thumbSize.height() + 4);
     if (l.source.contains(pos)) {
         chooseSource(l.source);
-    } else if (l.sound.output.contains(pos)) {
-        chooseOutput(l.sound.output);
-    } else if (l.sound.speaker.contains(pos) && m_pulse) {
-        m_pulse->toggleMute();
-    } else if (volumeBand.contains(pos) && m_sinks.current()) {
-        m_volume = m_sinks.current()->volume;
-        dragVolume(pos.x());
     } else if (l.track.contains(pos)) {
         m_seek = trackPosition(l.track, pos.x(), *player()->length);
         restartTimers();
@@ -163,9 +135,7 @@ void Media::mouseMoveEvent(QMouseEvent* event)
 {
     const QPoint pos = event->position().toPoint();
     const MediaLayout l = layout();
-    if (m_volume) {
-        dragVolume(pos.x());
-    } else if (m_seek && showsTrack()) {
+    if (m_seek && showsTrack()) {
         m_seek = trackPosition(l.track, pos.x(), *player()->length);
         update(l.track);
     } else if (m_pressed && !l.buttons[int(*m_pressed)].contains(pos)) {
@@ -177,10 +147,7 @@ void Media::mouseMoveEvent(QMouseEvent* event)
 void Media::mouseReleaseEvent(QMouseEvent* event)
 {
     const MediaLayout l = layout();
-    if (m_volume) {
-        m_volume.reset();
-        update();
-    } else if (m_seek) {
+    if (m_seek) {
         if (const Player* current = player(); m_mpris && current && showsTrack())
             m_mpris->setPosition(current->owner, *m_seek);
         m_seek.reset();
@@ -192,14 +159,6 @@ void Media::mouseReleaseEvent(QMouseEvent* event)
         if (l.buttons[int(which)].contains(event->position().toPoint()))
             act(which);
     }
-}
-
-void Media::wheelEvent(QWheelEvent* event)
-{
-    const Output* output = m_sinks.current();
-    if (!m_pulse || !output || event->angleDelta().y() == 0)
-        return;
-    m_pulse->setVolume(output->volume + (event->angleDelta().y() > 0 ? wheelStep : -wheelStep));
 }
 
 const Player* Media::player() const { return choosePlayer(m_players, m_source); }
@@ -310,34 +269,6 @@ QWidget* Media::settingsPage()
     connect(source, &QComboBox::activated, this,
         [this, source] { setSource(source->currentData().toString()); });
     return page;
-}
-
-void Media::chooseOutput(const QRect& field)
-{
-    if (m_sinks.outputs.empty())
-        return;
-    auto* menu = new QMenu(this);
-    menu->setAttribute(Qt::WA_DeleteOnClose);
-    for (const Output& output : m_sinks.outputs) {
-        QAction* action = menu->addAction(output.description, this, [this, name = output.name] {
-            if (m_pulse)
-                m_pulse->setDefault(name);
-        });
-        action->setCheckable(true);
-        action->setChecked(output.name == m_sinks.defaultName);
-    }
-    menu->popup(mapToGlobal(field.bottomLeft()));
-}
-
-void Media::dragVolume(int x)
-{
-    const double volume = volumeAt(layout().sound.groove, x);
-    if (std::abs(volume - *m_volume) < volumeGrain)
-        return;
-    m_volume = volume;
-    if (m_pulse)
-        m_pulse->setVolume(volume);
-    update();
 }
 
 void Media::act(Transport which)

@@ -52,6 +52,7 @@ add_library(jiancore STATIC
     src/widgets/medialayout.cpp
     src/widgets/mediapaint.cpp
     src/widgets/shelfwidget.h
+    src/widgets/sound.cpp
     src/widgets/soundlayout.cpp
     src/widgets/tasklayout.cpp
     src/widgets/tasks.cpp

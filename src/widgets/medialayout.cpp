@@ -49,9 +49,7 @@ MediaLayout mediaLayout(int width, QSize art, bool track)
         l.buttons[i] = QRect(x, buttonsTop, buttonWidth, buttonHeight);
         x += buttonWidth + buttonGap;
     }
-    l.volumeRule = rule();
-    l.sound = soundLayout(width, y);
-    l.height = l.sound.height;
+    l.height = buttonsTop + buttonHeight + fieldInset;
     return l;
 }
 

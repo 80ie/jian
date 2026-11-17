@@ -6,7 +6,7 @@
 // The volume slider's thumb.
 constexpr QSize thumbSize(10, 17);
 
-// Where the volume row and the output drop-down go.
+// Where each part of the sound widget goes.
 struct SoundLayout {
     QRect speaker;
     QRect groove;
@@ -15,8 +15,8 @@ struct SoundLayout {
     int height = 0;
 };
 
-// The layout `width` wide, the volume row at `top`.
-SoundLayout soundLayout(int width, int top);
+// The layout `width` wide.
+SoundLayout soundLayout(int width);
 
 // The thumb's left edge on `groove` at `volume`, which runs from 0 to 1.
 int thumbLeft(const QRect& groove, double volume);

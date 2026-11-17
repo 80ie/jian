@@ -6,6 +6,7 @@
 #include "widgets/catalog.h"
 #include "widgets/clock.h"
 #include "widgets/media.h"
+#include "widgets/sound.h"
 #include "widgets/tasks.h"
 #include "widgets/worldview.h"
 
@@ -111,9 +112,10 @@ QImage renderPanel(const Palette& palette, const Config& config)
             worldView->setScreen(screen);
         if (auto* media = qobject_cast<Media*>(widget)) {
             media->setPlayers(cannedPlayers());
-            media->setSinks(cannedSinks());
             media->setArt(cannedArt(palette));
         }
+        if (auto* sound = qobject_cast<Sound*>(widget))
+            sound->setSinks(cannedSinks());
         return widget;
     });
     panel.setSide(config.side);

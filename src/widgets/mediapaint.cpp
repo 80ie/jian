@@ -10,8 +10,6 @@ namespace {
 
 constexpr int textLeft = 3;
 constexpr int artInset = 4;
-constexpr int selectorTextLeft = 4;
-constexpr int wedgeCellWidth = 15;
 
 // Inside a sunken field's bevel and clear of its lip.
 QRect fieldInside(const QRect& field) { return field.adjusted(2, 2, -2, -2); }
@@ -67,29 +65,6 @@ void speaker(QPainter& p, const QRect& r)
 }
 
 } // namespace
-
-void drawSelector(
-    QPainter& p, const QRect& r, const Palette& palette, const QString& text, bool enabled)
-{
-    p.fillRect(r, palette.tone(5));
-    p.setPen(palette.tone(-6));
-    p.drawRect(r.adjusted(0, 0, -1, -1));
-    const int cell = r.right() - wedgeCellWidth - 1;
-    p.drawLine(cell, r.top(), cell, r.bottom());
-    const QPoint centre(r.right() - 7, r.top() + r.height() / 2);
-    for (int row = 0; row < 4; ++row)
-        p.fillRect(centre.x() - 4 + row, centre.y() - 2 + row, 8 - 2 * row, 1, palette.ink);
-
-    const QRect field(r.left() + selectorTextLeft, r.top() + 1, cell - r.left() - selectorTextLeft,
-        r.height() - 2);
-    // Clipped as a combo box clips its label, which trims the first glyph's fringe.
-    p.save();
-    p.setClipRect(field);
-    p.setPen(enabled ? palette.ink : palette.tone(-4));
-    p.drawText(field, Qt::AlignLeft | Qt::AlignVCenter,
-        p.fontMetrics().elidedText(text, Qt::ElideRight, field.width()));
-    p.restore();
-}
 
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art)
 {

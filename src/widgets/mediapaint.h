@@ -18,8 +18,6 @@ enum class Transport { Previous, Stop, PlayPause, Next };
 // What separates the end of a scrolling title from its beginning coming round again.
 inline constexpr QLatin1StringView marqueeGap("   ...   ");
 
-void drawSelector(
-    QPainter& p, const QRect& r, const Palette& palette, const QString& text, bool enabled);
 void drawArt(QPainter& p, const QRect& well, const Palette& palette, const QImage& art);
 // How wide a title can be before it has to scroll.
 int titleRoom(const QRect& field);

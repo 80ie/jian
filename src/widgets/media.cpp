@@ -2,6 +2,7 @@
 #include "media/coverart.h"
 #include "media/mpris.h"
 #include "paint/bevel.h"
+#include "paint/dropdown.h"
 #include "palette/palette.h"
 
 #include <QComboBox>
@@ -94,7 +95,7 @@ void Media::paintEvent(QPaintEvent* event)
     p.fillRect(rect(), m_palette.tone(0));
 
     const QString source = current ? labelOf(*current) : m_source;
-    drawSelector(
+    paint::dropDown(
         p, l.source, m_palette, source.isEmpty() ? u"No player"_s : source, current != nullptr);
     if (!l.art.isNull()) {
         // The marquee repaints its field many times a second, and scaling the art is not free.
@@ -117,7 +118,7 @@ void Media::paintEvent(QPaintEvent* event)
     const Output* output = m_sinks.current();
     drawVolume(p, l, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),
         !output || output->muted);
-    drawSelector(p, l.output, m_palette, output ? output->description : u"No output device"_s,
+    paint::dropDown(p, l.output, m_palette, output ? output->description : u"No output device"_s,
         !m_sinks.outputs.empty());
 }
 

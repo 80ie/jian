@@ -18,6 +18,7 @@ add_library(jiancore STATIC
     src/media/player.cpp
     src/media/pulse.cpp
     src/paint/bevel.cpp
+    src/paint/dropdown.cpp
     src/paint/sheet.cpp
     src/panel/config.cpp
     src/panel/dock.cpp

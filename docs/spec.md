@@ -917,9 +917,40 @@ widget's.
 |---|---|
 | dockapp tray | `ForeignSlot` handles windows it did not launch; a slot can hold a grid of 64x64 foreign windows |
 | system monitor in the cputnik manner | none beyond the widget contract |
-| Winamp-style player, analyzer | media's data sources (MPRIS, sink) stay separate classes from its painting, so a second face can reuse them |
+| Winamp-style player | media's data sources (MPRIS, sink) stay separate classes from its painting, so a second face can reuse them |
+| analyzer | none; a strip of the sound widget, once volume and output leave media for a widget of their own (section 12.1) |
 | notes, pomodoro | per-widget persistent state in `config.ini` |
 | calendar and reminders | none yet |
+
+### 12.1 Analyzer
+
+A spectrum in the manner of Strawberry's Boom analyzer: bars that fall under
+gravity, each with a peak cap that hangs and then drops. Not built, and not
+to be built into media as it stands, which is full already. It waits for the
+sink volume and the output drop-down to move out of media into a sound
+widget, where it would be a strip of its own.
+
+The panel does not play the audio, and does not need to. Every PipeWire or
+PulseAudio sink has a monitor source carrying what goes to the speakers, and
+recording from `@DEFAULT_MONITOR@` follows the default sink as the output
+drop-down changes it.
+
+- **Capture.** `parec -d @DEFAULT_MONITOR@ --format=s16le --rate=44100
+  --channels=1 --latency-msec=20` under `QProcess`, read as it arrives, with
+  the restart that the `pactl subscribe` reader already has. A libpipewire
+  stream would cut latency and could follow one player instead of the whole
+  sink, at the cost of a dependency and its loop; not worth it at first.
+- **Spectrum.** 512 to 1024 samples under a Hann window, magnitudes gathered
+  into log-spaced bands on a dB scale. A radix-2 FFT at this size is some
+  thirty lines, so fftw is not needed. Pure logic, under Qt Test.
+- **Paint.** A timer at 25 to 30 frames a second, running only while
+  something plays and the strip is visible.
+
+Known in advance: the monitor carries everything on the sink, notification
+sounds and other players included. It is taken before the hardware volume on
+most setups, so the bars do not shrink as the volume goes down. Latency
+through `parec` is 20 to 40 ms. An open capture keeps the sink from
+suspending, so it opens when MPRIS reports `Playing` and closes on pause.
 
 ## 13. Milestones
 

@@ -122,7 +122,7 @@ void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palet
 }
 
 void drawVolume(
-    QPainter& p, const MediaLayout& l, const Palette& palette, double volume, bool muted)
+    QPainter& p, const SoundLayout& l, const Palette& palette, double volume, bool muted)
 {
     p.save();
     p.setRenderHint(QPainter::Antialiasing, false);

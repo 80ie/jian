@@ -10,7 +10,7 @@
 #include <optional>
 
 class QPainter;
-struct MediaLayout;
+struct SoundLayout;
 struct Palette;
 
 enum class Transport { Previous, Stop, PlayPause, Next };
@@ -31,4 +31,4 @@ void drawTransport(QPainter& p, const std::array<QRect, 4>& buttons, const Palet
     const std::array<bool, 4>& enabled, std::optional<Transport> down, bool playing);
 // The speaker, the groove with its scale, and the thumb at `volume`.
 void drawVolume(
-    QPainter& p, const MediaLayout& l, const Palette& palette, double volume, bool muted);
+    QPainter& p, const SoundLayout& l, const Palette& palette, double volume, bool muted);

@@ -116,10 +116,10 @@ void Media::paintEvent(QPaintEvent* event)
     paint::divider(p, l.volumeRule, m_palette);
 
     const Output* output = m_sinks.current();
-    drawVolume(p, l, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),
+    drawVolume(p, l.sound, m_palette, std::min(1.0, m_volume.value_or(output ? output->volume : 0)),
         !output || output->muted);
-    paint::dropDown(p, l.output, m_palette, output ? output->description : u"No output device"_s,
-        !m_sinks.outputs.empty());
+    paint::dropDown(p, l.sound.output, m_palette,
+        output ? output->description : u"No output device"_s, !m_sinks.outputs.empty());
 }
 
 void Media::resizeEvent(QResizeEvent*) { restartTimers(); }
@@ -141,13 +141,13 @@ void Media::mousePressEvent(QMouseEvent* event)
             return;
         }
     }
-    const QRect volumeBand(
-        l.groove.left() - 6, l.thumbTop - 2, l.groove.width() + 12, thumbSize.height() + 4);
+    const QRect volumeBand(l.sound.groove.left() - 6, l.sound.thumbTop - 2,
+        l.sound.groove.width() + 12, thumbSize.height() + 4);
     if (l.source.contains(pos)) {
         chooseSource(l.source);
-    } else if (l.output.contains(pos)) {
-        chooseOutput(l.output);
-    } else if (l.speaker.contains(pos) && m_pulse) {
+    } else if (l.sound.output.contains(pos)) {
+        chooseOutput(l.sound.output);
+    } else if (l.sound.speaker.contains(pos) && m_pulse) {
         m_pulse->toggleMute();
     } else if (volumeBand.contains(pos) && m_sinks.current()) {
         m_volume = m_sinks.current()->volume;
@@ -331,7 +331,7 @@ void Media::chooseOutput(const QRect& field)
 
 void Media::dragVolume(int x)
 {
-    const double volume = volumeAt(layout().groove, x);
+    const double volume = volumeAt(layout().sound.groove, x);
     if (std::abs(volume - *m_volume) < volumeGrain)
         return;
     m_volume = volume;

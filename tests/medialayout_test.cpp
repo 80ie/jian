@@ -43,16 +43,6 @@ private slots:
             QVERIFY(std::abs(button.width() - l.buttons.front().width()) <= 1);
     }
 
-    void volume()
-    {
-        const QRect groove = mediaLayout(153, QSize(), false).groove;
-        for (double v : { 0.0, 0.25, 0.6, 1.0 })
-            QVERIFY(std::abs(volumeAt(groove, thumbLeft(groove, v) + thumbSize.width() / 2) - v)
-                < 0.01);
-        QCOMPARE(volumeAt(groove, 0), 0.0);
-        QCOMPARE(volumeAt(groove, 1000), 1.0);
-    }
-
     void track()
     {
         const QRect track = mediaLayout(153, QSize(), true).track;

@@ -1,13 +1,12 @@
 #pragma once
 
+#include "widgets/soundlayout.h"
+
 #include <QRect>
 #include <QSize>
 
 #include <array>
 #include <chrono>
-
-// The volume slider's thumb.
-constexpr QSize thumbSize(10, 17);
 
 // Where each part of the media widget goes. The heights are the Python shelf's, which took them
 // off the reference screenshot.
@@ -21,20 +20,12 @@ struct MediaLayout {
     QRect track;
     std::array<QRect, 4> buttons;
     QRect volumeRule;
-    QRect speaker;
-    QRect groove;
-    int thumbTop = 0;
-    QRect output;
+    SoundLayout sound;
     int height = 0;
 };
 
 // The layout `width` wide, with a well in the proportions of `art` if it is not empty.
 MediaLayout mediaLayout(int width, QSize art, bool track);
-
-// The thumb's left edge on `groove` at `volume`, which runs from 0 to 1.
-int thumbLeft(const QRect& groove, double volume);
-// The volume a press at `x` on `groove` asks for.
-double volumeAt(const QRect& groove, int x);
 
 // Where the trackbar's fill goes, inside its trough.
 QRect trackInside(const QRect& track);

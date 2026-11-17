@@ -7,14 +7,17 @@
 
 namespace {
 
+bool writeText(const QString& path, const QByteArray& text)
+{
+    QFile file(path);
+    return file.open(QIODevice::WriteOnly) && file.write(text) == text.size();
+}
+
 std::optional<Config> loadText(const QByteArray& text)
 {
     const QTemporaryDir dir;
-    QFile file(dir.filePath("config.ini"));
-    if (!file.open(QIODevice::WriteOnly) || file.write(text) != text.size())
-        return std::nullopt;
-    file.close();
-    return loadConfig(file.fileName());
+    const QString path = dir.filePath("config.ini");
+    return writeText(path, text) ? loadConfig(path) : std::nullopt;
 }
 
 } // namespace
@@ -77,6 +80,7 @@ private slots:
         QTest::newRow("floor") << QByteArray("[tasks]\nfloor=0\n");
         QTest::newRow("time size") << QByteArray("[clock]\ntimeSize=big\n");
         QTest::newRow("date size") << QByteArray("[clock]\ndateSize=0\n");
+        QTest::newRow("format") << QByteArray("[panel]\nformat=new\n");
     }
 
     void badValuesAreRejected()
@@ -84,6 +88,50 @@ private slots:
         QFETCH(QByteArray, text);
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression("bad (panel|tasks|popout|clock)/"));
         QVERIFY(!loadText(text));
+    }
+
+    void soundFollowsMedia_data()
+    {
+        QTest::addColumn<QByteArray>("text");
+        QTest::addColumn<QStringList>("widgets");
+        QTest::newRow("after media") << QByteArray("[panel]\nwidgets=clock, media, tray\n")
+                                     << QStringList { "clock", "media", "sound", "tray" };
+        QTest::newRow("no media") << QByteArray("[panel]\nwidgets=clock, tray\n")
+                                  << QStringList { "clock", "tray" };
+        QTest::newRow("placed already") << QByteArray("[panel]\nwidgets=sound, clock, media\n")
+                                        << QStringList { "sound", "clock", "media" };
+    }
+
+    void soundFollowsMedia()
+    {
+        QFETCH(QByteArray, text);
+        QFETCH(QStringList, widgets);
+        const std::optional<Config> loaded = loadText(text);
+        QVERIFY(loaded);
+        QCOMPARE(loaded->widgets, widgets);
+    }
+
+    void soundStaysDockedBesidePoppedMedia()
+    {
+        const std::optional<Config> loaded
+            = loadText("[panel]\nwidgets=media, tray\npopped=media\n");
+        QVERIFY(loaded);
+        QCOMPARE(loaded->widgets, (QStringList { "media", "sound", "tray" }));
+        QCOMPARE(loaded->poppedOut, QStringList { "media" });
+    }
+
+    void removedSoundStaysRemoved()
+    {
+        const QTemporaryDir dir;
+        const QString path = dir.filePath("config.ini");
+        QVERIFY(writeText(path, "[panel]\nwidgets=clock, media\n"));
+        std::optional<Config> config = loadConfig(path);
+        QVERIFY(config);
+        config->widgets.removeAll("sound");
+        QVERIFY(saveConfig(*config, path));
+        const std::optional<Config> loaded = loadConfig(path);
+        QVERIFY(loaded);
+        QCOMPARE(loaded->widgets, (QStringList { "clock", "media" }));
     }
 };
 

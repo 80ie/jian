@@ -287,6 +287,7 @@ which is the width the widget had in the panel.
 
 ```ini
 [panel]
+format=1
 widgets=clock, worldview, tasks, media, sound, tray
 popped=media
 
@@ -304,6 +305,12 @@ window placed by its inside instead came up 11 pixels lower in `fvwm-rig`
 than asked, on every restart. Widgets that `widgets` names but that cannot
 run here (7.2, 7.6) keep their place in it too, so that a panel started
 without fvwm does not drop World View from the file.
+
+Every save writes `format=1`. A file without it comes from before sound was
+a widget of its own (7.5), so loading it puts sound just after media, docked
+even if media is popped out, unless `widgets` has sound already or lacks
+media. Removing sound later saves the file with `format`, so it stays
+removed.
 
 Verified in `fvwm-rig`: the pager and the tray survive the reparent both
 ways. Qt moves the window a slot holds to the new top-level window, which is

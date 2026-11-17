@@ -7,6 +7,9 @@ using namespace Qt::StringLiterals;
 
 namespace {
 
+// Written with every save. A file without it had volume and output inside media.
+constexpr int format = 1;
+
 // QSettings would write an empty list as @Invalid().
 QVariant listValue(const QStringList& list)
 {
@@ -39,6 +42,12 @@ std::optional<Config> loadConfig(const QString& path)
         return bad("panel/width");
     config.widgets = ini.value("panel/widgets", config.widgets).toStringList();
     config.widgets.removeAll(QString());
+    const int fileFormat = ini.value("panel/format", 0).toInt(&ok);
+    if (!ok)
+        return bad("panel/format");
+    if (const qsizetype media = config.widgets.indexOf(u"media"_s);
+        fileFormat < 1 && media >= 0 && !config.widgets.contains(u"sound"_s))
+        config.widgets.insert(media + 1, u"sound"_s);
     config.poppedOut = ini.value("panel/popped").toStringList();
     config.poppedOut.removeAll(QString());
     ini.beginGroup("popout");
@@ -74,6 +83,7 @@ std::optional<Config> loadConfig(const QString& path)
 bool saveConfig(const Config& config, const QString& path)
 {
     QSettings ini(path, QSettings::IniFormat);
+    ini.setValue("panel/format", format);
     ini.setValue("panel/side", config.side == Qt::LeftEdge ? u"left"_s : u"right"_s);
     ini.setValue("panel/width", config.width);
     ini.setValue("panel/widgets", listValue(config.widgets));

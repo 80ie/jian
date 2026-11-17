@@ -15,6 +15,13 @@ private slots:
         QCOMPARE(volumeAt(groove, 0), 0.0);
         QCOMPARE(volumeAt(groove, 1000), 1.0);
     }
+
+    void grooveFillsTheRow()
+    {
+        const SoundLayout l = soundLayout(153);
+        QVERIFY(l.groove.left() > l.speaker.right());
+        QCOMPARE(l.groove.right(), l.output.right());
+    }
 };
 
 QTEST_GUILESS_MAIN(SoundLayoutTest)

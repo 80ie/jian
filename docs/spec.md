@@ -572,11 +572,12 @@ Ported from the Python media widget: sink volume and output selection.
 `pactl subscribe` stays as a subprocess.
 
 Top to bottom: the volume, then the output. The volume is a speaker that
-mutes on a click, beside a groove with a scale of five marks and a thumb to
-drag; the wheel over the widget steps it by 5%. The output is a drop-down
-like media's source. The Python widget had the output at the top of media.
-The speaker is drawn rather than taken from the Haiku icon theme, so that a
-render depends on nothing installed.
+mutes on a click, then a groove with a scale of five marks and a thumb to
+drag, which runs on to the right edge of the output below it; the wheel over
+the widget steps it by 5%. The output is a drop-down like media's source.
+The Python widget had the output at the top of media, and its groove
+stopped 24 pixels short of that edge. The speaker is drawn rather than taken
+from the Haiku icon theme, so that a render depends on nothing installed.
 
 Output selection is a direct `pactl` call, where the Python widget went
 through `FvwmCommand`, so the widget has no fvwm dependency.

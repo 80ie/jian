@@ -4,6 +4,8 @@ A desktop panel for X11 in C++20 and Qt 6 Widgets, replacing a Python panel
 written for fvwm. `docs/spec.md` says what it does and the order it is built
 in; `AGENTS.md` holds the rules for working on it.
 
+![The panel in five palettes](docs/themes.png)
+
     cmake --preset dev && cmake --build --preset dev && ctest --preset dev
 
 `dev` builds with ASan and UBSan, `release` without. `jian` runs the panel,
